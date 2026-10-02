@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Master Code</string>
+    <string name="inicio_toques">Toques: %1$d</string>
+    <string name="inicio_boton_tocar">Tocar</string>
+</resources>
