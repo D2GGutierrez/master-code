@@ -1,0 +1,5 @@
+# Fuerza LF para que los scripts funcionen igual en Windows y en Docker.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jar binary
