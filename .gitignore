@@ -1,0 +1,22 @@
+# Secretos y claves
+.env
+*.pem
+infra/keys/
+
+# Dependencias y compilados
+node_modules/
+dist/
+build/
+target/
+.gradle/
+__pycache__/
+*.pyc
+.venv/
+
+# Editores y sistema
+.idea/
+.vscode/
+local.properties
+*.log
+.DS_Store
+Thumbs.db
