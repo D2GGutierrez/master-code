@@ -1,0 +1,40 @@
+name: user-web
+
+# Se filtra por carpeta porque ya no hay chequeos obligatorios: así no corre por cambios de otras carpetas.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "user-web/**"
+      - ".github/workflows/user-web.yml"
+  pull_request:
+    paths:
+      - "user-web/**"
+      - ".github/workflows/user-web.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: user-web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: user-web/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Construir imagen
+        run: docker build -t master-code-user-web .
