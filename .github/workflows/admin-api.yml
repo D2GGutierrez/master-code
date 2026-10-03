@@ -41,6 +41,7 @@ jobs:
           POSTGRES_DB: ci
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
+          DOMINIO_INSTITUCIONAL: ejemplo.edu.pe
 
       - name: Construir imagen
         run: docker build -t master-code-admin-api .

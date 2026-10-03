@@ -1,2 +1,6 @@
 # Las migraciones las genera Django y no se editan a mano.
 extend-exclude = ["*/migrations/*"]
+
+[lint]
+# Django y DRF declaran listas como atributos de clase (permission_classes, fields...).
+extend-ignore = ["RUF012"]
