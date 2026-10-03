@@ -1,0 +1,2 @@
+# Las migraciones las genera Django y no se editan a mano.
+extend-exclude = ["*/migrations/*"]
