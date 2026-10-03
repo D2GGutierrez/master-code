@@ -14,6 +14,11 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+# Webs que el navegador deja llamar a esta API (admin-web y user-web).
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"
+).split(",")
+
 # Único dominio de correo con el que se puede crear una cuenta.
 DOMINIO_INSTITUCIONAL = os.environ["DOMINIO_INSTITUCIONAL"]
 
@@ -25,12 +30,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "cuentas",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Antes de CommonMiddleware: si esta responde primero (p. ej. un redirect), la respuesta sale sin cabeceras CORS.
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
