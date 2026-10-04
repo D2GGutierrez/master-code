@@ -35,7 +35,7 @@ jobs:
 
       # Clave nueva en cada corrida, con el formato del .env (una línea con \n): no hay claves en el repo.
       - name: Clave JWT temporal
-        run: echo "JWT_PRIVATE_KEY=$(openssl genrsa -quiet 2048 | awk '{printf "%s\\n", $0}')" >> "$GITHUB_ENV"
+        run: echo "JWT_PRIVATE_KEY=$(openssl genrsa 2048 | awk '{printf "%s\\n", $0}')" >> "$GITHUB_ENV"
 
       - name: Pruebas
         run: python manage.py test
