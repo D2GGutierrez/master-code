@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from cryptography.hazmat.primitives import serialization
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -93,3 +94,22 @@ STATIC_URL = "static/"
 
 # Django 5.2 no lo trae por defecto (6.x sí); así las claves primarias son bigint.
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ADR-4: la clave privada solo vive en el entorno. El .env la guarda en una línea con \n
+# y la librería necesita saltos de línea reales.
+jwt_clave_privada = os.environ["JWT_PRIVATE_KEY"].replace("\\n", "\n")
+# La pública se calcula de la privada, así no hay que guardarla en ningún lado.
+jwt_clave_publica = (
+    serialization.load_pem_private_key(jwt_clave_privada.encode(), password=None)
+    .public_key()
+    .public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo)
+    .decode()
+)
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": jwt_clave_privada,
+    "VERIFYING_KEY": jwt_clave_publica,
+    "ISSUER": "master-code-admin-api",
+    "USER_ID_CLAIM": "sub",
+}
