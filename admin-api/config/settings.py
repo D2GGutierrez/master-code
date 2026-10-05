@@ -123,3 +123,8 @@ SIMPLE_JWT = {
 }
 
 JWT_REFRESH_DAYS_MOBILE = int(os.environ.get("JWT_REFRESH_DAYS_MOBILE", "30"))
+
+# Solo la autenticación es global; cada vista declara sus propios permisos.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+}
