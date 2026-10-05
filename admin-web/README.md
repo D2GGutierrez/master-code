@@ -45,3 +45,10 @@ Para probar el registro del docente: levanta `admin-api` en el puerto 8000 (ver 
 ```js
 const respuesta = await peticion('/api/<ruta>/', { method: 'GET' }) // <ruta> es un ejemplo
 ```
+
+## Recuperación de contraseña
+
+- <http://localhost:3000/olvide-contrasena>: el docente escribe su correo y `admin-api` le envía un enlace.
+- <http://localhost:3000/nueva-contrasena?uid=...&token=...>: la abre el enlace del correo; pide la contraseña dos veces y la guarda.
+
+Para probar el flujo sin enviar correos reales, levanta `admin-api` con `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend`: el correo, con el enlace, aparece en su consola. El enlace vence en 30 minutos y sirve una sola vez.
