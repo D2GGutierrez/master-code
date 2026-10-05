@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
@@ -7,6 +10,8 @@ def crear_tokens(user, cliente):
         raise ValueError(f"El usuario {user.pk} no tiene un perfil con rol conocido.")
 
     refresh = RefreshToken.for_user(user)
+    if cliente == "mobile":
+        refresh.set_exp(lifetime=timedelta(days=settings.JWT_REFRESH_DAYS_MOBILE))
     # El estándar JWT pide sub como texto y simplejwt deja el id como número.
     refresh["sub"] = str(user.pk)
     refresh["email"] = user.email

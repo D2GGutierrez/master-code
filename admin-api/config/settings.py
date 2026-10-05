@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",
     "cuentas",
 ]
 
@@ -112,4 +114,11 @@ SIMPLE_JWT = {
     "VERIFYING_KEY": jwt_clave_publica,
     "ISSUER": "master-code-admin-api",
     "USER_ID_CLAIM": "sub",
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINUTES", "15"))),
+    # Duración web; el móvil usa JWT_REFRESH_DAYS_MOBILE (ver cuentas/tokens.py).
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("JWT_REFRESH_MINUTES_WEB", "30"))),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
+
+JWT_REFRESH_DAYS_MOBILE = int(os.environ.get("JWT_REFRESH_DAYS_MOBILE", "30"))

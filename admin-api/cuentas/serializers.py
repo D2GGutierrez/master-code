@@ -37,3 +37,17 @@ class RegistroDocenteSerializer(serializers.Serializer):
             email=email,
             institucion=settings.DOMINIO_INSTITUCIONAL,
         )
+
+
+class LoginSerializer(serializers.Serializer):
+    # EmailField ya quita los espacios de los extremos; aquí solo se pasa a minúsculas.
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    cliente = serializers.ChoiceField(choices=["admin-web", "user-web", "mobile"])
+
+    def validate_email(self, value):
+        return value.lower()
+
+
+class RefreshSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
