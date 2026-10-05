@@ -51,3 +51,17 @@ class LoginSerializer(serializers.Serializer):
 
 class RefreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class RecuperarSerializer(serializers.Serializer):
+    # EmailField ya quita los espacios de los extremos; aquí solo se pasa a minúsculas.
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.lower()
+
+
+class NuevaContrasenaSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    password = serializers.CharField()

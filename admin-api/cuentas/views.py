@@ -1,4 +1,10 @@
+import logging
+
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
@@ -7,15 +13,22 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from cuentas.recuperacion import generar_uid_token, usuario_del_token
 from cuentas.serializers import (
     LoginSerializer,
+    NuevaContrasenaSerializer,
+    RecuperarSerializer,
     RefreshSerializer,
     RegistroDocenteSerializer,
 )
 from cuentas.tokens import crear_tokens
 
+logger = logging.getLogger(__name__)
+
 CREDENCIALES_INCORRECTAS = {"detail": "Correo o contraseña incorrectos."}
 SESION_INVALIDA = {"detail": "La sesión no es válida o ya venció."}
+ENLACE_ENVIADO = {"detail": "Si el correo está registrado, te enviamos un enlace para recuperar tu contraseña."}
+ENLACE_INVALIDO = {"detail": "El enlace no es válido o ya venció."}
 
 
 class RegistroDocenteView(CreateAPIView):
@@ -96,3 +109,56 @@ class LogoutView(APIView):
         except TokenError:
             pass  # Ya revocado, vencido o inválido: la sesión ya no sirve, así que también es 204.
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecuperarView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = RecuperarSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Una cuenta pendiente de activación no puede recuperar la contraseña.
+        user = User.objects.filter(username=serializer.validated_data["email"], is_active=True).first()
+        if user is not None:
+            uid, token = generar_uid_token(user)
+            enlace = f"{settings.ADMIN_WEB_URL}/nueva-contrasena?uid={uid}&token={token}"
+            mensaje = (
+                "Recibimos una solicitud para recuperar la contraseña de tu cuenta de MASTER CODE.\n"
+                f"Abre este enlace para elegir una nueva:\n\n{enlace}\n\n"
+                f"El enlace vence en {settings.PASSWORD_RESET_TIMEOUT // 60} minutos. "
+                "Si no lo pediste, ignora este mensaje."
+            )
+            try:
+                send_mail("Recupera tu contraseña — MASTER CODE", mensaje, None, [user.email])
+            except OSError as error:
+                # OSError cubre los errores de SMTP y de red. Se registra solo el tipo:
+                # el mensaje del error podría traer el enlace o datos del servidor.
+                logger.error("No se pudo enviar el correo de recuperación: %s", type(error).__name__)
+
+        # Misma respuesta exista o no la cuenta (y aunque falle el envío): así no se revela qué correos están registrados.
+        return Response(ENLACE_ENVIADO)
+
+
+class NuevaContrasenaView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = NuevaContrasenaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datos = serializer.validated_data
+
+        user = usuario_del_token(datos["uid"], datos["token"])
+        if user is None:
+            return Response(ENLACE_INVALIDO, status=status.HTTP_400_BAD_REQUEST)
+        # Se valida antes de guardar: una contraseña débil no cambia nada y el token sigue sirviendo.
+        try:
+            validate_password(datos["password"], user)
+        except ValidationError as error:
+            return Response({"password": error.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(datos["password"])
+        user.save()
+        return Response({"detail": "Tu contraseña se actualizó."})
