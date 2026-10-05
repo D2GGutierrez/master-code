@@ -15,6 +15,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Misma imagen que docker-compose.yml; las pruebas de cuentas usan base de datos.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ci
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: admin-api
@@ -37,14 +52,22 @@ jobs:
       - name: Clave JWT temporal
         run: echo "JWT_PRIVATE_KEY=$(openssl genrsa 2048 | awk '{printf "%s\\n", $0}')" >> "$GITHUB_ENV"
 
+      # Django crea la base test_* copiando template1, y settings fija search_path=admin_schema.
+      - name: Crear admin_schema en template1
+        run: psql -h 127.0.0.1 -U ci -d template1 -c "CREATE SCHEMA IF NOT EXISTS admin_schema AUTHORIZATION ci;"
+        env:
+          PGPASSWORD: ci
+
       - name: Pruebas
         run: python manage.py test
-        # Valores falsos: las pruebas no se conectan a la base.
+        # Valores falsos que coinciden con el servicio postgres de este job.
         env:
           DJANGO_SECRET_KEY: clave-falsa-solo-para-ci
           POSTGRES_DB: ci
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
+          # settings usa localhost por defecto; 127.0.0.1 evita que intente primero por IPv6.
+          POSTGRES_HOST: 127.0.0.1
           DOMINIO_INSTITUCIONAL: ejemplo.edu.pe
 
       - name: Construir imagen
