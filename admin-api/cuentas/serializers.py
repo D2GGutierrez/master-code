@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
@@ -8,7 +8,8 @@ from cuentas.models import Docente
 from cuentas.validators import validar_dominio_institucional
 
 
-class RegistroDocenteSerializer(serializers.Serializer):
+# Campos y validaciones comunes al registro de docentes y de estudiantes.
+class RegistroSerializer(serializers.Serializer):
     nombre = serializers.CharField(max_length=150)
     email = serializers.EmailField(validators=[validar_dominio_institucional])
     password = serializers.CharField(write_only=True)
@@ -23,6 +24,8 @@ class RegistroDocenteSerializer(serializers.Serializer):
         validate_password(value)
         return value
 
+
+class RegistroDocenteSerializer(RegistroSerializer):
     # atomic: si falla el Docente, tampoco queda el usuario.
     @transaction.atomic
     def create(self, validated_data):
@@ -37,6 +40,24 @@ class RegistroDocenteSerializer(serializers.Serializer):
             email=email,
             institucion=settings.DOMINIO_INSTITUCIONAL,
         )
+
+
+class RegistroEstudianteSerializer(RegistroSerializer):
+    # atomic: si falla la asignación del grupo, tampoco queda el usuario.
+    @transaction.atomic
+    def create(self, validated_data):
+        email = validated_data["email"]
+        # Activa desde el registro: los estudiantes no esperan aprobación.
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=validated_data["password"],
+            first_name=validated_data["nombre"],
+        )
+        # El rol vive en un grupo y no en una tabla: el perfil del estudiante es de user-api (HU21 T1).
+        grupo, _ = Group.objects.get_or_create(name="estudiante")
+        user.groups.add(grupo)
+        return user
 
 
 class LoginSerializer(serializers.Serializer):

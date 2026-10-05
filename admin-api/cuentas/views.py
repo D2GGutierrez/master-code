@@ -20,6 +20,7 @@ from cuentas.serializers import (
     RecuperarSerializer,
     RefreshSerializer,
     RegistroDocenteSerializer,
+    RegistroEstudianteSerializer,
 )
 from cuentas.tokens import crear_tokens
 
@@ -36,6 +37,19 @@ class RegistroDocenteView(CreateAPIView):
     permission_classes = [AllowAny]
     # Sin autenticación: quien se registra todavía no tiene cuenta.
     authentication_classes = []
+
+
+class RegistroEstudianteView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = RegistroEstudianteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Registro exitoso. Ya puedes iniciar sesión."}, status=status.HTTP_201_CREATED
+        )
 
 
 class LoginView(APIView):
