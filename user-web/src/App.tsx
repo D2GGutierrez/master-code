@@ -1,5 +1,7 @@
+import RegistroEstudiante from './pages/RegistroEstudiante.tsx'
+
 function App() {
-  return <h1>MASTER CODE · Web del estudiante</h1>
+  return <RegistroEstudiante />
 }
 
 export default App

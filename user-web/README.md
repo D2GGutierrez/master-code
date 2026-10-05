@@ -33,3 +33,9 @@ npm run build
 docker build -t master-code-user-web .
 docker run --rm -p 3001:3001 master-code-user-web
 ```
+
+## Conexión con admin-api
+
+El registro llama a `admin-api` directamente desde el navegador (admin-api ya permite el origen `http://localhost:3001` por CORS). La URL base es `http://localhost:8000`, o el valor de la variable `VITE_API_URL` si existe; Vite la lee al arrancar o al construir.
+
+Para probar el registro del estudiante: levanta `admin-api` en el puerto 8000 (ver su README), arranca `npm run dev` y abre <http://localhost:3001>. La cuenta queda activa al crearse.
