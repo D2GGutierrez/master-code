@@ -26,3 +26,24 @@ export async function iniciarSesion(datos) {
   }
   return { ok: respuesta.ok, cuerpo }
 }
+
+export async function solicitarRecuperacion(correo) {
+  const respuesta = await fetch(`${API_URL}/recuperar/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: correo }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// datos: { uid, token, password }; uid y token llegan en el enlace del correo.
+export async function restablecerContrasena(datos) {
+  const respuesta = await fetch(`${API_URL}/nueva-contrasena/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
