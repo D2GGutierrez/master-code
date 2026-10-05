@@ -1,11 +1,28 @@
-// Ruta relativa: en desarrollo el proxy de Vite la reenvía a admin-api.
+import { API_URL } from './cliente.js'
+import { guardarTokens } from './sesion.js'
+
 export async function registrarDocente(datos) {
-  const respuesta = await fetch('/api/auth/registro/docente/', {
+  const respuesta = await fetch(`${API_URL}/registro/docente/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos),
   })
   // Si el cuerpo no es JSON (p. ej. una página de error), se devuelve vacío en vez de fallar.
   const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// Usa fetch y no peticion: un 401 aquí son credenciales incorrectas, no un token vencido.
+export async function iniciarSesion(datos) {
+  const respuesta = await fetch(`${API_URL}/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // admin-api exige saber desde qué aplicación se inicia sesión (claim cliente).
+    body: JSON.stringify({ ...datos, cliente: 'admin-web' }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  if (respuesta.ok) {
+    guardarTokens(cuerpo.access, cuerpo.refresh)
+  }
   return { ok: respuesta.ok, cuerpo }
 }
