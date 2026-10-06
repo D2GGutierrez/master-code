@@ -1,5 +1,8 @@
 # CA-001.1: registro válido y cuenta inactiva. CA-001.2: dominio no permitido.
 # CA-001.3: correo repetido. Además, login rechazado mientras la cuenta está inactiva.
+import io
+import logging
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -174,3 +177,150 @@ class RecuperacionContrasenaTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("Nueva-Clave-2026"))
         self.assertFalse(self.user.check_password("Otra-Clave-2026"))
+
+
+# Guarda cada registro de logging que llega, con su texto ya formateado (incluye tracebacks).
+class CapturaDeLogs(logging.Handler):
+    def __init__(self):
+        super().__init__(level=logging.DEBUG)
+        self.textos = []
+
+    def emit(self, record):
+        self.textos.append(self.format(record))
+        self.textos.append(repr(record.msg))
+        self.textos.append(repr(record.args))
+
+
+# CA-004.4: ninguna contraseña en los logs, en la consola ni en las respuestas de error.
+class SinContrasenasEnLogsTests(TestCase):
+    # Única y fácil de buscar; no es una contraseña real.
+    CONTRASENA_TRAZABLE = "Trazable-HU04-7f3Kq9-NoDebeAparecerEnLogs"
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def enviar_capturando(self, url, datos):
+        # Handler propio en el logger raíz y no assertLogs: la prueba sigue valiendo aunque no haya logs.
+        # Se baja el nivel a DEBUG para ver también los registros que hoy se descartan.
+        captura = CapturaDeLogs()
+        raiz, django_logger = logging.getLogger(), logging.getLogger("django")
+        niveles = raiz.level, django_logger.level
+        raiz.addHandler(captura)
+        raiz.setLevel(logging.DEBUG)
+        django_logger.setLevel(logging.DEBUG)
+        salida = io.StringIO()
+        try:
+            with redirect_stdout(salida), redirect_stderr(salida):
+                response = self.client.post(url, datos, format="json")
+        finally:
+            raiz.removeHandler(captura)
+            raiz.setLevel(niveles[0])
+            django_logger.setLevel(niveles[1])
+        return response, "\n".join(captura.textos), salida.getvalue()
+
+    def assertSinContrasena(self, response, logs, salida):
+        self.assertNotIn(self.CONTRASENA_TRAZABLE, logs)
+        self.assertNotIn(self.CONTRASENA_TRAZABLE, salida)
+        self.assertNotIn(self.CONTRASENA_TRAZABLE, response.content.decode())
+
+    def crear_docente_activo(self):
+        email = f"docente@{settings.DOMINIO_INSTITUCIONAL}"
+        user = User.objects.create_user(username=email, email=email, password=CONTRASENA)
+        Docente.objects.create(
+            user=user, nombre="Docente de Prueba", email=email, institucion=settings.DOMINIO_INSTITUCIONAL
+        )
+        return user
+
+    def datos_registro(self, email):
+        return {"nombre": "Persona de Prueba", "email": email, "password": self.CONTRASENA_TRAZABLE}
+
+    def test_registro_docente_valido(self):
+        datos = self.datos_registro(f"docente@{settings.DOMINIO_INSTITUCIONAL}")
+
+        response, logs, salida = self.enviar_capturando(REGISTRO_URL, datos)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_registro_docente_con_otro_dominio(self):
+        datos = self.datos_registro("docente@otro-dominio.com")
+
+        response, logs, salida = self.enviar_capturando(REGISTRO_URL, datos)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_registro_docente_con_correo_repetido(self):
+        self.crear_docente_activo()
+        datos = self.datos_registro(f"docente@{settings.DOMINIO_INSTITUCIONAL}")
+
+        response, logs, salida = self.enviar_capturando(REGISTRO_URL, datos)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_registro_estudiante_valido(self):
+        datos = self.datos_registro(f"estudiante@{settings.DOMINIO_INSTITUCIONAL}")
+
+        response, logs, salida = self.enviar_capturando(REGISTRO_ESTUDIANTE_URL, datos)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_registro_estudiante_con_otro_dominio(self):
+        datos = self.datos_registro("estudiante@otro-dominio.com")
+
+        response, logs, salida = self.enviar_capturando(REGISTRO_ESTUDIANTE_URL, datos)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_login_correcto(self):
+        user = self.crear_docente_activo()
+        user.set_password(self.CONTRASENA_TRAZABLE)
+        user.save()
+        datos = {"email": user.email, "password": self.CONTRASENA_TRAZABLE, "cliente": "admin-web"}
+
+        response, logs, salida = self.enviar_capturando(LOGIN_URL, datos)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_login_con_credenciales_incorrectas(self):
+        user = self.crear_docente_activo()
+        datos = {"email": user.email, "password": self.CONTRASENA_TRAZABLE, "cliente": "admin-web"}
+
+        response, logs, salida = self.enviar_capturando(LOGIN_URL, datos)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_nueva_contrasena_con_enlace_valido(self):
+        uid, token = generar_uid_token(self.crear_docente_activo())
+        datos = {"uid": uid, "token": token, "password": self.CONTRASENA_TRAZABLE}
+
+        response, logs, salida = self.enviar_capturando(NUEVA_CONTRASENA_URL, datos)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_nueva_contrasena_con_token_invalido(self):
+        uid, _ = generar_uid_token(self.crear_docente_activo())
+        datos = {"uid": uid, "token": "token-inventado", "password": self.CONTRASENA_TRAZABLE}
+
+        response, logs, salida = self.enviar_capturando(NUEVA_CONTRASENA_URL, datos)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertSinContrasena(response, logs, salida)
+
+    def test_nueva_contrasena_debil_no_se_repite_en_el_error(self):
+        # Solo números: la rechaza NumericPasswordValidator y la respuesta trae sus mensajes.
+        self.CONTRASENA_TRAZABLE = "730418562930174856"
+        uid, token = generar_uid_token(self.crear_docente_activo())
+        datos = {"uid": uid, "token": token, "password": self.CONTRASENA_TRAZABLE}
+
+        response, logs, salida = self.enviar_capturando(NUEVA_CONTRASENA_URL, datos)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.data)
+        self.assertSinContrasena(response, logs, salida)
