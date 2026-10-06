@@ -11,3 +11,33 @@ export async function registrarEstudiante(datos: Record<string, string>) {
   const cuerpo: Record<string, string[]> = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, cuerpo }
 }
+
+// Lo que puede responder admin-api: los tokens si sale bien; detail o errores por campo si no.
+export type CuerpoSesion = {
+  access?: string
+  refresh?: string
+  detail?: string
+  email?: string[]
+  password?: string[]
+}
+
+export async function iniciarSesion(datos: Record<string, string>) {
+  const respuesta = await fetch(`${API_URL}/api/auth/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // admin-api exige saber desde qué aplicación se inicia sesión (claim cliente).
+    body: JSON.stringify({ ...datos, cliente: 'user-web' }),
+  })
+  const cuerpo: CuerpoSesion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+export async function renovarTokens(refresh: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  })
+  const cuerpo: CuerpoSesion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}

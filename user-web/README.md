@@ -39,3 +39,9 @@ docker run --rm -p 3001:3001 master-code-user-web
 El registro llama a `admin-api` directamente desde el navegador (admin-api ya permite el origen `http://localhost:3001` por CORS). La URL base es `http://localhost:8000`, o el valor de la variable `VITE_API_URL` si existe; Vite la lee al arrancar o al construir.
 
 Para probar el registro del estudiante: levanta `admin-api` en el puerto 8000 (ver su README), arranca `npm run dev` y abre <http://localhost:3001>. La cuenta queda activa al crearse.
+
+## Inicio de sesión
+
+<http://localhost:3001/login> muestra el inicio de sesión; cualquier otra ruta muestra el registro. Al iniciar sesión se guardan el access y el refresh token en `localStorage`, y la sesión se renueva sola 60 segundos antes de que venza el access (también tras recargar la página). Si la renovación falla, la sesión se borra.
+
+Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://localhost:3001> (la cuenta del estudiante queda activa) e inicia sesión en `/login`.

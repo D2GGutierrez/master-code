@@ -59,6 +59,9 @@ function RegistroEstudiante() {
           onEnviar={registrar}
         />
       )}
+      <p>
+        <a href="/login">¿Ya tienes cuenta? Inicia sesión</a>
+      </p>
     </main>
   )
 }
