@@ -1,0 +1,20 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB}?currentSchema=app_schema
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  flyway:
+    # infra ya crea app_schema; Flyway solo guarda aquí su historial.
+    schemas: app_schema
+    default-schema: app_schema
+  jpa:
+    # El esquema lo cambian solo las migraciones de Flyway, nunca Hibernate.
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: app_schema

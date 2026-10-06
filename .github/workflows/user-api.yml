@@ -1,0 +1,35 @@
+name: user-api
+
+# Se filtra por carpeta porque ya no hay chequeos obligatorios: así no corre por cambios de otras carpetas.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "user-api/**"
+      - ".github/workflows/user-api.yml"
+  pull_request:
+    paths:
+      - "user-api/**"
+      - ".github/workflows/user-api.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: user-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Sin pruebas todavía: verify solo compila y empaqueta, por eso no hace falta PostgreSQL.
+      - name: Compilar
+        run: ./mvnw -B verify
+
+      - name: Construir imagen
+        run: docker build -t master-code-user-api .
