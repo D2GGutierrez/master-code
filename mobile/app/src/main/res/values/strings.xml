@@ -2,4 +2,12 @@
     <string name="app_name">Master Code</string>
     <string name="inicio_toques">Toques: %1$d</string>
     <string name="inicio_boton_tocar">Tocar</string>
+    <string name="login_titulo">Iniciar sesión</string>
+    <string name="login_correo">Correo</string>
+    <string name="login_contrasena">Contraseña</string>
+    <string name="login_boton">Ingresar</string>
+    <string name="login_error_credenciales">Correo o contraseña incorrectos.</string>
+    <string name="login_error_pendiente">Tu cuenta está pendiente de activación por el administrador.</string>
+    <string name="login_error_conexion">No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</string>
+    <string name="login_error_inesperado">Ocurrió un error inesperado. Inténtalo más tarde.</string>
 </resources>

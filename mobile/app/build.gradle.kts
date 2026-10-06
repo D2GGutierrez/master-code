@@ -18,7 +18,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 10.0.2.2 es la PC anfitriona vista desde el emulador de Android.
+            buildConfigField("String", "ADMIN_API_URL", "\"http://10.0.2.2:8000/\"")
+        }
         release {
+            // Pendiente: todavía no hay URL de producción de admin-api.
+            buildConfigField("String", "ADMIN_API_URL", "\"\"")
             optimization {
                 enable = false
             }
@@ -30,6 +36,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -44,4 +51,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
