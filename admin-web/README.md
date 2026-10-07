@@ -74,3 +74,5 @@ Para probar la expiración: inicia sesión, cambia a mano los valores de `access
 ## Cerrar sesión
 
 Con sesión guardada, todas las pantallas salvo `/login` muestran arriba a la derecha el botón «Cerrar sesión». Al pulsarlo se envía el refresh a `admin-api` (`/api/auth/logout/`) para revocarlo, se borran los tokens y la ruta recordada, y se va a `/login`. Si `admin-api` no responde, la sesión del navegador se cierra igual. El access ya emitido sigue valiendo hasta que vence (15 minutos).
+
+En `/cursos` la tabla muestra 10 cursos por página (se pagina en el navegador, porque `admin-api` devuelve la lista completa) y, si el docente no tiene cursos, un mensaje con el vínculo «Crear mi primer curso».
