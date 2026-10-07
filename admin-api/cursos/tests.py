@@ -14,7 +14,8 @@ CURSOS_URL = "/api/cursos/"
 CONTRASENA = "Clave-Falsa-2026"
 
 
-class CrearCursoTests(TestCase):
+# Preparación común a las pruebas de crear y de buscar cursos.
+class CursosTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
 
@@ -35,6 +36,8 @@ class CrearCursoTests(TestCase):
         _, access = crear_tokens(docente.user, "admin-web")
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
+
+class CrearCursoTests(CursosTestCase):
     def test_sin_nombre_devuelve_error_en_nombre_y_no_guarda(self):
         self.autenticar(self.crear_docente("docente-a"))
 
@@ -102,3 +105,32 @@ class CrearCursoTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Curso.objects.get().docente, docente_a)
         self.assertEqual(Curso.objects.filter(docente=docente_b).count(), 0)
+
+
+# HU11 T4: búsqueda por nombre en el listado de cursos.
+class BuscarCursosTests(CursosTestCase):
+    def setUp(self):
+        super().setUp()
+        docente_a = self.crear_docente("docente-a")
+        docente_b = self.crear_docente("docente-b")
+        for nombre in ["Python básico", "python avanzado", "Java"]:
+            Curso.objects.create(docente=docente_a, nombre=nombre, lenguaje=LENGUAJES[0])
+        Curso.objects.create(docente=docente_b, nombre="Python de otro docente", lenguaje=LENGUAJES[0])
+        self.autenticar(docente_a)
+
+    def nombres_encontrados(self, busqueda):
+        response = self.client.get(CURSOS_URL, {"search": busqueda})
+        self.assertEqual(response.status_code, 200)
+        return sorted(curso["nombre"] for curso in response.data)
+
+    def test_coincidencia_parcial(self):
+        self.assertEqual(self.nombres_encontrados("pyth"), ["Python básico", "python avanzado"])
+
+    def test_no_distingue_mayusculas(self):
+        self.assertEqual(self.nombres_encontrados("PYTHON"), ["Python básico", "python avanzado"])
+
+    def test_sin_coincidencias_devuelve_lista_vacia(self):
+        self.assertEqual(self.nombres_encontrados("ruby"), [])
+
+    def test_curso_de_otro_docente_que_coincide_no_aparece(self):
+        self.assertNotIn("Python de otro docente", self.nombres_encontrados("python"))

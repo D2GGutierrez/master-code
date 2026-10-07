@@ -1,4 +1,5 @@
 from django.db.models import Count
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
@@ -9,6 +10,10 @@ from cursos.serializers import CursoListaSerializer, CursoSerializer
 
 class CursosView(ListCreateAPIView):
     permission_classes = [IsAuthenticated, EsDocente]
+    # ?search= busca por nombre (parcial, sin distinguir mayúsculas). Se aplica sobre
+    # get_queryset, que ya filtra por el docente del token: nunca ve cursos ajenos.
+    filter_backends = [SearchFilter]
+    search_fields = ["nombre"]
 
     def get_queryset(self):
         # annotate cuenta los problemas en la misma consulta (COUNT + GROUP BY), no una por curso.
