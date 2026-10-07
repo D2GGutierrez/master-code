@@ -7,3 +7,14 @@ export async function listarCursos() {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// datos: { nombre, lenguaje }. El docente no se envía: admin-api lo toma del token.
+export async function crearCurso(datos) {
+  const respuesta = await peticion('/api/cursos/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}

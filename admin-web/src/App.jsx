@@ -1,5 +1,6 @@
 import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
+import NuevoCurso from './pages/NuevoCurso.jsx'
 import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
 
@@ -15,6 +16,9 @@ function App() {
   }
   if (ruta === '/cursos') {
     return <MisCursos />
+  }
+  if (ruta === '/cursos/nuevo') {
+    return <NuevoCurso />
   }
   return <RegistroDocente />
 }

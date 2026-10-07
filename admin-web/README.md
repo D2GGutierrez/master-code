@@ -56,3 +56,7 @@ Para probar el flujo sin enviar correos reales, levanta `admin-api` con `EMAIL_B
 ## Mis cursos
 
 <http://localhost:3000/cursos> muestra la tabla con los cursos del docente con sesión (nombre, lenguaje y cantidad de problemas), cargada con `peticion`. Necesita los tokens guardados en `localStorage` (claves `access` y `refresh`); mientras no exista la pantalla de login, se obtienen con el login de `admin-api` y se guardan a mano desde la consola del navegador.
+
+## Nuevo curso
+
+<http://localhost:3000/cursos/nuevo> muestra el formulario para crear un curso (nombre y lenguaje: Python, Java o JavaScript). Usa `peticion`, así que necesita los tokens en `localStorage`, igual que `/cursos`. El docente dueño del curso lo decide `admin-api` a partir del token.

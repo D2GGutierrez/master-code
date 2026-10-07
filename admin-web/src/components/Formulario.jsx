@@ -20,14 +20,32 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar }) {
       {campos.map((campo) => (
         <div key={campo.nombre} className="campo">
           <label htmlFor={campo.nombre}>{campo.etiqueta}</label>
-          <input
-            id={campo.nombre}
-            name={campo.nombre}
-            type={campo.tipo}
-            value={valores[campo.nombre] ?? ''}
-            onChange={manejarCambio}
-            required
-          />
+          {campo.tipo === 'select' ? (
+            <select
+              id={campo.nombre}
+              name={campo.nombre}
+              value={valores[campo.nombre] ?? ''}
+              onChange={manejarCambio}
+              required
+            >
+              {/* Opción vacía: con required obliga a elegir una de verdad. */}
+              <option value="">Selecciona…</option>
+              {campo.opciones.map((opcion) => (
+                <option key={opcion.valor} value={opcion.valor}>
+                  {opcion.etiqueta}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id={campo.nombre}
+              name={campo.nombre}
+              type={campo.tipo}
+              value={valores[campo.nombre] ?? ''}
+              onChange={manejarCambio}
+              required
+            />
+          )}
           {errores[campo.nombre] && <p className="error">{errores[campo.nombre]}</p>}
         </div>
       ))}
