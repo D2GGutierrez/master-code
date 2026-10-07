@@ -27,6 +27,19 @@ export async function iniciarSesion(datos) {
   return { ok: respuesta.ok, cuerpo }
 }
 
+// Usa fetch y no peticion: con el access vencido, peticion renovaría (rotando este mismo refresh)
+// o, si falla, llevaría al login guardando una ruta, y aquí solo se quiere revocar.
+export async function cerrarSesionEnServidor(refresh) {
+  const respuesta = await fetch(`${API_URL}/logout/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  })
+  // admin-api responde 204 sin cuerpo: queda vacío en vez de fallar.
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
 export async function solicitarRecuperacion(correo) {
   const respuesta = await fetch(`${API_URL}/recuperar/`, {
     method: 'POST',

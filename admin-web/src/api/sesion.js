@@ -17,6 +17,11 @@ export function borrarTokens() {
   localStorage.removeItem('refresh')
 }
 
+// Basta con el refresh: con él se puede renovar el access aunque haya vencido.
+export function haySesion() {
+  return leerRefresh() !== null
+}
+
 // sessionStorage: la ruta se recuerda solo en esta pestaña.
 const CLAVE_RUTA = 'rutaAntesDelLogin'
 
@@ -37,6 +42,10 @@ export function irAlLogin() {
 
 export function hayRutaGuardada() {
   return sessionStorage.getItem(CLAVE_RUTA) !== null
+}
+
+export function borrarRutaGuardada() {
+  sessionStorage.removeItem(CLAVE_RUTA)
 }
 
 // Devuelve la ruta a la que volver tras iniciar sesión y la borra, para usarla una sola vez.

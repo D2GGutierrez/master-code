@@ -1,3 +1,5 @@
+import { haySesion } from './api/sesion.js'
+import BotonCerrarSesion from './components/BotonCerrarSesion.jsx'
 import InicioSesion from './pages/InicioSesion.jsx'
 import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
@@ -7,8 +9,7 @@ import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
 
 // Sin enrutador todavía: la pantalla se elige por la ruta de la URL.
-function App() {
-  const ruta = window.location.pathname
+function pantalla(ruta) {
   if (ruta === '/olvide-contrasena') {
     return <OlvideContrasena />
   }
@@ -29,6 +30,20 @@ function App() {
     return <InicioSesion />
   }
   return <RegistroDocente />
+}
+
+function App() {
+  const ruta = window.location.pathname
+  return (
+    <>
+      {haySesion() && ruta !== '/login' && (
+        <header style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <BotonCerrarSesion />
+        </header>
+      )}
+      {pantalla(ruta)}
+    </>
+  )
 }
 
 export default App
