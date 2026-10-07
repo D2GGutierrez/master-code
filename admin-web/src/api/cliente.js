@@ -1,4 +1,4 @@
-import { borrarTokens, guardarTokens, leerAccess, leerRefresh } from './sesion.js'
+import { guardarTokens, irAlLogin, leerAccess, leerRefresh } from './sesion.js'
 
 // Ruta relativa: en desarrollo el proxy de Vite la reenvía a admin-api.
 export const API_URL = '/api/auth'
@@ -21,7 +21,8 @@ async function renovar() {
       return true
     }
   }
-  borrarTokens()
+  // Sin refresh o rechazado: la sesión expiró del todo.
+  irAlLogin()
   return false
 }
 

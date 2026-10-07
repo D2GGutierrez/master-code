@@ -1,3 +1,4 @@
+import InicioSesion from './pages/InicioSesion.jsx'
 import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
 import NuevoCurso from './pages/NuevoCurso.jsx'
@@ -19,6 +20,9 @@ function App() {
   }
   if (ruta === '/cursos/nuevo') {
     return <NuevoCurso />
+  }
+  if (ruta === '/login') {
+    return <InicioSesion />
   }
   return <RegistroDocente />
 }

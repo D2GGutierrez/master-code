@@ -60,3 +60,9 @@ Para probar el flujo sin enviar correos reales, levanta `admin-api` con `EMAIL_B
 ## Nuevo curso
 
 <http://localhost:3000/cursos/nuevo> muestra el formulario para crear un curso (nombre y lenguaje: Python, Java o JavaScript). Usa `peticion`, así que necesita los tokens en `localStorage`, igual que `/cursos`. El docente dueño del curso lo decide `admin-api` a partir del token.
+
+## Inicio de sesión y sesión expirada
+
+<http://localhost:3000/login> inicia la sesión del docente y lleva a `/cursos`. Si la sesión expira del todo (el refresh venció o fue rechazado), cualquier pantalla que use `peticion` borra la sesión, recuerda la ruta en `sessionStorage` y lleva a `/login` con un aviso; al volver a entrar, regresa a esa ruta.
+
+Para probar la expiración: inicia sesión, cambia a mano los valores de `access` y `refresh` en `localStorage` (herramientas del navegador) y abre `/cursos`.
