@@ -1,3 +1,4 @@
+import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
 import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
@@ -11,6 +12,9 @@ function App() {
   // admin-api arma el enlace del correo con esta ruta.
   if (ruta === '/nueva-contrasena') {
     return <NuevaContrasena />
+  }
+  if (ruta === '/cursos') {
+    return <MisCursos />
   }
   return <RegistroDocente />
 }

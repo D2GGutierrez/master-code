@@ -52,3 +52,7 @@ const respuesta = await peticion('/api/<ruta>/', { method: 'GET' }) // <ruta> es
 - <http://localhost:3000/nueva-contrasena?uid=...&token=...>: la abre el enlace del correo; pide la contraseña dos veces y la guarda.
 
 Para probar el flujo sin enviar correos reales, levanta `admin-api` con `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend`: el correo, con el enlace, aparece en su consola. El enlace vence en 30 minutos y sirve una sola vez.
+
+## Mis cursos
+
+<http://localhost:3000/cursos> muestra la tabla con los cursos del docente con sesión (nombre, lenguaje y cantidad de problemas), cargada con `peticion`. Necesita los tokens guardados en `localStorage` (claves `access` y `refresh`); mientras no exista la pantalla de login, se obtienen con el login de `admin-api` y se guardan a mano desde la consola del navegador.
