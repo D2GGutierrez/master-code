@@ -20,7 +20,16 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar }) {
       {campos.map((campo) => (
         <div key={campo.nombre} className="campo">
           <label htmlFor={campo.nombre}>{campo.etiqueta}</label>
-          {campo.tipo === 'select' ? (
+          {/* Un campo puede traer su propio componente (p. ej. un editor) si no es un input. */}
+          {campo.componente ? (
+            <campo.componente
+              id={campo.nombre}
+              etiqueta={campo.etiqueta}
+              valor={valores[campo.nombre] ?? ''}
+              // Forma funcional: el componente puede guardar este callback de un render anterior.
+              onCambio={(valor) => setValores((anteriores) => ({ ...anteriores, [campo.nombre]: valor }))}
+            />
+          ) : campo.tipo === 'select' ? (
             <select
               id={campo.nombre}
               name={campo.nombre}

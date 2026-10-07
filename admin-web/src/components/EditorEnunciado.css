@@ -1,0 +1,17 @@
+.editor-barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.editor-barra button[aria-pressed='true'] {
+  font-weight: bold;
+}
+
+/* Sin borde, el área editable no se distingue del resto de la página. */
+.editor-contenido {
+  border: 1px solid #767676;
+  min-height: 8rem;
+  padding: 0.5rem;
+}

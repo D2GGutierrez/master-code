@@ -66,3 +66,7 @@ Para probar el flujo sin enviar correos reales, levanta `admin-api` con `EMAIL_B
 <http://localhost:3000/login> inicia la sesión del docente y lleva a `/cursos`. Si la sesión expira del todo (el refresh venció o fue rechazado), cualquier pantalla que use `peticion` borra la sesión, recuerda la ruta en `sessionStorage` y lleva a `/login` con un aviso; al volver a entrar, regresa a esa ruta.
 
 Para probar la expiración: inicia sesión, cambia a mano los valores de `access` y `refresh` en `localStorage` (herramientas del navegador) y abre `/cursos`.
+
+## Nuevo problema
+
+<http://localhost:3000/problemas/nuevo> crea un problema en uno de los cursos del docente: curso, título, enunciado (editor Tiptap con negrita, cursiva, título, listas y bloque de código; se guarda como HTML), lenguaje y dificultad. Necesita sesión: entra antes por `/login`.
