@@ -23,6 +23,8 @@ class CrearProblemaTests(CursosTestCase):
             "enunciado": "Lee dos enteros e imprime su suma.",
             "lenguaje": LENGUAJES[0],
             "dificultad": DIFICULTADES[0],
+            "plataforma": Problema.Plataforma.WEB,
+            "tipo_ejercicio": Problema.TipoEjercicio.ESCRITURA_CODIGO,
         }
 
     def test_sin_enunciado_devuelve_error_en_enunciado_y_no_guarda(self):

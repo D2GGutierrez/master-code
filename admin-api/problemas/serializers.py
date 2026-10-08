@@ -13,6 +13,17 @@ class ProblemaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Problema
-        fields = ["id", "curso", "titulo", "enunciado", "lenguaje", "dificultad", "fecha_creacion"]
+        # plataforma y tipo_ejercicio se validan con los choices del modelo.
+        fields = [
+            "id",
+            "curso",
+            "titulo",
+            "enunciado",
+            "lenguaje",
+            "dificultad",
+            "plataforma",
+            "tipo_ejercicio",
+            "fecha_creacion",
+        ]
         # curso sale de la URL en la vista: si el cuerpo lo trae, se ignora.
         read_only_fields = ["curso"]
