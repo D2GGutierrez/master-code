@@ -1,6 +1,12 @@
 server:
   port: 8081
 
+# No van bajo spring.security.oauth2: el JwtDecoder se arma a mano en SeguridadConfig.
+jwt:
+  jwks-uri: ${JWKS_URI:http://localhost:8000/.well-known/jwks.json}
+  # Debe ser igual al ISSUER de SIMPLE_JWT en admin-api.
+  issuer: ${JWT_ISSUER:master-code-admin-api}
+
 spring:
   datasource:
     # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).
