@@ -1,9 +1,9 @@
 from django.db.models import Count
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from cuentas.permissions import EsDocente
+from cuentas.permissions import EsDocente, EsPropietario
 from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
 
@@ -33,3 +33,11 @@ class CursosView(ListCreateAPIView):
     def perform_create(self, serializer):
         # El dueño sale del token y no del cuerpo, para que nadie cree cursos a nombre de otro docente.
         serializer.save(docente=self.request.user.docente)
+
+
+class EditarCursoView(UpdateAPIView):
+    # Todos los cursos: así uno ajeno da 403 (EsPropietario) y uno inexistente 404.
+    queryset = Curso.objects.all()
+    # Mismas validaciones que al crear; docente no está en sus campos, así que no se puede cambiar.
+    serializer_class = CursoSerializer
+    permission_classes = [IsAuthenticated, EsDocente, EsPropietario]
