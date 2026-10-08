@@ -22,7 +22,7 @@ from cuentas.serializers import (
     RegistroDocenteSerializer,
     RegistroEstudianteSerializer,
 )
-from cuentas.tokens import crear_tokens
+from cuentas.tokens import crear_tokens, jwk_publico
 
 logger = logging.getLogger(__name__)
 
@@ -176,3 +176,21 @@ class NuevaContrasenaView(APIView):
         user.set_password(datos["password"])
         user.save()
         return Response({"detail": "Tu contraseña se actualizó."})
+
+
+class JwksView(APIView):
+    # Pública: user-api la descarga de servidor a servidor para verificar los tokens (ADR-4).
+    # Solo expone la clave pública.
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        try:
+            jwk = jwk_publico(settings.SIMPLE_JWT["VERIFYING_KEY"])
+        except (ValueError, TypeError) as error:
+            # Falla cerrado: un JWKS vacío con 200 haría que user-api rechace todo sin saber por qué.
+            logger.error("No se pudo publicar el JWKS: %s", type(error).__name__)
+            return Response(
+                {"detail": "Clave pública no disponible."}, status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        return Response({"keys": [jwk]}, headers={"Cache-Control": "public, max-age=300"})
