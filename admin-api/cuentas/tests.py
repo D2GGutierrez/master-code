@@ -11,14 +11,19 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.utils import aware_utcnow
 
 from cuentas.models import Docente
 from cuentas.recuperacion import generar_uid_token
+from cuentas.tokens import crear_tokens
 
 REGISTRO_URL = "/api/auth/registro/docente/"
 REGISTRO_ESTUDIANTE_URL = "/api/auth/registro/estudiante/"
 LOGIN_URL = "/api/auth/login/"
 NUEVA_CONTRASENA_URL = "/api/auth/nueva-contrasena/"
+REFRESH_URL = "/api/auth/refresh/"
+# Endpoint protegido (IsAuthenticated + EsDocente) para probar el access token.
+CURSOS_URL = "/api/cursos/"
 CONTRASENA = "Clave-Falsa-2026"
 
 
@@ -324,3 +329,85 @@ class SinContrasenasEnLogsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("password", response.data)
         self.assertSinContrasena(response, logs, salida)
+
+
+# CA-002.2: la sesión se renueva con el refresh. CA-002.3: las peticiones usan el access vigente.
+class ExpiracionYRenovacionTests(TestCase):
+    ACCESS = settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"]
+    REFRESH = settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]
+    UN_MINUTO = timedelta(minutes=1)
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def crear_docente_activo(self):
+        email = f"docente@{settings.DOMINIO_INSTITUCIONAL}"
+        user = User.objects.create_user(
+            username=email, email=email, password=CONTRASENA, is_active=True
+        )
+        Docente.objects.create(
+            user=user,
+            nombre="Docente de Prueba",
+            email=email,
+            institucion=settings.DOMINIO_INSTITUCIONAL,
+        )
+        return user
+
+    def emitir_tokens(self, user, hace=timedelta(0)):
+        # Se atrasa el reloj de simplejwt solo al emitir: el token nace con iat y exp en el
+        # pasado y después se valida con el reloj real, como si hubiera pasado ese tiempo.
+        emitido = aware_utcnow() - hace
+        with patch(
+            "rest_framework_simplejwt.tokens.aware_utcnow", return_value=emitido
+        ):
+            return crear_tokens(user, "admin-web")
+
+    def pedir_cursos(self, access):
+        return self.client.get(CURSOS_URL, HTTP_AUTHORIZATION=f"Bearer {access}")
+
+    def test_access_vigente_permite_entrar(self):
+        _, access = self.emitir_tokens(self.crear_docente_activo())
+
+        response = self.pedir_cursos(access)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_access_vencido_se_rechaza_con_401(self):
+        _, access = self.emitir_tokens(
+            self.crear_docente_activo(), hace=self.ACCESS + self.UN_MINUTO
+        )
+
+        response = self.pedir_cursos(access)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["code"], "token_not_valid")
+
+    def test_access_vencido_se_renueva_con_el_refresh_vigente(self):
+        # Pasó lo justo para vencer el access, pero el refresh (más largo) sigue vigente.
+        self.assertGreater(self.REFRESH, self.ACCESS + self.UN_MINUTO)
+        refresh, access = self.emitir_tokens(
+            self.crear_docente_activo(), hace=self.ACCESS + self.UN_MINUTO
+        )
+        self.assertEqual(self.pedir_cursos(access).status_code, 401)
+
+        renovacion = self.client.post(REFRESH_URL, {"refresh": refresh}, format="json")
+
+        self.assertEqual(renovacion.status_code, 200)
+        self.assertNotEqual(renovacion.data["access"], access)
+        self.assertEqual(self.pedir_cursos(renovacion.data["access"]).status_code, 200)
+        # Rotación: llega un refresh nuevo y el anterior ya no sirve.
+        self.assertNotEqual(renovacion.data["refresh"], refresh)
+        reuso = self.client.post(REFRESH_URL, {"refresh": refresh}, format="json")
+        self.assertEqual(reuso.status_code, 401)
+
+    def test_refresh_vencido_no_renueva_ni_entrega_tokens(self):
+        refresh, _ = self.emitir_tokens(
+            self.crear_docente_activo(), hace=self.REFRESH + self.UN_MINUTO
+        )
+
+        response = self.client.post(REFRESH_URL, {"refresh": refresh}, format="json")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["detail"], "La sesión no es válida o ya venció.")
+        self.assertNotIn("access", response.data)
+        self.assertNotIn("refresh", response.data)
