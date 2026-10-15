@@ -1,7 +1,10 @@
-from django.db.models import Count
+from django.db.models import Count, ProtectedError
+from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, UpdateAPIView
+from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from cuentas.permissions import EsDocente, EsPropietario
 from cursos.models import Curso
@@ -35,9 +38,23 @@ class CursosView(ListCreateAPIView):
         serializer.save(docente=self.request.user.docente)
 
 
-class EditarCursoView(UpdateAPIView):
+class EditarCursoView(DestroyModelMixin, UpdateAPIView):
     # Todos los cursos: así uno ajeno da 403 (EsPropietario) y uno inexistente 404.
     queryset = Curso.objects.all()
     # Mismas validaciones que al crear; docente no está en sus campos, así que no se puede cambiar.
     serializer_class = CursoSerializer
     permission_classes = [IsAuthenticated, EsDocente, EsPropietario]
+
+    def delete(self, request, *args, **kwargs):
+        # El mixin da destroy, pero UpdateAPIView no expone el método DELETE.
+        return self.destroy(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            # PROTECT en Problema.curso (HU12 T1): sin esto, DRF respondería un 500.
+            return Response(
+                {"detail": "No se puede eliminar el curso porque ya tiene problemas creados."},
+                status=status.HTTP_409_CONFLICT,
+            )
