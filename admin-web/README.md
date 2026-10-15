@@ -78,3 +78,5 @@ Con sesión guardada, todas las pantallas salvo `/login` muestran arriba a la de
 En `/cursos` la tabla muestra 10 cursos por página (se pagina en el navegador, porque `admin-api` devuelve la lista completa) y, si el docente no tiene cursos, un mensaje con el vínculo «Crear mi primer curso».
 
 El buscador de `/cursos` filtra por nombre al pulsar «Buscar» o Enter (envía `?search=` a `admin-api`; coincidencia parcial y sin distinguir mayúsculas) y «Limpiar» vuelve a la lista completa.
+
+La columna «Acciones» de `/cursos` tiene «Eliminar», con confirmación en la misma fila. Si `admin-api` bloquea el borrado (409, el curso tiene problemas), su mensaje se muestra en un aviso informativo azul, no como error.

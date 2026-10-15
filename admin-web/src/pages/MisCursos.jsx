@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
-import { listarCursos } from '../api/cursos.js'
+import { eliminarCurso, listarCursos } from '../api/cursos.js'
+import Aviso from '../components/Aviso.jsx'
 import Paginacion from '../components/Paginacion.jsx'
 
 const ERROR_GENERAL = 'No se pudieron cargar tus cursos. Inténtalo de nuevo.'
+const ERROR_ELIMINAR = 'No se pudo eliminar el curso. Inténtalo de nuevo.'
+const MOTIVO_409 = 'No se puede eliminar este curso porque tiene problemas asociados.'
 // admin-api devuelve todos los cursos de una vez: la tabla se pagina en el navegador.
 const CURSOS_POR_PAGINA = 10
 
@@ -14,6 +17,13 @@ function MisCursos() {
   // texto: lo que hay en el campo; busqueda: el término ya aplicado al pulsar «Buscar».
   const [texto, setTexto] = useState('')
   const [busqueda, setBusqueda] = useState('')
+  // id del curso cuya fila pide confirmación (solo una a la vez) o null.
+  const [confirmando, setConfirmando] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const [errorEliminar, setErrorEliminar] = useState('')
+  // Cambiarlo vuelve a ejecutar el efecto de carga sin tocar la búsqueda aplicada.
+  const [recargas, setRecargas] = useState(0)
 
   useEffect(() => {
     // Si cambia la búsqueda o se sale de la pantalla antes de la respuesta, esa respuesta se descarta.
@@ -44,7 +54,37 @@ function MisCursos() {
     return () => {
       activo = false
     }
-  }, [busqueda])
+  }, [busqueda, recargas])
+
+  function pedirConfirmacion(id) {
+    setAviso('')
+    setErrorEliminar('')
+    setConfirmando(id)
+  }
+
+  async function eliminar(id) {
+    setEliminando(true)
+    try {
+      const { ok, status, cuerpo } = await eliminarCurso(id)
+      if (ok) {
+        setAviso('Curso eliminado.')
+        setPagina(1)
+        setRecargas(recargas + 1)
+      } else if (status === 409) {
+        // El 409 es una regla del negocio, no una falla: va en el aviso informativo, con el texto del servidor.
+        setAviso(cuerpo.detail || MOTIVO_409)
+      } else {
+        setErrorEliminar(ERROR_ELIMINAR)
+        // Recarga por si el curso ya no existe (404).
+        setRecargas(recargas + 1)
+      }
+    } catch {
+      setErrorEliminar(ERROR_ELIMINAR)
+    } finally {
+      setEliminando(false)
+      setConfirmando(null)
+    }
+  }
 
   function aplicarBusqueda(termino) {
     // Vuelve a la página 1: la página actual puede no existir en el nuevo resultado.
@@ -96,6 +136,7 @@ function MisCursos() {
               <th scope="col">Nombre</th>
               <th scope="col">Lenguaje</th>
               <th scope="col">Problemas</th>
+              <th scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -104,6 +145,23 @@ function MisCursos() {
                 <td>{curso.nombre}</td>
                 <td>{curso.lenguaje}</td>
                 <td>{curso.cantidad_problemas}</td>
+                <td>
+                  {confirmando === curso.id ? (
+                    <>
+                      ¿Eliminar “{curso.nombre}”?{' '}
+                      <button type="button" disabled={eliminando} onClick={() => eliminar(curso.id)}>
+                        Sí, eliminar
+                      </button>{' '}
+                      <button type="button" disabled={eliminando} onClick={() => setConfirmando(null)}>
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" disabled={eliminando} onClick={() => pedirConfirmacion(curso.id)}>
+                      Eliminar
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -134,6 +192,9 @@ function MisCursos() {
           )}
         </form>
       )}
+      {/* Encima del contenido: siguen a la vista aunque la lista quede vacía tras eliminar. */}
+      <Aviso mensaje={aviso} />
+      {errorEliminar && <p>{errorEliminar}</p>}
       {contenido}
     </main>
   )
