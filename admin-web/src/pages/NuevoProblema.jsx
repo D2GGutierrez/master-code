@@ -15,6 +15,17 @@ const DIFICULTADES = [
   { valor: 'medio', etiqueta: 'Medio' },
   { valor: 'dificil', etiqueta: 'Difícil' },
 ]
+const PLATAFORMAS = [
+  { valor: 'web', etiqueta: 'Web' },
+  { valor: 'movil', etiqueta: 'Móvil' },
+  { valor: 'ambas', etiqueta: 'Ambas' },
+]
+const TIPOS_EJERCICIO = [
+  { valor: 'escritura_codigo', etiqueta: 'Escritura de código' },
+  { valor: 'prediccion_salida', etiqueta: 'Predecir la salida' },
+  { valor: 'opcion_multiple', etiqueta: 'Opción múltiple' },
+  { valor: 'completar_espacio', etiqueta: 'Completar espacio' },
+]
 
 // admin-api responde los errores como { campo: ['mensaje', ...] }.
 function erroresDelServidor(campos, cuerpo) {
@@ -78,6 +89,8 @@ function NuevoProblema() {
     { nombre: 'enunciado', etiqueta: 'Enunciado', componente: EditorEnunciado },
     { nombre: 'lenguaje', etiqueta: 'Lenguaje de programación', tipo: 'select', opciones: LENGUAJES },
     { nombre: 'dificultad', etiqueta: 'Dificultad', tipo: 'select', opciones: DIFICULTADES },
+    { nombre: 'plataforma', etiqueta: 'Plataforma', tipo: 'select', opciones: PLATAFORMAS },
+    { nombre: 'tipo_ejercicio', etiqueta: 'Tipo de ejercicio', tipo: 'select', opciones: TIPOS_EJERCICIO },
   ]
 
   async function crear(valores) {
@@ -136,6 +149,8 @@ function NuevoProblema() {
         enviando={enviando}
         errores={errores}
         onEnviar={crear}
+        // admin-api no tiene valor por defecto: se parte de la combinación del flujo actual.
+        valoresIniciales={{ plataforma: 'web', tipo_ejercicio: 'escritura_codigo' }}
       />
     )
   }

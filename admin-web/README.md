@@ -69,7 +69,7 @@ Para probar la expiración: inicia sesión, cambia a mano los valores de `access
 
 ## Nuevo problema
 
-<http://localhost:3000/problemas/nuevo> crea un problema en uno de los cursos del docente: curso, título, enunciado (editor Tiptap con negrita, cursiva, título, listas y bloque de código; se guarda como HTML), lenguaje y dificultad. Necesita sesión: entra antes por `/login`.
+<http://localhost:3000/problemas/nuevo> crea un problema en uno de los cursos del docente: curso, título, enunciado (editor Tiptap con negrita, cursiva, título, listas y bloque de código; se guarda como HTML), lenguaje, dificultad, plataforma (Web, Móvil o Ambas; por defecto Web) y tipo de ejercicio (por defecto Escritura de código). Necesita sesión: entra antes por `/login`.
 
 ## Cerrar sesión
 

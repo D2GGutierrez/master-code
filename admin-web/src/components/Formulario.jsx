@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import './Formulario.css'
 
-function Formulario({ campos, textoBoton, enviando, errores, onEnviar }) {
-  const [valores, setValores] = useState({})
+function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales }) {
+  const [valores, setValores] = useState(valoresIniciales ?? {})
 
   function manejarCambio(evento) {
     setValores({ ...valores, [evento.target.name]: evento.target.value })
