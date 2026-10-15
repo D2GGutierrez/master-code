@@ -21,6 +21,17 @@ export async function crearCurso(datos) {
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
 
+// PUT: admin-api exige nombre y lenguaje, y el formulario siempre envía los dos.
+export async function actualizarCurso(id, datos) {
+  const respuesta = await peticion(`/api/cursos/${id}/`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}
+
 export async function eliminarCurso(id) {
   const respuesta = await peticion(`/api/cursos/${id}/`, { method: 'DELETE' })
   // El 204 llega sin cuerpo: el catch lo deja vacío en vez de fallar.

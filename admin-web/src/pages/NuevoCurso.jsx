@@ -3,7 +3,7 @@ import { crearCurso } from '../api/cursos.js'
 import Formulario from '../components/Formulario.jsx'
 
 // Los valores son la lista fija que acepta admin-api; la etiqueta es solo para mostrar.
-const CAMPOS = [
+export const CAMPOS = [
   { nombre: 'nombre', etiqueta: 'Nombre del curso', tipo: 'text' },
   {
     nombre: 'lenguaje',

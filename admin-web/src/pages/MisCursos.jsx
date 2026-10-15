@@ -146,6 +146,7 @@ function MisCursos() {
                 <td>{curso.lenguaje}</td>
                 <td>{curso.cantidad_problemas}</td>
                 <td>
+                  <a href={`/cursos/${curso.id}/editar`}>Editar</a>{' '}
                   {confirmando === curso.id ? (
                     <>
                       ¿Eliminar “{curso.nombre}”?{' '}

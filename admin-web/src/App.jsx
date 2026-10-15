@@ -1,5 +1,6 @@
 import { haySesion } from './api/sesion.js'
 import BotonCerrarSesion from './components/BotonCerrarSesion.jsx'
+import EditarCurso from './pages/EditarCurso.jsx'
 import InicioSesion from './pages/InicioSesion.jsx'
 import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
@@ -22,6 +23,11 @@ function pantalla(ruta) {
   }
   if (ruta === '/cursos/nuevo') {
     return <NuevoCurso />
+  }
+  // Anclada y solo con dígitos: un id no numérico cae en la pantalla por defecto.
+  const edicion = ruta.match(/^\/cursos\/(\d+)\/editar$/)
+  if (edicion) {
+    return <EditarCurso id={Number(edicion[1])} />
   }
   if (ruta === '/problemas/nuevo') {
     return <NuevoProblema />
