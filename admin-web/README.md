@@ -84,3 +84,5 @@ El buscador de `/cursos` filtra por nombre al pulsar «Buscar» o Enter (envía 
 La columna «Acciones» de `/cursos` tiene «Eliminar», con confirmación en la misma fila. Si `admin-api` bloquea el borrado (409, el curso tiene problemas), su mensaje se muestra en un aviso informativo azul, no como error.
 
 «Editar» lleva a <http://localhost:3000/cursos/ID/editar>: el mismo formulario de «Nuevo curso» con el nombre y el lenguaje actuales; «Guardar cambios» los envía con PUT y vuelve a `/cursos`.
+
+Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sobre `<dialog>`) resume qué cambia; si no cambió nada no se abre y aparece «No hay cambios para guardar.».

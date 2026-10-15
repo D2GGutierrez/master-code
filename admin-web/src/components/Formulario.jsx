@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import './Formulario.css'
 
-function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales }) {
+function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales, onCambio }) {
   const [valores, setValores] = useState(valoresIniciales ?? {})
   // Un campo sin mostrarSi se ve siempre; con mostrarSi, solo cuando devuelve true según los valores actuales.
   const visibles = campos.filter((campo) => !campo.mostrarSi || campo.mostrarSi(valores))
 
   function manejarCambio(evento) {
     setValores({ ...valores, [evento.target.name]: evento.target.value })
+    // Opcional: avisa al padre de que el docente cambió algo (p. ej. para borrar un mensaje).
+    onCambio?.()
   }
 
   function manejarEnvio(evento) {
@@ -36,7 +38,10 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
               etiqueta={campo.etiqueta}
               valor={valores[campo.nombre] ?? ''}
               // Forma funcional: el componente puede guardar este callback de un render anterior.
-              onCambio={(valor) => setValores((anteriores) => ({ ...anteriores, [campo.nombre]: valor }))}
+              onCambio={(valor) => {
+                setValores((anteriores) => ({ ...anteriores, [campo.nombre]: valor }))
+                onCambio?.()
+              }}
             />
           ) : campo.tipo === 'select' ? (
             <select

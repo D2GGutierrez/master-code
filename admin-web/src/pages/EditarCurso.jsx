@@ -1,9 +1,29 @@
 import { useEffect, useState } from 'react'
 import { actualizarCurso, listarCursos } from '../api/cursos.js'
+import Aviso from '../components/Aviso.jsx'
+import Confirmacion from '../components/Confirmacion.jsx'
 import Formulario from '../components/Formulario.jsx'
 import { CAMPOS } from './NuevoCurso.jsx'
 
 const ERROR_GUARDAR = 'No se pudo guardar el curso. Inténtalo de nuevo.'
+const LENGUAJES = CAMPOS.find((campo) => campo.nombre === 'lenguaje').opciones
+
+function etiquetaLenguaje(valor) {
+  return LENGUAJES.find((opcion) => opcion.valor === valor).etiqueta
+}
+
+// Una línea por campo que cambió respecto al curso cargado; vacía si no cambió nada.
+function cambios(curso, valores) {
+  const lista = []
+  // admin-api guarda el nombre sin espacios sobrantes: «Python » no es un cambio.
+  if (valores.nombre.trim() !== curso.nombre) {
+    lista.push(`Nombre: “${curso.nombre}” → “${valores.nombre.trim()}”`)
+  }
+  if (valores.lenguaje !== curso.lenguaje) {
+    lista.push(`Lenguaje: ${etiquetaLenguaje(curso.lenguaje)} → ${etiquetaLenguaje(valores.lenguaje)}`)
+  }
+  return lista
+}
 
 // admin-api responde los errores de validación como { campo: ['mensaje', ...] }.
 function erroresDelServidor(cuerpo) {
@@ -26,6 +46,9 @@ function EditarCurso({ id }) {
   const [noExiste, setNoExiste] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState({})
+  // Valores del formulario al pulsar «Guardar cambios»; mientras no sean null, el cuadro está abierto.
+  const [pendientes, setPendientes] = useState(null)
+  const [sinCambios, setSinCambios] = useState(false)
 
   useEffect(() => {
     // Si se sale de la pantalla antes de la respuesta, no se actualiza un componente desmontado.
@@ -61,11 +84,19 @@ function EditarCurso({ id }) {
     }
   }, [id])
 
-  async function guardar(valores) {
+  function revisar(valores) {
+    const hayCambios = cambios(curso, valores).length > 0
+    setSinCambios(!hayCambios)
+    if (hayCambios) {
+      setPendientes(valores)
+    }
+  }
+
+  async function guardar() {
     setEnviando(true)
     setErrores({})
     try {
-      const { ok, status, cuerpo } = await actualizarCurso(id, valores)
+      const { ok, status, cuerpo } = await actualizarCurso(id, pendientes)
       if (ok) {
         window.location.href = '/cursos'
         // El botón sigue deshabilitado mientras el navegador cambia de página.
@@ -81,6 +112,8 @@ function EditarCurso({ id }) {
     } catch {
       // fetch solo lanza error cuando no hay conexión con el servidor.
       setErrores({ general: ERROR_GUARDAR })
+    } finally {
+      setPendientes(null)
     }
     setEnviando(false)
   }
@@ -99,14 +132,35 @@ function EditarCurso({ id }) {
   } else {
     // Formulario toma los valores iniciales solo al montarse: por eso se monta con el curso ya cargado.
     contenido = (
-      <Formulario
-        campos={CAMPOS}
-        textoBoton="Guardar cambios"
-        enviando={enviando}
-        errores={errores}
-        onEnviar={guardar}
-        valoresIniciales={{ nombre: curso.nombre, lenguaje: curso.lenguaje }}
-      />
+      <>
+        <Aviso mensaje={sinCambios ? 'No hay cambios para guardar.' : ''} />
+        <Formulario
+          campos={CAMPOS}
+          textoBoton="Guardar cambios"
+          enviando={enviando}
+          errores={errores}
+          onEnviar={revisar}
+          valoresIniciales={{ nombre: curso.nombre, lenguaje: curso.lenguaje }}
+          onCambio={() => setSinCambios(false)}
+        />
+        <Confirmacion
+          abierto={pendientes !== null}
+          titulo="¿Guardar los cambios del curso?"
+          textoConfirmar="Sí, guardar"
+          textoCancelar="Seguir editando"
+          enviando={enviando}
+          onConfirmar={guardar}
+          onCancelar={() => setPendientes(null)}
+        >
+          {pendientes && (
+            <ul>
+              {cambios(curso, pendientes).map((linea) => (
+                <li key={linea}>{linea}</li>
+              ))}
+            </ul>
+          )}
+        </Confirmacion>
+      </>
     )
   }
 
