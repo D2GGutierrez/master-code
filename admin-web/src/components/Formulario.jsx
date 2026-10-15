@@ -3,6 +3,8 @@ import './Formulario.css'
 
 function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales }) {
   const [valores, setValores] = useState(valoresIniciales ?? {})
+  // Un campo sin mostrarSi se ve siempre; con mostrarSi, solo cuando devuelve true según los valores actuales.
+  const visibles = campos.filter((campo) => !campo.mostrarSi || campo.mostrarSi(valores))
 
   function manejarCambio(evento) {
     setValores({ ...valores, [evento.target.name]: evento.target.value })
@@ -11,13 +13,20 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
   function manejarEnvio(evento) {
     // Evita que el navegador recargue la página al enviar.
     evento.preventDefault()
-    onEnviar(valores)
+    // Lo escrito en un campo oculto sigue en el estado, pero solo se envían los campos visibles.
+    const enviados = {}
+    for (const campo of visibles) {
+      if (campo.nombre in valores) {
+        enviados[campo.nombre] = valores[campo.nombre]
+      }
+    }
+    onEnviar(enviados)
   }
 
   return (
     <form className="formulario" onSubmit={manejarEnvio}>
       {errores.general && <p className="error">{errores.general}</p>}
-      {campos.map((campo) => (
+      {visibles.map((campo) => (
         <div key={campo.nombre} className="campo">
           <label htmlFor={campo.nombre}>{campo.etiqueta}</label>
           {/* Un campo puede traer su propio componente (p. ej. un editor) si no es un input. */}

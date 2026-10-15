@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listarCursos } from '../api/cursos.js'
 import { crearProblema } from '../api/problemas.js'
+import Aviso from '../components/Aviso.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
 import Formulario from '../components/Formulario.jsx'
 
@@ -26,6 +27,12 @@ const TIPOS_EJERCICIO = [
   { valor: 'opcion_multiple', etiqueta: 'Opción múltiple' },
   { valor: 'completar_espacio', etiqueta: 'Completar espacio' },
 ]
+
+// admin-api aún no guarda la respuesta de ningún tipo (HU16, HU46, HU47): la sección queda reservada
+// y, como nunca recibe un valor, no se envía nada.
+function SeccionPendiente() {
+  return <Aviso mensaje="Esta sección estará disponible próximamente." />
+}
 
 // admin-api responde los errores como { campo: ['mensaje', ...] }.
 function erroresDelServidor(campos, cuerpo) {
@@ -91,6 +98,30 @@ function NuevoProblema() {
     { nombre: 'dificultad', etiqueta: 'Dificultad', tipo: 'select', opciones: DIFICULTADES },
     { nombre: 'plataforma', etiqueta: 'Plataforma', tipo: 'select', opciones: PLATAFORMAS },
     { nombre: 'tipo_ejercicio', etiqueta: 'Tipo de ejercicio', tipo: 'select', opciones: TIPOS_EJERCICIO },
+    {
+      nombre: 'casos_prueba',
+      etiqueta: 'Casos de prueba',
+      componente: SeccionPendiente,
+      mostrarSi: (valores) => valores.tipo_ejercicio === 'escritura_codigo',
+    },
+    {
+      nombre: 'alternativas',
+      etiqueta: 'Alternativas',
+      componente: SeccionPendiente,
+      mostrarSi: (valores) => valores.tipo_ejercicio === 'opcion_multiple',
+    },
+    {
+      nombre: 'salida_esperada',
+      etiqueta: 'Salida esperada',
+      componente: SeccionPendiente,
+      mostrarSi: (valores) => valores.tipo_ejercicio === 'prediccion_salida',
+    },
+    {
+      nombre: 'texto_completar',
+      etiqueta: 'Texto que completa el espacio',
+      componente: SeccionPendiente,
+      mostrarSi: (valores) => valores.tipo_ejercicio === 'completar_espacio',
+    },
   ]
 
   async function crear(valores) {

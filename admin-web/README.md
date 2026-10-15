@@ -71,6 +71,8 @@ Para probar la expiración: inicia sesión, cambia a mano los valores de `access
 
 <http://localhost:3000/problemas/nuevo> crea un problema en uno de los cursos del docente: curso, título, enunciado (editor Tiptap con negrita, cursiva, título, listas y bloque de código; se guarda como HTML), lenguaje, dificultad, plataforma (Web, Móvil o Ambas; por defecto Web) y tipo de ejercicio (por defecto Escritura de código). Necesita sesión: entra antes por `/login`.
 
+Según el tipo de ejercicio se muestra solo su sección de respuesta (casos de prueba, alternativas, salida esperada o texto que completa el espacio); por ahora cada una muestra «Esta sección estará disponible próximamente.». En `Formulario`, un campo con `mostrarSi(valores)` solo se ve y se envía cuando devuelve `true`.
+
 ## Cerrar sesión
 
 Con sesión guardada, todas las pantallas salvo `/login` muestran arriba a la derecha el botón «Cerrar sesión». Al pulsarlo se envía el refresh a `admin-api` (`/api/auth/logout/`) para revocarlo, se borran los tokens y la ruta recordada, y se va a `/login`. Si `admin-api` no responde, la sesión del navegador se cierra igual. El access ya emitido sigue valiendo hasta que vence (15 minutos).
