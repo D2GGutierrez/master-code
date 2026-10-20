@@ -55,3 +55,16 @@ class Problema(models.Model):
                 name="problema_plataforma_tipo_valido",
             )
         ]
+
+
+class CasoPrueba(models.Model):
+    # CASCADE: un caso no tiene sentido sin su problema; si el problema se borra, sus casos también.
+    problema = models.ForeignKey(Problema, on_delete=models.CASCADE, related_name="casos_prueba")
+    # blank=True: algunos programas no reciben entrada.
+    entrada = models.TextField(blank=True)
+    salida_esperada = models.TextField()
+    # False por seguridad: un caso nuevo queda oculto (solo para calificar) salvo que el docente lo publique.
+    es_publico = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "admin_caso_prueba"
