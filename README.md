@@ -30,17 +30,19 @@ Una sola base de datos PostgreSQL con dos schemas: `admin_schema` (lo maneja Dja
 | `infra/` | Configuración de apoyo; por ahora, el SQL que crea los dos schemas. |
 | `docs/` | Decisiones, historias de usuario, criterios de aceptación, flujo de Git y guías. |
 
-## Cómo levantar lo que existe hoy
-
-Solo está la base de datos.
+## Cómo levantar todo
 
 ```
 cp .env.example .env
-docker compose up -d db
-docker compose exec db psql -U mastercode -d mastercode -c "\dn"
+docker compose up -d
 ```
 
-Debe listar los schemas `admin_schema` y `app_schema`. El SQL de `infra/db/init/` solo se ejecuta cuando el volumen está vacío; si lo cambias, hay que recrear el volumen con `docker compose down -v` (borra los datos de la base local).
+Levanta la base y los cinco servicios: `admin-api` en http://localhost:8000, `admin-web` en http://localhost:3000, `user-api` en http://localhost:8081, `user-web` en http://localhost:3001 y `ai-service` en http://localhost:8002 (la base queda en el puerto 5432). admin-api aplica sus migraciones al arrancar y user-api las suyas con Flyway. También sirven `make up`, `make logs` y `make down`.
+
+- Ver logs: `docker compose logs -f admin-api` (o el servicio que quieras).
+- Bajar sin perder datos: `docker compose down`. Los datos quedan en el volumen de la base.
+
+El SQL de `infra/db/init/` solo se ejecuta cuando el volumen está vacío; si lo cambias, hay que recrear el volumen con `docker compose down -v` (borra los datos de la base local).
 
 En Windows, usa `copy .env.example .env` en lugar de `cp`.
 

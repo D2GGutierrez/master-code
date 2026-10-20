@@ -1,5 +1,6 @@
-# Por ahora solo levanta la base de datos.
-# Cada servicio se agrega en su propio habilitador.
+# Levanta todo el sistema: docker compose up -d
+# Dentro de la red los servicios se llaman por su nombre (db, admin-api), no por localhost.
+# Cada servicio recibe solo sus variables: la clave privada JWT solo llega a admin-api.
 services:
   db:
     image: postgres:16
@@ -17,6 +18,74 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  admin-api:
+    build: ./admin-api
+    # El Dockerfile solo arranca el servidor: aquí se migra antes, para que la base esté al día.
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      # admin-api: nombre con el que user-api pide el JWKS; sin él Django responde 400.
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,admin-api
+      DOMINIO_INSTITUCIONAL: ${DOMINIO_INSTITUCIONAL}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # db y 5432: dentro de la red no se usa localhost ni el puerto publicado al PC.
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  admin-web:
+    build: ./admin-web
+    environment:
+      # El proxy de Vite corre dentro del contenedor: su localhost no es admin-api.
+      API_PROXY_TARGET: http://admin-api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - admin-api
+
+  user-api:
+    build: ./user-api
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      # Solo la clave pública, por la red interna (ADR-4).
+      JWKS_URI: http://admin-api:8000/.well-known/jwks.json
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  user-web:
+    build: ./user-web
+    ports:
+      - "3001:3001"
+    depends_on:
+      - user-api
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8002:8002"
 
 volumes:
   db_data:
