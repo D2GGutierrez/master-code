@@ -1,0 +1,42 @@
+name: ai-service
+
+# Se filtra por carpeta porque ya no hay chequeos obligatorios: así no corre por cambios de otras carpetas.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ai-service/**"
+      - ".github/workflows/ai-service.yml"
+  pull_request:
+    paths:
+      - "ai-service/**"
+      - ".github/workflows/ai-service.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ai-service/requirements.txt
+
+      # ruff en la misma versión que admin-api (requirements-dev.txt).
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt ruff==0.17.0
+
+      - name: Ruff
+        run: ruff check
+
+      # Sin pruebas todavía: basta con que la aplicación importe sin errores.
+      - name: Importar la aplicación
+        run: python -c "from app.main import app"
+
+      - name: Construir imagen
+        run: docker build -t master-code-ai-service .
