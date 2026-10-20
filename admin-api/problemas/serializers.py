@@ -1,7 +1,8 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from cursos.serializers import LENGUAJES
-from problemas.models import Problema
+from problemas.models import CasoPrueba, Problema
 
 # Única lista de dificultades permitidas; el modelo guarda texto libre.
 DIFICULTADES = ["facil", "medio", "dificil"]
@@ -22,9 +23,17 @@ COMBINACIONES_IMPOSIBLES = {
 }
 
 
+class CasoPruebaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CasoPrueba
+        # problema no va: lo asigna ProblemaSerializer.create con el problema recién creado.
+        fields = ["id", "entrada", "salida_esperada", "es_publico"]
+
+
 class ProblemaSerializer(serializers.ModelSerializer):
     lenguaje = serializers.ChoiceField(choices=LENGUAJES)
     dificultad = serializers.ChoiceField(choices=DIFICULTADES)
+    casos_prueba = CasoPruebaSerializer(many=True, required=False)
 
     class Meta:
         model = Problema
@@ -39,6 +48,7 @@ class ProblemaSerializer(serializers.ModelSerializer):
             "plataforma",
             "tipo_ejercicio",
             "fecha_creacion",
+            "casos_prueba",
         ]
         # curso sale de la URL en la vista: si el cuerpo lo trae, se ignora.
         read_only_fields = ["curso"]
@@ -49,4 +59,20 @@ class ProblemaSerializer(serializers.ModelSerializer):
         if mensaje:
             # El error va en plataforma para que el formulario lo muestre bajo ese selector.
             raise serializers.ValidationError({"plataforma": mensaje})
+        if attrs["tipo_ejercicio"] == Problema.TipoEjercicio.ESCRITURA_CODIGO and not attrs.get("casos_prueba"):
+            raise serializers.ValidationError(
+                {
+                    "casos_prueba": "Agrega al menos un caso de prueba: los problemas de escritura "
+                    "de código se califican con casos de prueba."
+                }
+            )
         return attrs
+
+    # atomic: si falla un caso, tampoco queda el problema sin sus casos.
+    @transaction.atomic
+    def create(self, validated_data):
+        casos = validated_data.pop("casos_prueba", [])
+        problema = Problema.objects.create(**validated_data)
+        for caso in casos:
+            CasoPrueba.objects.create(problema=problema, **caso)
+        return problema
