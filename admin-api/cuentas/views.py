@@ -137,15 +137,28 @@ class RecuperarView(APIView):
         user = User.objects.filter(username=serializer.validated_data["email"], is_active=True).first()
         if user is not None:
             uid, token = generar_uid_token(user)
-            enlace = f"{settings.ADMIN_WEB_URL}/nueva-contrasena?uid={uid}&token={token}"
+            # El estudiante cambia la contraseña en user-web; el docente, en admin-web.
+            if user.groups.filter(name="estudiante").exists():
+                base, asunto, cuenta = (
+                    settings.USER_WEB_URL,
+                    "Recupera tu contraseña de MASTER CODE",
+                    "tu cuenta de estudiante de MASTER CODE",
+                )
+            else:
+                base, asunto, cuenta = (
+                    settings.ADMIN_WEB_URL,
+                    "Recupera tu contraseña — MASTER CODE",
+                    "tu cuenta de MASTER CODE",
+                )
+            enlace = f"{base}/nueva-contrasena?uid={uid}&token={token}"
             mensaje = (
-                "Recibimos una solicitud para recuperar la contraseña de tu cuenta de MASTER CODE.\n"
+                f"Recibimos una solicitud para recuperar la contraseña de {cuenta}.\n"
                 f"Abre este enlace para elegir una nueva:\n\n{enlace}\n\n"
                 f"El enlace vence en {settings.PASSWORD_RESET_TIMEOUT // 60} minutos. "
                 "Si no lo pediste, ignora este mensaje."
             )
             try:
-                send_mail("Recupera tu contraseña — MASTER CODE", mensaje, None, [user.email])
+                send_mail(asunto, mensaje, None, [user.email])
             except OSError as error:
                 # OSError cubre los errores de SMTP y de red. Se registra solo el tipo:
                 # el mensaje del error podría traer el enlace o datos del servidor.
