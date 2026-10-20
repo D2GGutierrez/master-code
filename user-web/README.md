@@ -45,3 +45,7 @@ Para probar el registro del estudiante: levanta `admin-api` en el puerto 8000 (v
 <http://localhost:3001/login> muestra el inicio de sesión; cualquier otra ruta muestra el registro. Al iniciar sesión se guardan el access y el refresh token en `localStorage`, y la sesión se renueva sola 60 segundos antes de que venza el access (también tras recargar la página). Si la renovación falla, la sesión se borra.
 
 Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://localhost:3001> (la cuenta del estudiante queda activa) e inicia sesión en `/login`.
+
+## Mi avance
+
+<http://localhost:3001/avance> muestra el avance del estudiante (envíos desde la web y el móvil) con `GET /api/avance` de `user-api`, cuya URL base es `http://localhost:8081` o el valor de `VITE_USER_API_URL`; sin sesión lleva a `/login`.

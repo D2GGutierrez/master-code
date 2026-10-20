@@ -37,16 +37,18 @@ export function programarRenovacion() {
   temporizador = setTimeout(renovar, vencimiento(access) - MARGEN_MS - Date.now())
 }
 
-async function renovar() {
+// Devuelve si se renovó: cliente.ts la usa para reintentar tras un 401.
+export async function renovar() {
   try {
     const { ok, cuerpo } = await renovarTokens(localStorage.getItem('refresh') ?? '')
     if (ok && cuerpo.access && cuerpo.refresh) {
       // Se guardan los dos: el refresh anterior ya quedó invalidado.
       guardarSesion(cuerpo.access, cuerpo.refresh)
-      return
+      return true
     }
   } catch {
     // Sin conexión: se trata igual que un rechazo, sin reintentar en bucle.
   }
   borrarSesion()
+  return false
 }
