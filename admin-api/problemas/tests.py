@@ -25,6 +25,8 @@ class CrearProblemaTests(CursosTestCase):
             "dificultad": DIFICULTADES[0],
             "plataforma": Problema.Plataforma.WEB,
             "tipo_ejercicio": Problema.TipoEjercicio.ESCRITURA_CODIGO,
+            # Escritura de código exige al menos un caso (HU16 T3).
+            "casos_prueba": [{"entrada": "2 3", "salida_esperada": "5"}],
         }
 
     def test_sin_enunciado_devuelve_error_en_enunciado_y_no_guarda(self):
@@ -122,6 +124,9 @@ class CombinacionesValidasTests(CursosTestCase):
                     "plataforma": plataforma,
                     "tipo_ejercicio": tipo,
                 }
+                # Solo escritura de código exige casos (HU16 T3); los otros tipos van sin ellos.
+                if tipo == Problema.TipoEjercicio.ESCRITURA_CODIGO:
+                    datos["casos_prueba"] = [{"entrada": "2 3", "salida_esperada": "5"}]
 
                 response = self.client.post(
                     f"/api/cursos/{curso.pk}/problemas/", datos, format="json"
