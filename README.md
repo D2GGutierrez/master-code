@@ -48,8 +48,8 @@ En Windows, usa `copy .env.example .env` en lugar de `cp`.
 
 ## Cómo trabajamos
 
-Se trabaja directo en `main`, sin ramas ni Pull Requests. Antes de cada `git push` se corre `git pull --rebase`, para que los commits de los tres queden en línea. Cada commit corresponde a una tarea y usa el formato `carpeta: qué hace (HU# T#)`. Cuando la fecha de un commit se modifica a pedido del profesor, la descripción del commit trae la fecha real. Las tareas y sus criterios están en [`docs/historias-tareas.md`](docs/historias-tareas.md) y [`docs/historias-criterios.md`](docs/historias-criterios.md).
+Cada integrante trabaja en su rama personal (`Gutierrez`, `carlos-junco`, `gael-lajara`) con un commit por tarea y el formato `carpeta: qué hace (HU# T#)`. **A `main` solo llega lo que ya funciona en la rama personal** (CI en verde y probado a mano), por Pull Request revisado por otra persona. Antes de empezar se corre `git pull --rebase origin main` en la rama personal. Cuando la fecha de un commit se modifica a pedido del profesor, la descripción del commit trae la fecha real. Reglas completas en [`docs/flujo-git.md`](docs/flujo-git.md). Las tareas y sus criterios están en [`docs/historias-tareas.md`](docs/historias-tareas.md) y [`docs/historias-criterios.md`](docs/historias-criterios.md).
 
 ## Historia del repositorio
 
-El proyecto se reinició al inicio del Sprint 1 para aplicar un estándar de código mínimo y entendible, con trabajo directo en `main`.
+El proyecto se reinició al inicio del Sprint 1 para aplicar un estándar de código mínimo y entendible.

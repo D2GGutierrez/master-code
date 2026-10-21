@@ -6,8 +6,8 @@ Monorepo `master-code-v2`: plataforma web y móvil para entrenar programación c
 admin-api (Django, 8000) · admin-web (React, 3000) · user-api (Spring Boot, 8081) · user-web (React+Vite+TS, 3001) · mobile (Kotlin+Compose) · ai-service (FastAPI, 8002) · infra · docs
 
 ## Reglas fijas
-- Se trabaja directo en `main`: no hay ramas ni Pull Requests. No crees ramas.
-- NUNCA ejecutes `git add`, `git commit`, `git push`, `git merge`, `git pull`, `git rebase` ni `git reset`. Los commits los hago yo, a mano, con el formato `carpeta: qué hace (HU# T#)`. Antes de cada push yo corro `git pull --rebase`.
+- Cada persona trabaja en su rama personal (Juan Diego: `Gutierrez`). A `main` solo llega lo que ya funciona en la rama personal, por Pull Request. No crees ramas ni cambies de rama.
+- NUNCA ejecutes `git add`, `git commit`, `git push`, `git merge`, `git pull`, `git rebase` ni `git reset`. Los commits los hago yo, a mano, con el formato `carpeta: qué hace (HU# T#)`. Antes de cada push yo corro `git pull --rebase origin main`.
 - Código mínimo: solo lo que la tarea pide. Sin dependencias, archivos ni opciones "por si acaso". Pregunta antes de agregar una dependencia.
 - No leas, imprimas ni modifiques `.env`. Solo `.env.example`, y siempre con valores falsos.
 - Ningún secreto en el repositorio, en logs ni en tu salida.
@@ -17,4 +17,4 @@ admin-api (Django, 8000) · admin-web (React, 3000) · user-api (Spring Boot, 80
 - Responde y comenta el código en español.
 
 ## Documentación (léela solo cuando la tarea lo pida)
-docs/historias-tareas.md · docs/historias-criterios.md · docs/decisiones-tecnicas-adr.md · docs/contrato-jwt.md · docs/flujo-git.md · docs/habilitadores.md
+docs/historias-tareas.md · docs/historias-criterios.md · docs/decisiones-tecnicas-adr.md · docs/contrato-jwt.md · docs/flujo-git.md · docs/habilitadores.md · docs/registro-cambios.md · docs/modelo-de-datos.md

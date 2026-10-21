@@ -3,7 +3,7 @@ name: mobile
 # Se filtra por carpeta para que no corra por cambios de otras carpetas.
 on:
   push:
-    branches: [main]
+    branches: [main, Gutierrez, carlos-junco, gael-lajara]
     paths:
       - "mobile/**"
       - ".github/workflows/mobile.yml"

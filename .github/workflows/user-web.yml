@@ -3,7 +3,7 @@ name: user-web
 # Se filtra por carpeta porque ya no hay chequeos obligatorios: así no corre por cambios de otras carpetas.
 on:
   push:
-    branches: [main]
+    branches: [main, Gutierrez, carlos-junco, gael-lajara]
     paths:
       - "user-web/**"
       - ".github/workflows/user-web.yml"

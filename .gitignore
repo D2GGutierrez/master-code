@@ -1,4 +1,5 @@
 # Secretos y claves
+CLAUDE.md
 .env
 *.pem
 infra/keys/
@@ -18,5 +19,10 @@ __pycache__/
 .vscode/
 local.properties
 *.log
+.pytest_cache/
+
+# Prompts de trabajo (no son parte del producto)
+Claude outputs/
 .DS_Store
 Thumbs.db
+docs/roadmap-s2-datos.json

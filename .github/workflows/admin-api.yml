@@ -3,7 +3,7 @@ name: admin-api
 # Se filtra por carpeta porque ya no hay chequeos obligatorios: así no corre por cambios de otras carpetas.
 on:
   push:
-    branches: [main]
+    branches: [main, Gutierrez, carlos-junco, gael-lajara]
     paths:
       - "admin-api/**"
       - ".github/workflows/admin-api.yml"
