@@ -15,6 +15,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Misma imagen que docker-compose.yml; las pruebas del avance usan base de datos.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ci
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    # Valores falsos que coinciden con el servicio postgres de este job.
+    # 127.0.0.1 y no localhost: evita que intente primero por IPv6.
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ci
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
     defaults:
       run:
         working-directory: user-api
@@ -27,7 +50,13 @@ jobs:
           java-version: "21"
           cache: maven
 
-      # Sin pruebas todavía: verify solo compila y empaqueta, por eso no hace falta PostgreSQL.
+      # Flyway crea las tablas, pero app_schema lo crea infra en local: aquí se crea a mano.
+      - name: Crear app_schema
+        run: psql -h 127.0.0.1 -U ci -d ci -c "CREATE SCHEMA IF NOT EXISTS app_schema AUTHORIZATION ci;"
+        env:
+          PGPASSWORD: ci
+
+      # verify compila, corre las pruebas (con el postgres de arriba) y empaqueta.
       - name: Compilar
         run: ./mvnw -B verify
 
