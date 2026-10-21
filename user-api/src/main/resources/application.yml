@@ -7,6 +7,10 @@ jwt:
   # Debe ser igual al ISSUER de SIMPLE_JWT en admin-api.
   issuer: ${JWT_ISSUER:master-code-admin-api}
 
+# Orígenes de user-web permitidos por el navegador (ADR-7 / D4). Lista separada por comas.
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
+
 spring:
   datasource:
     # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).

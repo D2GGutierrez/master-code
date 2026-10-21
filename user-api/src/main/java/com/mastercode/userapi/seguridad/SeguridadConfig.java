@@ -8,7 +8,10 @@ import java.util.function.Predicate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,6 +26,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.mastercode.userapi.perfil.EstudianteRepository;
 
@@ -35,6 +41,8 @@ public class SeguridadConfig {
         return http
                 // Sin cookies ni sesión: cada petición trae su Bearer, así que CSRF no aplica.
                 .csrf(csrf -> csrf.disable())
+                // Dentro de la cadena: así el preflight OPTIONS del navegador se responde antes de pedir el JWT.
+                .cors(Customizer.withDefaults())
                 .sessionManagement(sesion -> sesion.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/health").permitAll()
@@ -44,6 +52,23 @@ public class SeguridadConfig {
                 // Se crea aquí y no como @Component para que Spring Boot no lo registre dos veces.
                 .addFilterAfter(new AsegurarPerfilFiltro(estudiantes), BearerTokenAuthenticationFilter.class)
                 .build();
+    }
+
+    // Orígenes de user-web por variable de entorno (ADR-7 / D4), igual que en admin-api.
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(@Value("${cors.allowed-origins}") List<String> origenes) {
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOrigins(origenes);
+        cors.setAllowedMethods(List.of(
+                HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
+                HttpMethod.PATCH.name(), HttpMethod.DELETE.name(), HttpMethod.OPTIONS.name()));
+        cors.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE));
+        // El token va en Authorization, no en cookies.
+        cors.setAllowCredentials(false);
+
+        UrlBasedCorsConfigurationSource fuente = new UrlBasedCorsConfigurationSource();
+        fuente.registerCorsConfiguration("/**", cors);
+        return fuente;
     }
 
     @Bean
