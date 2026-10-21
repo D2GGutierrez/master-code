@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { listarCursos } from '../api/cursos.js'
 import { crearProblema } from '../api/problemas.js'
 import Aviso from '../components/Aviso.jsx'
+import CasosPrueba from '../components/CasosPrueba.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
 import Formulario from '../components/Formulario.jsx'
 
@@ -28,18 +29,20 @@ const TIPOS_EJERCICIO = [
   { valor: 'completar_espacio', etiqueta: 'Completar espacio' },
 ]
 
-// admin-api aún no guarda la respuesta de ningún tipo (HU16, HU46, HU47): la sección queda reservada
+// admin-api aún no guarda la respuesta de los demás tipos (HU46, HU47): la sección queda reservada
 // y, como nunca recibe un valor, no se envía nada.
 function SeccionPendiente() {
   return <Aviso mensaje="Esta sección estará disponible próximamente." />
 }
 
-// admin-api responde los errores como { campo: ['mensaje', ...] }.
+// admin-api responde los errores como { campo: ['mensaje', ...] }; en casos_prueba puede ser
+// una lista con un objeto de errores por caso, que se deja tal cual para CasosPrueba.
 function erroresDelServidor(campos, cuerpo) {
   const errores = {}
   for (const campo of campos) {
-    if (cuerpo[campo.nombre]) {
-      errores[campo.nombre] = cuerpo[campo.nombre].join(' ')
+    const mensajes = cuerpo[campo.nombre]
+    if (mensajes) {
+      errores[campo.nombre] = mensajes.every((mensaje) => typeof mensaje === 'string') ? mensajes.join(' ') : mensajes
     }
   }
   if (Object.keys(errores).length === 0) {
@@ -101,7 +104,7 @@ function NuevoProblema() {
     {
       nombre: 'casos_prueba',
       etiqueta: 'Casos de prueba',
-      componente: SeccionPendiente,
+      componente: CasosPrueba,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'escritura_codigo',
     },
     {
@@ -127,6 +130,11 @@ function NuevoProblema() {
   async function crear(valores) {
     // El curso va en la URL, no en el cuerpo.
     const { curso, ...datos } = valores
+    // Solo se descarta un caso con entrada y salida vacías a la vez; los textos van sin recortar.
+    const enviados = (datos.casos_prueba || []).filter((caso) => caso.entrada !== '' || caso.salida_esperada !== '')
+    if (datos.casos_prueba) {
+      datos.casos_prueba = enviados.map(({ entrada, salida_esperada }) => ({ entrada, salida_esperada }))
+    }
     setEnviando(true)
     setErrores({})
     try {
@@ -135,7 +143,12 @@ function NuevoProblema() {
       if (ok) {
         setCreado(cuerpo.titulo)
       } else {
-        setErrores(erroresDelServidor(campos, cuerpo))
+        const nuevos = erroresDelServidor(campos, cuerpo)
+        // Los errores vienen en el orden de los casos enviados: se ubican en la posición que tiene cada caso en pantalla.
+        if (Array.isArray(nuevos.casos_prueba)) {
+          nuevos.casos_prueba = valores.casos_prueba.map((caso) => nuevos.casos_prueba[enviados.indexOf(caso)])
+        }
+        setErrores(nuevos)
       }
     } catch {
       // fetch solo lanza error cuando no hay conexión con el servidor.

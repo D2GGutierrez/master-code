@@ -49,6 +49,7 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
                 id={campo.nombre}
                 etiqueta={campo.etiqueta}
                 valor={valores[campo.nombre] ?? ''}
+                error={error}
                 // Forma funcional: el componente puede guardar este callback de un render anterior.
                 onCambio={(valor) => {
                   setValores((anteriores) => ({ ...anteriores, [campo.nombre]: valor }))
@@ -86,7 +87,8 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
                 aria-describedby={error ? idError : undefined}
               />
             )}
-            {error && (
+            {/* Una lista (errores por caso de prueba) la pinta el propio componente. */}
+            {typeof error === 'string' && (
               <p id={idError} className="error" role="alert">
                 {error}
               </p>

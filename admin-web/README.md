@@ -75,6 +75,8 @@ Según el tipo de ejercicio se muestra solo su sección de respuesta (casos de p
 
 Si `admin-api` rechaza una combinación imposible de plataforma y tipo de ejercicio, su mensaje aparece en rojo bajo «Plataforma» (`role="alert"`, con `aria-invalid` y `aria-describedby` en el campo). En todos los formularios, el error de un campo se oculta en cuanto se modifica ese campo.
 
+Con «Escritura de código», «Casos de prueba» (`components/CasosPrueba.jsx`) permite agregar y quitar casos (entrada y salida esperada); se envían en el mismo POST como `casos_prueba`, sin recortar los textos, y se descartan solo los casos totalmente en blanco. Los errores de `admin-api` por caso aparecen bajo el campo del caso.
+
 ## Cerrar sesión
 
 Con sesión guardada, todas las pantallas salvo `/login` muestran arriba a la derecha el botón «Cerrar sesión». Al pulsarlo se envía el refresh a `admin-api` (`/api/auth/logout/`) para revocarlo, se borran los tokens y la ruta recordada, y se va a `/login`. Si `admin-api` no responde, la sesión del navegador se cierra igual. El access ya emitido sigue valiendo hasta que vence (15 minutos).
