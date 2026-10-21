@@ -46,6 +46,8 @@ Para probar el registro del estudiante: levanta `admin-api` en el puerto 8000 (v
 
 Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://localhost:3001> (la cuenta del estudiante queda activa) e inicia sesión en `/login`.
 
+«Olvidé mi contraseña» en `/login` lleva a `/olvide-contrasena`, que pide a `admin-api` el enlace de recuperación; el enlace del correo abre `/nueva-contrasena?uid=…&token=…` para elegir la nueva contraseña.
+
 ## Mi avance
 
 <http://localhost:3001/avance> muestra el avance del estudiante (envíos desde la web y el móvil) con `GET /api/avance` de `user-api`, cuya URL base es `http://localhost:8081` o el valor de `VITE_USER_API_URL`; sin sesión lleva a `/login`.

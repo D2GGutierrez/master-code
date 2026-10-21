@@ -65,6 +65,9 @@ function InicioSesion() {
             onEnviar={entrar}
           />
           <p>
+            <a href="/olvide-contrasena">Olvidé mi contraseña</a>
+          </p>
+          <p>
             <a href="/">¿No tienes cuenta? Regístrate</a>
           </p>
         </>

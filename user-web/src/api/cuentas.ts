@@ -32,6 +32,34 @@ export async function iniciarSesion(datos: Record<string, string>) {
   return { ok: respuesta.ok, cuerpo }
 }
 
+// Lo que puede responder admin-api al recuperar: detail (éxito o enlace inválido) o errores por campo.
+export type CuerpoRecuperacion = {
+  detail?: string
+  email?: string[]
+  password?: string[]
+}
+
+export async function solicitarRecuperacion(correo: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/recuperar/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: correo }),
+  })
+  const cuerpo: CuerpoRecuperacion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// uid y token llegan en el enlace del correo.
+export async function restablecerContrasena(datos: { uid: string; token: string; password: string }) {
+  const respuesta = await fetch(`${API_URL}/api/auth/nueva-contrasena/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  })
+  const cuerpo: CuerpoRecuperacion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
 export async function renovarTokens(refresh: string) {
   const respuesta = await fetch(`${API_URL}/api/auth/refresh/`, {
     method: 'POST',
