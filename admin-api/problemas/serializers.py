@@ -76,3 +76,36 @@ class ProblemaSerializer(serializers.ModelSerializer):
         for caso in casos:
             CasoPrueba.objects.create(problema=problema, **caso)
         return problema
+
+
+# Vista del estudiante (CA-012.4). Todavía no los usa ninguna ruta: son para la futura API del
+# estudiante (HU25/HU32), que debe usarlos a ellos y no ProblemaSerializer, que expone los ocultos.
+# No borrarlos por parecer código sin uso.
+class CasoPruebaEstudianteSerializer(serializers.ModelSerializer):
+    # Sin es_publico ni id: al estudiante solo le llegan casos públicos y no necesita saber más.
+    class Meta:
+        model = CasoPrueba
+        fields = ["entrada", "salida_esperada"]
+
+
+class ProblemaEstudianteSerializer(serializers.ModelSerializer):
+    # Sin curso ni fecha_creacion: son datos internos que el estudiante no necesita para resolver.
+    casos_prueba = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Problema
+        fields = [
+            "id",
+            "titulo",
+            "enunciado",
+            "lenguaje",
+            "dificultad",
+            "plataforma",
+            "tipo_ejercicio",
+            "casos_prueba",
+        ]
+
+    def get_casos_prueba(self, problema):
+        # Único lugar donde se filtra: los ocultos solo sirven para calificar y nunca salen.
+        publicos = problema.casos_prueba.filter(es_publico=True)
+        return CasoPruebaEstudianteSerializer(publicos, many=True).data
