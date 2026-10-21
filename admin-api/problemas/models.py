@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
+from cuentas.models import Docente
 from cursos.models import Curso
 
 
@@ -34,6 +36,18 @@ class Problema(models.Model):
     plataforma = models.CharField(max_length=10, choices=Plataforma.choices)
     tipo_ejercicio = models.CharField(max_length=20, choices=TipoEjercicio.choices)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    # Quién aprobó el problema y cuándo (HU19 T3). Vacíos mientras no se aprueba.
+    # SET_NULL: si el docente se elimina, el problema y la fecha de aprobación se conservan.
+    aprobado_por = models.ForeignKey(
+        Docente, null=True, blank=True, on_delete=models.SET_NULL, related_name="problemas_aprobados"
+    )
+    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+
+    # La acción «Aprobar» (HU19 T2) la usará: así quién y cuándo siempre se guardan juntos.
+    def registrar_aprobacion(self, docente):
+        self.aprobado_por = docente
+        self.fecha_aprobacion = timezone.now()
+        self.save(update_fields=["aprobado_por", "fecha_aprobacion"])
 
     class Meta:
         db_table = "admin_problema"
