@@ -1,5 +1,6 @@
 import { programarRenovacion } from './api/sesion.ts'
 import Avance from './pages/Avance.tsx'
+import EditorPrueba from './pages/EditorPrueba.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import OlvideContrasena from './pages/OlvideContrasena.tsx'
@@ -21,6 +22,9 @@ function App() {
   }
   if (window.location.pathname === '/nueva-contrasena') {
     return <NuevaContrasena />
+  }
+  if (window.location.pathname === '/editor-prueba') {
+    return <EditorPrueba />
   }
   return <RegistroEstudiante />
 }
