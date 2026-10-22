@@ -1,4 +1,5 @@
 import Editor from '@monaco-editor/react'
+import { idMonaco } from '../lenguajes.ts'
 
 type Props = {
   valor: string
@@ -9,12 +10,12 @@ type Props = {
 }
 
 // Monaco se descarga de un CDN la primera vez que se muestra el editor (cargador por defecto del paquete).
-function EditorCodigo({ valor, onCambio, lenguaje = 'plaintext', soloLectura = false, altura = '360px' }: Props) {
+function EditorCodigo({ valor, onCambio, lenguaje = '',soloLectura = false, altura = '360px' }: Props) {
   return (
     <Editor
       value={valor}
       onChange={(texto) => onCambio(texto ?? '')}
-      language={lenguaje}
+      language={idMonaco(lenguaje)}
       height={altura}
       theme="vs"
       loading="Cargando editor…"
