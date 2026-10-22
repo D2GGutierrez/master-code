@@ -51,3 +51,7 @@ Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://loc
 ## Mi avance
 
 <http://localhost:3001/avance> muestra el avance del estudiante (envíos desde la web y el móvil) con `GET /api/avance` de `user-api`, cuya URL base es `http://localhost:8081` o el valor de `VITE_USER_API_URL`; sin sesión lleva a `/login`.
+
+## Editor de código
+
+`src/components/EditorCodigo.tsx` envuelve el editor Monaco (`@monaco-editor/react`); Monaco se descarga de un CDN al abrir el editor, así que necesita conexión a internet. <http://localhost:3001/editor-prueba> es una página provisional para probarlo (cuenta caracteres y líneas) y se reemplazará por la pantalla del problema (HU33).
