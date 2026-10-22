@@ -43,6 +43,13 @@ class Problema(models.Model):
     )
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
 
+    # Descartar archiva, no borra (HU20 T2): el problema sigue en la base pero ya no se muestra.
+    archivado = models.BooleanField(default=False)
+
+    def archivar(self):
+        self.archivado = True
+        self.save(update_fields=["archivado"])
+
     # La acción «Aprobar» (HU19 T2) la usará: así quién y cuándo siempre se guardan juntos.
     def registrar_aprobacion(self, docente):
         self.aprobado_por = docente

@@ -145,3 +145,6 @@ PASSWORD_RESET_TIMEOUT = 1800
 ADMIN_WEB_URL = os.environ.get("ADMIN_WEB_URL", "http://localhost:3000")
 # user-web tiene la misma pantalla para los estudiantes.
 USER_WEB_URL = os.environ.get("USER_WEB_URL", "http://localhost:3001")
+
+# Días de vigencia del código de invitación de un curso (HU26 T1).
+INVITACION_DIAS = int(os.environ.get("INVITACION_DIAS", "30"))
