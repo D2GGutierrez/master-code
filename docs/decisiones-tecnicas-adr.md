@@ -140,6 +140,23 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 
 > **Decidido.** lista de orígenes permitidos por variable de entorno (`CORS_ALLOWED_ORIGINS`), con el mismo patrón que `admin-api` (HU22-T7). Sin esto, `user-web` (puerto 3001) no puede llamar a `user-api` (8081) desde el navegador.
 
+### D5. Revisión de los problemas generados por la IA (HU17 a HU20; decidido el 27 de octubre de 2026)
+
+> **Decidido.** En `admin-api`, `Problema` suma `generado_por_ia`, `aprobado_por_docente` y `respuesta_esperada`, y se crea `OpcionRespuesta` (`ADMIN_OPCION_RESPUESTA`, que era HU46-T1) porque la IA también genera ejercicios de opción múltiple y hay que guardar sus alternativas. Lo generado nace con `generado_por_ia=true` y `aprobado_por_docente=false`: la IA nunca publica sola (ADR-2). Un estudiante solo ve lo que cumple `Problema.objects.visibles_para_estudiante()` (aprobado y no archivado); HU31 debe partir de esa consulta.
+>
+> - **Los problemas creados a mano nacen aprobados si están completos**, con el docente que los creó como aprobador. Si les falta algo (por ejemplo, un `opcion_multiple` sin alternativas) se guardan como borrador sin aprobar. La migración aprueba los problemas de escritura de código que ya existían y tienen al menos un caso de prueba.
+> - **«Completo»** (`problemas/completitud.py`): `escritura_codigo` con al menos un caso de prueba; `opcion_multiple` con entre 2 y 6 alternativas y exactamente una correcta; `prediccion_salida` y `completar_espacio` con `respuesta_esperada`. La misma regla decide el guardado de lo que genera la IA, el 400 de Aprobar y si un problema manual nace aprobado.
+> - **La plataforma de cada problema generado sale de su tipo** (`escritura_codigo` va a `web`; los otros tres a `movil`). Pedir «ambas» significa «genera para las dos», no que cada problema se publique en las dos.
+>
+> **Rutas de `admin-api`** (todas exigen sesión de docente; un problema o curso ajeno da 404):
+>
+> - `POST /api/cursos/<id>/problemas/generar/`, cuerpo `{"tema", "nivel", "cantidad", "lenguaje"?, "plataforma"?}`. `lenguaje` por defecto es el del curso; `plataforma` por defecto es `ambas`; `cantidad` de 1 a 10. Responde 201 con `{"problemas": [...]}`. Todo o nada: si un solo problema no cumple el formato, no se guarda ninguno. Con ai-service caído o sin tiempo: 503; con una respuesta inservible: 502. Ambos con `{"detail": "...", "reintentar": true}` y sin guardar nada. Puede tardar hasta 100 segundos (`AI_SERVICE_TIMEOUT_SEGUNDOS`).
+> - `GET /api/problemas/pendientes/` (`?curso=<id>` opcional): lista de problemas de IA sin aprobar ni descartar de los cursos del docente, del más nuevo al más antiguo, con `generado_por_ia`, `curso_nombre`, casos, alternativas y respuesta esperada.
+> - `POST /api/problemas/<id>/aprobar/`: 200 con el problema aprobado y registrado quién y cuándo. 400 si está incompleto, con el motivo bajo el nombre del campo (`casos_prueba`, `opciones` o `respuesta_esperada`). 409 si fue descartado. Repetirlo es 200 y no cambia nada.
+> - `POST /api/problemas/<id>/descartar/`, cuerpo `{"confirmar": true}`: archiva el problema, no lo borra. Sin `confirmar: true` responde 400 y no cambia nada (el cuadro de confirmación es de la pantalla; esto evita descartar por una llamada suelta). 409 si ya está aprobado. Repetirlo es 200.
+>
+> **Pendiente:** editar un problema antes de aprobarlo (CA-19.1 a CA-19.3) necesita un `PATCH /api/problemas/<id>/` que todavía no existe en `admin-api`.
+
 ### Ya decidido en `registro-cambios.md`
 
 >Curso «publicado» = tiene al menos un problema aprobado (HU25-T1). El código de invitación vence a los 30 días y se genera también para los cursos existentes (HU26-T1). Límite de ejecuciones de prueba: 10 por minuto, configurable (HU06-T4).

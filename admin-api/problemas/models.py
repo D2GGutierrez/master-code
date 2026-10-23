@@ -20,10 +20,24 @@ class TipoEjercicio(models.TextChoices):
     COMPLETAR_ESPACIO = "completar_espacio", "Completar el espacio"
 
 
+class ProblemaQuerySet(models.QuerySet):
+    # Bandeja de revisión (HU18 T1): lo que generó la IA y el docente todavía no decide.
+    # Un problema descartado queda archivado y no vuelve aquí (CA-20.4).
+    def pendientes_de_revision(self):
+        return self.filter(generado_por_ia=True, aprobado_por_docente=False, archivado=False)
+
+    # Lo único que puede ver un estudiante (ADR-2, HU31): aprobado por un docente y no descartado.
+    # Toda consulta que alimente a user-api debe partir de aquí y no de Problema.objects.
+    def visibles_para_estudiante(self):
+        return self.filter(aprobado_por_docente=True, archivado=False)
+
+
 class Problema(models.Model):
     # Alias: el código existente usa Problema.Plataforma y Problema.TipoEjercicio.
     Plataforma = Plataforma
     TipoEjercicio = TipoEjercicio
+
+    objects = ProblemaQuerySet.as_manager()
 
     # PROTECT: la base impide borrar un curso que tiene problemas (HU12 lo convierte en 409).
     curso = models.ForeignKey(Curso, on_delete=models.PROTECT)
@@ -36,6 +50,12 @@ class Problema(models.Model):
     plataforma = models.CharField(max_length=10, choices=Plataforma.choices)
     tipo_ejercicio = models.CharField(max_length=20, choices=TipoEjercicio.choices)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    # La IA nunca publica sola (ADR-2): un problema generado nace con generado_por_ia=True y
+    # aprobado_por_docente=False, y los estudiantes solo ven los aprobados.
+    generado_por_ia = models.BooleanField(default=False)
+    aprobado_por_docente = models.BooleanField(default=False)
+    # Solo para prediccion_salida y completar_espacio (el texto exacto que se espera). Vacía en los demás.
+    respuesta_esperada = models.TextField(blank=True)
     # Quién aprobó el problema y cuándo (HU19 T3). Vacíos mientras no se aprueba.
     # SET_NULL: si el docente se elimina, el problema y la fecha de aprobación se conservan.
     aprobado_por = models.ForeignKey(
@@ -50,11 +70,12 @@ class Problema(models.Model):
         self.archivado = True
         self.save(update_fields=["archivado"])
 
-    # La acción «Aprobar» (HU19 T2) la usará: así quién y cuándo siempre se guardan juntos.
+    # La acción «Aprobar» (HU19 T2) la usa: así la marca, quién y cuándo siempre se guardan juntos.
     def registrar_aprobacion(self, docente):
+        self.aprobado_por_docente = True
         self.aprobado_por = docente
         self.fecha_aprobacion = timezone.now()
-        self.save(update_fields=["aprobado_por", "fecha_aprobacion"])
+        self.save(update_fields=["aprobado_por_docente", "aprobado_por", "fecha_aprobacion"])
 
     class Meta:
         db_table = "admin_problema"
@@ -74,7 +95,12 @@ class Problema(models.Model):
                     )
                 ),
                 name="problema_plataforma_tipo_valido",
-            )
+            ),
+            # Quien aprueba deja la fecha: un aprobado sin fecha sería una aprobación sin rastro (CA-19.5).
+            models.CheckConstraint(
+                condition=Q(aprobado_por_docente=False) | Q(fecha_aprobacion__isnull=False),
+                name="problema_aprobado_con_fecha",
+            ),
         ]
 
 
@@ -89,3 +115,18 @@ class CasoPrueba(models.Model):
 
     class Meta:
         db_table = "admin_caso_prueba"
+
+
+# Alternativas de un ejercicio de opción múltiple (ADMIN_OPCION_RESPUESTA, HU46 T1). Se crea ahora porque
+# la IA también genera ejercicios de este tipo y hay que guardarlos con sus alternativas.
+class OpcionRespuesta(models.Model):
+    # CASCADE: una alternativa no tiene sentido sin su problema.
+    problema = models.ForeignKey(Problema, on_delete=models.CASCADE, related_name="opciones")
+    texto = models.TextField()
+    # Exactamente una por problema; esa regla se comprueba al aprobar (problemas/completitud.py).
+    es_correcta = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "admin_opcion_respuesta"
+        # El orden de creación: el docente las ve como las escribió (el celular las mezcla, HU46 T2).
+        ordering = ["id"]

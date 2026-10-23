@@ -34,6 +34,8 @@ services:
       # D3: la clave de la API interna la reciben solo admin-api y user-api.
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       USER_API_URL: http://user-api:8081
+      # ai-service genera los problemas (HU17): se le pide por la red interna.
+      AI_SERVICE_URL: http://ai-service:8002
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

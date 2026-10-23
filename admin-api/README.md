@@ -29,6 +29,15 @@ En Linux/Mac: `python3 -m venv .venv && .venv/bin/python -m pip install -r requi
 
 Comprueba que responde en <http://localhost:8000/health>.
 
+## Variables de la generación con IA (HU17)
+
+| Variable | Valor por defecto | Para qué sirve |
+|---|---|---|
+| `AI_SERVICE_URL` | `http://localhost:8002` | Dónde está ai-service. `docker-compose.yml` la fija en `http://ai-service:8002`. |
+| `AI_SERVICE_TIMEOUT_SEGUNDOS` | `100` | Cuánto se espera su respuesta. Debe ser mayor que lo que espera ai-service al LLM (90 s). |
+
+Las rutas de generar, pendientes, aprobar y descartar están en el ADR-7 (D5) de `docs/decisiones-tecnicas-adr.md`.
+
 ## Imagen de Docker
 
 ```powershell

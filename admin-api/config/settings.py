@@ -154,3 +154,9 @@ INVITACION_DIAS = int(os.environ.get("INVITACION_DIAS", "30"))
 INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "")
 # Dónde está user-api dentro de la red de Docker (HU28 T1).
 USER_API_URL = os.environ.get("USER_API_URL", "http://localhost:8081")
+
+# Dónde está ai-service (genera los problemas, HU17 T5). En Docker: http://ai-service:8002.
+AI_SERVICE_URL = os.environ.get("AI_SERVICE_URL", "http://localhost:8002")
+# Segundos que se espera su respuesta. ai-service espera hasta 90 s al LLM: aquí debe ser mayor,
+# o admin-api cortaría antes que él y el docente vería «no disponible» con una respuesta en camino.
+AI_SERVICE_TIMEOUT = int(os.environ.get("AI_SERVICE_TIMEOUT_SEGUNDOS", "100"))
