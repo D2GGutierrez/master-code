@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.db.models import Count, ProtectedError
+from django.db.models import Count, ProtectedError, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.filters import SearchFilter
@@ -27,10 +27,15 @@ class CursosView(ListCreateAPIView):
 
     def get_queryset(self):
         # annotate cuenta los problemas en la misma consulta (COUNT + GROUP BY), no una por curso.
+        # Los descartados (archivados) no cuentan (CA-20.4): el filtro va dentro del COUNT, en la misma consulta.
         # El id desempata cursos con la misma fecha para que el orden sea estable.
         return (
             Curso.objects.filter(docente=self.request.user.docente)
-            .annotate(cantidad_problemas=Count("problema"))
+            .annotate(
+                cantidad_problemas=Count(
+                    "problema", filter=Q(problema__archivado=False)
+                )
+            )
             .order_by("-fecha_creacion", "-id")
         )
 
