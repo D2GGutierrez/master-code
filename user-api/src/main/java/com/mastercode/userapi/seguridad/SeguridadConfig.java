@@ -37,7 +37,8 @@ import com.mastercode.userapi.perfil.EstudianteRepository;
 public class SeguridadConfig {
 
     @Bean
-    SecurityFilterChain seguridad(HttpSecurity http, EstudianteRepository estudiantes) throws Exception {
+    SecurityFilterChain seguridad(HttpSecurity http, EstudianteRepository estudiantes,
+            @Value("${internal.api-key}") String claveInterna) throws Exception {
         return http
                 // Sin cookies ni sesión: cada petición trae su Bearer, así que CSRF no aplica.
                 .csrf(csrf -> csrf.disable())
@@ -46,10 +47,13 @@ public class SeguridadConfig {
                 .sessionManagement(sesion -> sesion.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/health").permitAll()
+                        // Sin JWT: la protege ClaveInternaFiltro con la clave interna (D3).
+                        .requestMatchers("/internal/**").permitAll()
                         .requestMatchers("/api/**").hasRole("ESTUDIANTE")
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(servidor -> servidor.jwt(jwt -> jwt.jwtAuthenticationConverter(conversorDeRol())))
-                // Se crea aquí y no como @Component para que Spring Boot no lo registre dos veces.
+                // Se crean aquí y no como @Component para que Spring Boot no los registre dos veces.
+                .addFilterBefore(new ClaveInternaFiltro(claveInterna), BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(new AsegurarPerfilFiltro(estudiantes), BearerTokenAuthenticationFilter.class)
                 .build();
     }

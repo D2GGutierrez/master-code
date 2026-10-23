@@ -126,6 +126,11 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 ### D3. Autenticación entre servicios (API interna)
 
 > **Decidido.** rutas bajo `/internal/` en `admin-api` y `user-api`, solo alcanzables por la red de Docker y protegidas con la cabecera `X-Internal-Key`. La clave vive en una variable de entorno que solo reciben esos dos servicios. No se reenvía el JWT del usuario, porque los datos que pide el estudiante no le pertenecen a su rol.
+>
+> **Rutas internas construidas** (la clave es la variable `INTERNAL_API_KEY`; sin ella, las dos APIs rechazan todo con 403):
+>
+> - `admin-api`: `GET /internal/cursos/por-codigo/<codigo>/` (200 con el curso; 404 si no existe; 410 si venció) y `GET /internal/cursos/?ids=1,2` (los cursos que existan). Las usa `user-api` en la inscripción (HU26-T3) y en «Mis cursos» (HU27-T1).
+> - `user-api`: `GET /internal/cursos/{cursoId}/inscritos` (email y fecha de cada inscrito). La usa `admin-api` en la lista de inscritos del docente (HU28-T1), que además comprueba que el curso sea del docente (403 si es de otro).
 
 ### D4. CORS de `user-api`
 

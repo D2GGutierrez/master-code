@@ -148,3 +148,9 @@ USER_WEB_URL = os.environ.get("USER_WEB_URL", "http://localhost:3001")
 
 # Días de vigencia del código de invitación de un curso (HU26 T1).
 INVITACION_DIAS = int(os.environ.get("INVITACION_DIAS", "30"))
+
+# D3: clave compartida entre admin-api y user-api para su API interna (/internal/). Sin valor,
+# la API interna rechaza todo: es preferible a dejarla abierta por olvido.
+INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "")
+# Dónde está user-api dentro de la red de Docker (HU28 T1).
+USER_API_URL = os.environ.get("USER_API_URL", "http://localhost:8081")

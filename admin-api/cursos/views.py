@@ -1,12 +1,16 @@
+from django.contrib.auth.models import User
 from django.db.models import Count, ProtectedError
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, UpdateAPIView
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from cuentas.permissions import EsDocente, EsPropietario
+from cursos.inscritos import UserApiNoDisponible, inscritos_de
 from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
 
@@ -58,3 +62,37 @@ class EditarCursoView(DestroyModelMixin, UpdateAPIView):
                 {"detail": "No se puede eliminar el curso porque ya tiene problemas creados."},
                 status=status.HTTP_409_CONFLICT,
             )
+
+
+class InscritosView(APIView):
+    permission_classes = [IsAuthenticated, EsDocente]
+
+    def get(self, request, pk):
+        # Se busca entre todos los cursos y luego se comprueba el dueño: uno ajeno da 403 y uno
+        # inexistente 404, igual que al editar o eliminar (CA-28.4).
+        curso = get_object_or_404(Curso, pk=pk)
+        if curso.docente_id != request.user.docente.pk:
+            return Response(
+                {"detail": "Solo puedes ver los inscritos de tus propios cursos."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            inscritos = inscritos_de(curso.pk)
+        except UserApiNoDisponible:
+            return Response(
+                {"detail": "No se pudo consultar a los inscritos. Intenta de nuevo en un momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        # El nombre vive en la cuenta (admin_schema); user-api solo conoce el email. Una sola
+        # consulta para todos, no una por estudiante.
+        nombres = dict(User.objects.filter(email__in=[i["email"] for i in inscritos]).values_list("email", "first_name"))
+        return Response(
+            [
+                {
+                    "email": inscrito["email"],
+                    "nombre": nombres.get(inscrito["email"], ""),
+                    "fecha_inscripcion": inscrito["fecha"],
+                }
+                for inscrito in inscritos
+            ]
+        )
