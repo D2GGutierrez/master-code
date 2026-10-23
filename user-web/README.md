@@ -56,6 +56,8 @@ Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://loc
 
 `src/components/EditorCodigo.tsx` envuelve el editor Monaco (`@monaco-editor/react`); Monaco se descarga de un CDN al abrir el editor, así que necesita conexión a internet. <http://localhost:3001/editor-prueba> es una página provisional para probarlo (cuenta caracteres y líneas) y se reemplazará por la pantalla del problema (HU33).
 
+«Ejecutar» (`src/components/EjecutorCodigo.tsx`) corre el código con la entrada opcional mediante `POST /api/ejecuciones` de `user-api` y muestra la salida o el error, sin crear un envío; exige sesión, así que en `/editor-prueba` sin sesión lleva a `/login`.
+
 `idMonaco` (`src/lenguajes.ts`) traduce el lenguaje del curso o problema (`python`, `java`, `javascript`) al resaltado de Monaco; cualquier otro valor se muestra como texto plano.
 
 ## Mis cursos

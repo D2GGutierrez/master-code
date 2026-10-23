@@ -1,0 +1,20 @@
+.ejecutor textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ejecutor-salida pre {
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ejecutor-error {
+  color: #b00020;
+}
+
+.ejecutor-estado {
+  font-size: 0.85em;
+}

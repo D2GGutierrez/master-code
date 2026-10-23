@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import EditorCodigo from '../components/EditorCodigo.tsx'
+import EjecutorCodigo from '../components/EjecutorCodigo.tsx'
 
 const LENGUAJES = [
   {
@@ -55,7 +55,7 @@ function EditorPrueba() {
           </option>
         ))}
       </select>
-      <EditorCodigo valor={codigo} onCambio={setCodigo} lenguaje={lenguaje} />
+      <EjecutorCodigo valor={codigo} onCambio={setCodigo} lenguaje={lenguaje} />
       <pre>
         Caracteres: {codigo.length} · Líneas: {codigo.split('\n').length}
       </pre>
