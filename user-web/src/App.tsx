@@ -1,6 +1,7 @@
 import { programarRenovacion } from './api/sesion.ts'
 import Avance from './pages/Avance.tsx'
 import EditorPrueba from './pages/EditorPrueba.tsx'
+import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import OlvideContrasena from './pages/OlvideContrasena.tsx'
@@ -13,6 +14,9 @@ programarRenovacion()
 function App() {
   if (window.location.pathname === '/login') {
     return <InicioSesion />
+  }
+  if (window.location.pathname === '/inicio') {
+    return <Inicio />
   }
   if (window.location.pathname === '/avance') {
     return <Avance />

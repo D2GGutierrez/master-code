@@ -1,0 +1,19 @@
+.inicio {
+  padding: 0 16px;
+}
+
+.inicio-cursos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+
+.tarjeta-curso {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  /* Un nombre de curso largo y sin espacios se parte en vez de ensanchar la tarjeta. */
+  overflow-wrap: anywhere;
+}
