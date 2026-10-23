@@ -38,3 +38,10 @@ export async function eliminarCurso(id) {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// Lista completa, sin paginar: [{ email, nombre, fecha_inscripcion }]. admin-api la pide a user-api.
+export async function listarInscritos(cursoId) {
+  const respuesta = await peticion(`/api/cursos/${cursoId}/inscritos/`)
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}

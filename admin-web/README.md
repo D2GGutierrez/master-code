@@ -90,3 +90,5 @@ La columna «Acciones» de `/cursos` tiene «Eliminar», con confirmación en la
 «Editar» lleva a <http://localhost:3000/cursos/ID/editar>: el mismo formulario de «Nuevo curso» con el nombre y el lenguaje actuales; «Guardar cambios» los envía con PUT y vuelve a `/cursos`.
 
 Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sobre `<dialog>`) resume qué cambia; si no cambió nada no se abre y aparece «No hay cambios para guardar.».
+
+«Ver inscritos» lleva a <http://localhost:3000/cursos/ID/inscritos>: la tabla de estudiantes inscritos (nombre, correo y fecha de inscripción), 20 por página; `admin-api` la obtiene de `user-api`, así que con `user-api` caído se muestra un error con «Reintentar».
