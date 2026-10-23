@@ -27,7 +27,7 @@ def test_proveedor_real_con_clave_esta_completo(monkeypatch):
 
 
 def test_el_aviso_no_contiene_la_clave(monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "github")
+    monkeypatch.setenv("LLM_PROVIDER", "groq")
     monkeypatch.setenv("LLM_API_KEY", "")
 
     assert "clave-secreta" not in config.problema_de_configuracion()

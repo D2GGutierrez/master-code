@@ -38,6 +38,14 @@ class CorsTest {
                 .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 
+    // HU06-T4: sin esto, el navegador no deja que user-web lea el Retry-After del 429 de «Ejecutar».
+    @Test
+    void el_navegador_puede_leer_retry_after_en_las_respuestas() throws Exception {
+        mvc.perform(get("/health").header("Origin", "http://localhost:3001"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Expose-Headers", "Retry-After"));
+    }
+
     @Test
     void health_sigue_publico_sin_token() throws Exception {
         mvc.perform(get("/health")).andExpect(status().isOk());

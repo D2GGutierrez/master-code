@@ -1,6 +1,9 @@
 import os
 
-PROVEEDORES = ("mock", "gemini", "github", "groq")
+PROVEEDORES = ("mock", "gemini", "groq")
+# Modelo que se usa si LLM_MODEL no está definida. Gemini usa un alias que Google mantiene apuntando a su
+# Flash vigente, para que el servicio no se rompa cuando retiran un modelo concreto.
+MODELO_POR_DEFECTO = {"gemini": "gemini-flash-latest", "groq": "llama-3.3-70b-versatile"}
 # Motores que ejecutan el código de los estudiantes (HU08). mock no ejecuta nada: es para CI y desarrollo.
 PROVEEDORES_SANDBOX = ("mock", "judge0", "piston")
 
@@ -8,6 +11,8 @@ PROVEEDORES_SANDBOX = ("mock", "judge0", "piston")
 # Se lee del entorno en cada llamada y no al importar: así las pruebas pueden cambiar las variables.
 def proveedor_llm() -> str:
     valor = os.environ.get("LLM_PROVIDER", "mock").strip().lower() or "mock"
+    if valor == "github":
+        raise ValueError("LLM_PROVIDER=github ya no existe: GitHub Models fue retirado. Usa mock, gemini o groq.")
     if valor not in PROVEEDORES:
         raise ValueError(f"LLM_PROVIDER debe ser uno de {', '.join(PROVEEDORES)}")
     return valor
@@ -33,6 +38,12 @@ def url_piston() -> str:
 # La clave nunca se imprime ni se devuelve en una respuesta: solo se lee aquí.
 def clave_llm() -> str:
     return os.environ.get("LLM_API_KEY", "")
+
+
+# Modelo del proveedor activo. Los nombres de modelo cambian con frecuencia: por eso se puede
+# reemplazar con LLM_MODEL sin tocar el código.
+def modelo_llm() -> str:
+    return os.environ.get("LLM_MODEL", "").strip() or MODELO_POR_DEFECTO.get(proveedor_llm(), "")
 
 
 # Mensaje para el arranque; devuelve None si la configuración está completa.

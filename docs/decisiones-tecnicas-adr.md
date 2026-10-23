@@ -40,12 +40,16 @@
 
 - Groq: modelos open-source (Llama 3.3 70B) gratis y rápidos, 1,000 solicitudes/día.
 
+>Actualización del 27 de octubre de 2026 (HU17-T3): GitHub Models se retiró, así que ai-service ya no lo ofrece (`LLM_PROVIDER` acepta `mock`, `gemini` o `groq`). Las cuotas gratuitas y los nombres de modelo cambian seguido y Google ya no publica los límites en su documentación: se revisan en AI Studio antes de depender de un número. Por eso el modelo se elige con `LLM_MODEL` (por defecto `gemini-flash-latest` para Gemini y `llama-3.3-70b-versatile` para Groq) y retirar un modelo no obliga a cambiar código.
+
 
 ### Diseño técnico
 
 >Un servicio dedicado (ai-service, Python + FastAPI) expone dos endpoints:
 
 - POST /generate: recibe el contexto del docente (tema, nivel, lenguaje, objetivos, cantidad) más la plataforma destino, y devuelve el contenido en el formato correspondiente: para Web, enunciado + starter code + casos de prueba; para Móvil, el snippet + tipo de pregunta + respuesta correcta ya calculada. Lo llama Administración (Django). El docente revisa y aprueba antes de publicar — obligatorio, porque con un LLM gratuito hay más probabilidad de que se le escape un error.
+
+>**Contrato de `POST /generate`** (HU17-T3). Cuerpo: `{"tema", "nivel", "lenguaje", "cantidad", "plataforma"}` (`cantidad` de 1 a 10; `nivel`: facil, medio o dificil; `lenguaje`: python, java o javascript; `plataforma`: web, movil o ambas). Respuesta 200: `{"problemas": [{"titulo", "enunciado", "tipo_ejercicio", "casos_prueba", "opciones", "respuesta_esperada"}]}`, siempre validada contra el formato fijo y con exactamente `cantidad` problemas de un tipo que sirva para la plataforma. Errores: 422 si el cuerpo es inválido; 502 si la IA respondió algo que no cumple el formato (el `detail` dice qué); 503 si el proveedor no se pudo usar (sin clave, sin red o la petición fue rechazada). ai-service no reintenta: reintentar es decisión de admin-api (HU17-T6). Puede tardar hasta 90 segundos, así que el cliente debe esperar al menos eso. Con `LLM_PROVIDER=mock` responde problemas de relleno marcados con «[Mock]», sin clave ni red.
 
 - POST /evaluate: no llama a ningún LLM en el MVP. Solo orquesta la llamada al sandbox (Judge0/Piston) para escritura_codigo y devuelve pase/falla por caso de prueba. El Feedback cualitativo queda como un parámetro opcional que hoy simplemente no se activa.
 

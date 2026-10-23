@@ -2,6 +2,7 @@ package com.mastercode.userapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -9,9 +10,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.mastercode.userapi.sandbox.EjecucionResultado;
@@ -21,7 +27,14 @@ import com.mastercode.userapi.sandbox.LenguajeNoSoportadoException;
 import com.mastercode.userapi.sandbox.SandboxNoDisponibleException;
 
 // HU06-T1 (CA-06.2, CA-06.3): «Ejecutar» devuelve la salida o el error y no crea ningún envío.
+// HU06-T4: pasado el límite por minuto, 429 con Retry-After.
 class EjecucionApiTest extends PruebaDeApi {
+
+    private static final String CODIGO_VALIDO = "{\"codigo\":\"print('x')\",\"lenguaje\":\"python\"}";
+
+    // El mismo valor que usa el limitador: la prueba no depende de que el valor por defecto siga siendo 10.
+    @Value("${ejecuciones.limite-por-minuto}")
+    private int limitePorMinuto;
 
     private ResultActions ejecutar(String email, String cuerpo) throws Exception {
         return mvc.perform(post("/api/ejecuciones")
@@ -168,5 +181,49 @@ class EjecucionApiTest extends PruebaDeApi {
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(sandbox);
+    }
+
+    // --- HU06-T4: límite de ejecuciones por minuto ---
+
+    @Test
+    void al_pasar_el_limite_da_429_con_retry_after_y_sin_llamar_al_sandbox() throws Exception {
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.OK, "x", "", 1L));
+        String email = correoUnico();
+        for (int i = 0; i < limitePorMinuto; i++) {
+            ejecutar(email, CODIGO_VALIDO).andExpect(status().isOk());
+        }
+
+        MvcResult bloqueado = ejecutar(email, CODIGO_VALIDO).andExpect(status().isTooManyRequests()).andReturn();
+
+        long espera = Long.parseLong(bloqueado.getResponse().getHeader(HttpHeaders.RETRY_AFTER));
+        assertThat(espera).isBetween(1L, 60L);
+        assertThat(bloqueado.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .contains("\"detail\"")
+                .contains("Espera");
+        // Las ejecuciones rechazadas no llegan al motor: justamente de eso protege el límite.
+        verify(sandbox, times(limitePorMinuto)).ejecutar(any());
+    }
+
+    @Test
+    void el_limite_es_por_estudiante() throws Exception {
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.OK, "x", "", 1L));
+        String uno = correoUnico();
+        for (int i = 0; i < limitePorMinuto; i++) {
+            ejecutar(uno, CODIGO_VALIDO).andExpect(status().isOk());
+        }
+        ejecutar(uno, CODIGO_VALIDO).andExpect(status().isTooManyRequests());
+
+        ejecutar(correoUnico(), CODIGO_VALIDO).andExpect(status().isOk());
+    }
+
+    @Test
+    void una_peticion_invalida_no_gasta_ejecuciones() throws Exception {
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.OK, "x", "", 1L));
+        String email = correoUnico();
+        for (int i = 0; i <= limitePorMinuto; i++) {
+            ejecutar(email, "{\"codigo\":\"  \",\"lenguaje\":\"python\"}").andExpect(status().isBadRequest());
+        }
+
+        ejecutar(email, CODIGO_VALIDO).andExpect(status().isOk());
     }
 }

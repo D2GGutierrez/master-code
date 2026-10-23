@@ -77,6 +77,8 @@ services:
       # Por la red interna: user-api le pide a ai-service que ejecute el código.
       AI_SERVICE_URL: http://ai-service:8002
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      # Ejecuciones de prueba por estudiante y por minuto (HU06-T4).
+      EJECUCIONES_POR_MINUTO: ${EJECUCIONES_POR_MINUTO:-10}
       # Por la red interna: user-api le pregunta a admin-api por los datos de los cursos.
       ADMIN_API_URL: http://admin-api:8000
     ports:
@@ -98,6 +100,8 @@ services:
       # Solo ai-service recibe la clave del LLM. Con mock (por defecto) no hace falta.
       LLM_PROVIDER: ${LLM_PROVIDER}
       LLM_API_KEY: ${LLM_API_KEY}
+      # Modelo del proveedor; vacío = el modelo por defecto de ese proveedor (ver .env.example).
+      LLM_MODEL: ${LLM_MODEL:-}
       # Motor que ejecuta el código de los estudiantes: mock (por defecto, no ejecuta nada), judge0 o piston.
       # Con mock, docker compose up funciona sin ningún motor. Cambiarlo no toca el código (HU08-T3).
       SANDBOX_PROVIDER: ${SANDBOX_PROVIDER:-mock}

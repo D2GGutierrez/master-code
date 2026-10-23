@@ -67,6 +67,8 @@ public class SeguridadConfig {
                 HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
                 HttpMethod.PATCH.name(), HttpMethod.DELETE.name(), HttpMethod.OPTIONS.name()));
         cors.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE));
+        // Sin esto el navegador oculta Retry-After del 429 de «Ejecutar» (HU06-T4) a user-web.
+        cors.setExposedHeaders(List.of(HttpHeaders.RETRY_AFTER));
         // El token va en Authorization, no en cookies.
         cors.setAllowCredentials(false);
 

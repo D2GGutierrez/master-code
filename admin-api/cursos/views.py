@@ -14,6 +14,9 @@ from cursos.inscritos import UserApiNoDisponible, inscritos_de
 from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
 
+MENSAJE_CON_PROBLEMAS = "No se puede eliminar el curso porque ya tiene problemas creados."
+MENSAJE_CON_INSCRITOS = "No se puede eliminar el curso porque ya tiene estudiantes inscritos."
+
 
 class CursosView(ListCreateAPIView):
     permission_classes = [IsAuthenticated, EsDocente]
@@ -54,14 +57,29 @@ class EditarCursoView(DestroyModelMixin, UpdateAPIView):
         return self.destroy(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        # get_object aplica EsPropietario: un curso ajeno da 403 antes de preguntar nada a user-api.
+        curso = self.get_object()
+        # Primero lo que se sabe aquí mismo: con problemas ya no hace falta consultar a user-api.
+        if curso.problema_set.exists():
+            return Response({"detail": MENSAJE_CON_PROBLEMAS}, status=status.HTTP_409_CONFLICT)
+        # CA-12.3 (HU28 T5): los inscritos viven en user-api, que responde por su API interna.
         try:
-            return super().destroy(request, *args, **kwargs)
-        except ProtectedError:
-            # PROTECT en Problema.curso (HU12 T1): sin esto, DRF respondería un 500.
+            tiene_inscritos = bool(inscritos_de(curso.pk))
+        except UserApiNoDisponible:
+            # Sin poder comprobarlo no se borra: eliminar un curso con inscritos deja inscripciones huérfanas.
             return Response(
-                {"detail": "No se puede eliminar el curso porque ya tiene problemas creados."},
-                status=status.HTTP_409_CONFLICT,
+                {"detail": "No se pudo comprobar si el curso tiene estudiantes inscritos. Intenta de nuevo en un momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+        if tiene_inscritos:
+            return Response({"detail": MENSAJE_CON_INSCRITOS}, status=status.HTTP_409_CONFLICT)
+        try:
+            self.perform_destroy(curso)
+        except ProtectedError:
+            # PROTECT en Problema.curso (HU12 T1): si alguien creó un problema justo ahora, la base
+            # lo frena; sin esto, DRF respondería un 500.
+            return Response({"detail": MENSAJE_CON_PROBLEMAS}, status=status.HTTP_409_CONFLICT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InscritosView(APIView):

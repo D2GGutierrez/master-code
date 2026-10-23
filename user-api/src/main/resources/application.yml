@@ -25,6 +25,10 @@ sandbox:
   # Debe ser mayor que el tiempo máximo de ejecución del motor, o el cliente cortaría antes que él.
   timeout-segundos: ${SANDBOX_TIMEOUT_SEGUNDOS:40}
 
+# HU06-T4: ejecuciones de prueba que un estudiante puede hacer por minuto (ventana deslizante de 60 s).
+ejecuciones:
+  limite-por-minuto: ${EJECUCIONES_POR_MINUTO:10}
+
 spring:
   datasource:
     # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).

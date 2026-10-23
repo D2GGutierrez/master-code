@@ -1,5 +1,8 @@
 # CA-008.1: un curso vacío se elimina. CA-008.2: un curso con problemas no se elimina.
-# CA-008.4: el bloqueo explica la causa. CA-008.3 (estudiantes inscritos) es del Sprint 2.
+# CA-008.3: un curso con estudiantes inscritos no se elimina (HU28 T5, los inscritos los informa user-api).
+# CA-008.4: el bloqueo explica la causa.
+from unittest.mock import patch
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -7,6 +10,7 @@ from rest_framework.test import APIClient
 
 from cuentas.models import Docente
 from cuentas.tokens import crear_tokens
+from cursos.inscritos import UserApiNoDisponible
 from cursos.models import Curso
 from cursos.serializers import LENGUAJES
 from problemas.models import Problema
@@ -18,6 +22,11 @@ CONTRASENA = "Clave-Falsa-2026"
 class EliminarCursoTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        # user-api no existe en las pruebas: por defecto el curso no tiene inscritos. Cada prueba
+        # de inscritos cambia este valor.
+        parche = patch("cursos.views.inscritos_de", return_value=[])
+        self.inscritos_de = parche.start()
+        self.addCleanup(parche.stop)
 
     # Copiados de cursos/tests.py: importar su clase haría correr sus pruebas dos veces.
     def crear_docente(self, usuario):
@@ -114,3 +123,77 @@ class EliminarCursoTests(TestCase):
 
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Curso.objects.filter(pk=curso.pk).exists())
+
+    # --- HU28-T5: estudiantes inscritos ---
+    def test_curso_con_inscritos_no_se_elimina(self):
+        docente = self.crear_docente("docente-a")
+        curso = self.crear_curso(docente)
+        self.autenticar(docente)
+        self.inscritos_de.return_value = [{"email": "ana@example.com", "fecha": "2026-10-20T10:00:00Z"}]
+
+        response = self.borrar(curso)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertTrue(Curso.objects.filter(pk=curso.pk).exists())
+        self.inscritos_de.assert_called_once_with(curso.pk)
+
+    def test_el_bloqueo_explica_que_el_curso_tiene_inscritos(self):
+        docente = self.crear_docente("docente-a")
+        curso = self.crear_curso(docente)
+        self.autenticar(docente)
+        self.inscritos_de.return_value = [{"email": "ana@example.com", "fecha": "2026-10-20T10:00:00Z"}]
+
+        mensaje = self.borrar(curso).data["detail"].lower()
+
+        self.assertIn("eliminar", mensaje)
+        self.assertIn("inscritos", mensaje)
+
+    def test_curso_sin_inscritos_ni_problemas_se_elimina_despues_de_preguntar(self):
+        docente = self.crear_docente("docente-a")
+        curso = self.crear_curso(docente)
+        self.autenticar(docente)
+
+        response = self.borrar(curso)
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Curso.objects.filter(pk=curso.pk).exists())
+        self.inscritos_de.assert_called_once_with(curso.pk)
+
+    def test_si_user_api_no_responde_el_curso_no_se_elimina(self):
+        docente = self.crear_docente("docente-a")
+        curso = self.crear_curso(docente)
+        self.autenticar(docente)
+        self.inscritos_de.side_effect = UserApiNoDisponible("sin conexión")
+
+        response = self.borrar(curso)
+
+        self.assertEqual(response.status_code, 503)
+        self.assertTrue(Curso.objects.filter(pk=curso.pk).exists())
+
+    def test_con_problemas_responde_sin_consultar_a_user_api(self):
+        docente = self.crear_docente("docente-a")
+        curso = self.crear_curso(docente)
+        self.crear_problema(curso)
+        self.autenticar(docente)
+
+        response = self.borrar(curso)
+
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("problemas", response.data["detail"].lower())
+        self.inscritos_de.assert_not_called()
+
+    def test_un_curso_ajeno_da_403_sin_consultar_a_user_api(self):
+        dueno = self.crear_docente("docente-a")
+        curso = self.crear_curso(dueno)
+        self.autenticar(self.crear_docente("docente-b"))
+
+        response = self.borrar(curso)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Curso.objects.filter(pk=curso.pk).exists())
+        self.inscritos_de.assert_not_called()
+
+    def test_un_curso_inexistente_da_404(self):
+        self.autenticar(self.crear_docente("docente-a"))
+
+        self.assertEqual(self.client.delete("/api/cursos/999999/").status_code, 404)

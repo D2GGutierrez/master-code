@@ -3,13 +3,16 @@ package com.mastercode.userapi.ejecucion;
 import java.util.Locale;
 import java.util.Set;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mastercode.userapi.Detalle;
+import com.mastercode.userapi.perfil.Estudiante;
 import com.mastercode.userapi.sandbox.EjecucionResultado;
 import com.mastercode.userapi.sandbox.EjecucionSolicitud;
 import com.mastercode.userapi.sandbox.Estado;
@@ -32,14 +35,17 @@ public class EjecucionController {
     }
 
     private final SandboxCliente sandbox;
+    private final LimiteEjecuciones limite;
 
-    public EjecucionController(SandboxCliente sandbox) {
+    public EjecucionController(SandboxCliente sandbox, LimiteEjecuciones limite) {
         this.sandbox = sandbox;
+        this.limite = limite;
     }
 
     // POST y no GET: lleva código en el cuerpo y cada llamada ejecuta algo. Es una «ejecución», no un envío.
     @PostMapping("/api/ejecuciones")
-    public ResponseEntity<?> ejecutar(@RequestBody Solicitud solicitud) {
+    public ResponseEntity<?> ejecutar(@RequestBody Solicitud solicitud,
+            @RequestAttribute("estudiante") Estudiante estudiante) {
         String codigo = solicitud.codigo();
         if (codigo == null || codigo.isBlank()) {
             return error(HttpStatus.BAD_REQUEST, "Escribe tu código antes de ejecutarlo.");
@@ -55,6 +61,12 @@ public class EjecucionController {
         String lenguaje = solicitud.lenguaje() == null ? "" : solicitud.lenguaje().trim().toLowerCase(Locale.ROOT);
         if (!LENGUAJES.contains(lenguaje)) {
             return error(HttpStatus.BAD_REQUEST, "Lenguaje no soportado. Usa python, java o javascript.");
+        }
+
+        // Después de validar: una petición inválida no llega al sandbox y por eso no gasta ejecuciones.
+        long espera = limite.intentar(estudiante.getId());
+        if (espera > 0) {
+            return demasiadasEjecuciones(espera);
         }
 
         EjecucionResultado resultado;
@@ -73,6 +85,14 @@ public class EjecucionController {
         }
         // Un programa que falla, no compila o tarda demasiado es una respuesta normal (200) con su estado.
         return ResponseEntity.ok(resultado);
+    }
+
+    // 429 con Retry-After (segundos): el navegador y los clientes saben cuánto esperar sin adivinar.
+    private static ResponseEntity<Detalle> demasiadasEjecuciones(long espera) {
+        String tiempo = espera == 1 ? "1 segundo" : espera + " segundos";
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(espera))
+                .body(new Detalle("Ejecutaste demasiadas veces seguidas. Espera " + tiempo + " e intenta de nuevo."));
     }
 
     private static ResponseEntity<Detalle> noDisponible() {
