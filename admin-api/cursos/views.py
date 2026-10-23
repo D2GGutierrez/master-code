@@ -15,7 +15,16 @@ from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
 
 MENSAJE_CON_PROBLEMAS = "No se puede eliminar el curso porque ya tiene problemas creados."
+# Mis cursos no cuenta los descartados: sin este texto, un curso que muestra «0 problemas» diría que tiene problemas.
+MENSAJE_SOLO_ARCHIVADOS = "No se puede eliminar el curso porque solo tiene problemas descartados, que se conservan archivados."
 MENSAJE_CON_INSCRITOS = "No se puede eliminar el curso porque ya tiene estudiantes inscritos."
+
+
+def motivo_con_problemas(curso):
+    # Solo elige el texto: el curso sigue bloqueado tenga problemas activos o solo archivados.
+    if curso.problema_set.filter(archivado=False).exists():
+        return MENSAJE_CON_PROBLEMAS
+    return MENSAJE_SOLO_ARCHIVADOS
 
 
 class CursosView(ListCreateAPIView):
@@ -66,7 +75,7 @@ class EditarCursoView(DestroyModelMixin, UpdateAPIView):
         curso = self.get_object()
         # Primero lo que se sabe aquí mismo: con problemas ya no hace falta consultar a user-api.
         if curso.problema_set.exists():
-            return Response({"detail": MENSAJE_CON_PROBLEMAS}, status=status.HTTP_409_CONFLICT)
+            return Response({"detail": motivo_con_problemas(curso)}, status=status.HTTP_409_CONFLICT)
         # CA-12.3 (HU28 T5): los inscritos viven en user-api, que responde por su API interna.
         try:
             tiene_inscritos = bool(inscritos_de(curso.pk))
@@ -83,7 +92,7 @@ class EditarCursoView(DestroyModelMixin, UpdateAPIView):
         except ProtectedError:
             # PROTECT en Problema.curso (HU12 T1): si alguien creó un problema justo ahora, la base
             # lo frena; sin esto, DRF respondería un 500.
-            return Response({"detail": MENSAJE_CON_PROBLEMAS}, status=status.HTTP_409_CONFLICT)
+            return Response({"detail": motivo_con_problemas(curso)}, status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
