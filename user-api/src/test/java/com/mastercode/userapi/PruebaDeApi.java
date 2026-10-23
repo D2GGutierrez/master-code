@@ -16,10 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mastercode.userapi.admin.AdminCliente;
 import com.mastercode.userapi.perfil.EstudianteRepository;
+import com.mastercode.userapi.sandbox.SandboxCliente;
 
 // Base de las pruebas de la API de inscripciones (HU26, HU27, HU28). Todas comparten la misma
 // configuración para que Spring arranque una sola vez. AdminCliente se reemplaza por un mock:
-// ninguna prueba necesita admin-api encendido.
+// ninguna prueba necesita admin-api ni ai-service encendidos.
 // @Transactional: cada prueba deshace lo que insertó, también lo que crea el filtro del perfil.
 @SpringBootTest(properties = "internal.api-key=" + PruebaDeApi.CLAVE_INTERNA)
 @AutoConfigureMockMvc
@@ -39,6 +40,10 @@ abstract class PruebaDeApi {
 
     @MockBean
     protected AdminCliente admin;
+
+    // Tampoco hace falta ai-service ni ningún motor para probar «Ejecutar».
+    @MockBean
+    protected SandboxCliente sandbox;
 
     // Correo único por prueba: no choca con datos de la base de desarrollo ni con otras corridas.
     protected static String correoUnico() {

@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.mastercode.userapi.Detalle;
 import com.mastercode.userapi.admin.AdminCliente;
 import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.CursoDto;
-import com.mastercode.userapi.inscripcion.InscripcionController.Detalle;
 import com.mastercode.userapi.inscripcion.InscripcionRepository.Fila;
 import com.mastercode.userapi.perfil.Estudiante;
 

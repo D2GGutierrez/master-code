@@ -98,12 +98,17 @@ services:
       # Solo ai-service recibe la clave del LLM. Con mock (por defecto) no hace falta.
       LLM_PROVIDER: ${LLM_PROVIDER}
       LLM_API_KEY: ${LLM_API_KEY}
+      # Motor que ejecuta el código de los estudiantes: mock (por defecto, no ejecuta nada), judge0 o piston.
+      # Con mock, docker compose up funciona sin ningún motor. Cambiarlo no toca el código (HU08-T3).
+      SANDBOX_PROVIDER: ${SANDBOX_PROVIDER:-mock}
+      JUDGE0_URL: http://judge0-server:2358
+      PISTON_URL: http://piston:2000
     ports:
       - "8002:8002"
 
   # Sandbox (HU07): Judge0 ejecuta el código de los estudiantes. Solo ai-service lo llamará (ADR-7 / D1).
   # Tiene su propia base y su propio Redis: no se mezcla con admin_schema ni app_schema (ADR-1).
-  # Los límites de tiempo y memoria y el bloqueo de red son de HU07-T2.
+  # Los límites de tiempo y memoria y el bloqueo de red (HU07-T2) están en el entorno de judge0-server.
   # Requiere un kernel Linux con cgroup v1 (Judge0 1.13.1). En Docker Desktop con WSL2 (cgroup v2)
   # levanta bien pero falla al ejecutar código ("Cannot run proxy, clone failed"): probarlo en Linux.
   judge0-db:
@@ -187,6 +192,36 @@ services:
       judge0-redis:
         condition: service_healthy
 
+  # Sandbox alternativo (HU08-T2). No arranca con un docker compose up normal: se pide con
+  #   docker compose --profile piston up -d piston
+  # A diferencia de Judge0 1.13.1, Piston pide cgroup v2 (el de Docker Desktop con WSL2).
+  # Los lenguajes se instalan una vez, ver docs/piston.md.
+  piston:
+    image: ghcr.io/engineer-man/piston
+    profiles: ["piston"]
+    # Aísla cada programa con mecanismos del kernel: sin esto no puede crear su entorno.
+    privileged: true
+    tmpfs:
+      - /tmp:exec
+    ports:
+      # Solo en este PC (127.0.0.1), para instalar lenguajes y probar a mano; ai-service usa http://piston:2000.
+      - "127.0.0.1:2000:2000"
+    volumes:
+      - piston_packages:/piston/packages
+    environment:
+      # Límites de cada ejecución (HU07-T2 pide lo mismo para Judge0): código de estudiantes, no confiable.
+      # Tiempo en milisegundos: corta un bucle infinito.
+      PISTON_RUN_TIMEOUT: "5000"
+      PISTON_COMPILE_TIMEOUT: "10000"
+      # Memoria en bytes (256 MB).
+      PISTON_RUN_MEMORY_LIMIT: "268435456"
+      PISTON_COMPILE_MEMORY_LIMIT: "268435456"
+      # Procesos por ejecución: frena una bomba de procesos (fork bomb).
+      PISTON_MAX_PROCESS_COUNT: "64"
+      # Sin red: el programa no puede abrir conexiones. Es el valor por defecto; se deja escrito a propósito.
+      PISTON_DISABLE_NETWORKING: "true"
+
 volumes:
   db_data:
   judge0_db_data:
+  piston_packages:

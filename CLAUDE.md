@@ -17,4 +17,4 @@ admin-api (Django, 8000) · admin-web (React, 3000) · user-api (Spring Boot, 80
 - Responde y comenta el código en español.
 
 ## Documentación (léela solo cuando la tarea lo pida)
-docs/historias-tareas.md · docs/historias-criterios.md · docs/decisiones-tecnicas-adr.md · docs/contrato-jwt.md · docs/flujo-git.md · docs/habilitadores.md · docs/registro-cambios.md · docs/modelo-de-datos.md
+docs/historias-tareas.md · docs/historias-criterios.md · docs/decisiones-tecnicas-adr.md · docs/contrato-jwt.md · docs/flujo-git.md · docs/habilitadores.md · docs/registro-cambios.md · docs/modelo-de-datos.md · docs/judge0.md · docs/piston.md

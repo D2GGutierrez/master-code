@@ -1,6 +1,4 @@
-import json
 import urllib.error
-import urllib.request
 
 from app.providers.sandbox.base import (
     Ejecucion,
@@ -9,6 +7,7 @@ from app.providers.sandbox.base import (
     ProveedorSandbox,
     Resultado,
 )
+from app.providers.sandbox.http import post_json
 
 # Ids de lenguaje de Judge0 1.13.1.
 LENGUAJES = {"python": 71, "java": 62, "javascript": 63}
@@ -17,15 +16,6 @@ LENGUAJES = {"python": 71, "java": 62, "javascript": 63}
 # Cualquier otro (por ejemplo 13, error interno) se trata como falla del servicio.
 _ESTADO_POR_ID = {3: Estado.OK, 5: Estado.TIEMPO_AGOTADO, 6: Estado.ERROR_COMPILACION}
 _ERRORES_DE_EJECUCION = range(7, 13)
-
-
-def _post_json(url: str, cuerpo: dict) -> dict:
-    peticion = urllib.request.Request(
-        url, data=json.dumps(cuerpo).encode(), headers={"Content-Type": "application/json"}, method="POST"
-    )
-    # Tiempo máximo para no dejar colgada la petición si el motor no responde.
-    with urllib.request.urlopen(peticion, timeout=30) as respuesta:
-        return json.loads(respuesta.read())
 
 
 # Judge0 informa el tiempo en segundos, como texto ("0.012"), o null.
@@ -38,7 +28,7 @@ def _a_milisegundos(segundos) -> int | None:
 
 class Judge0(ProveedorSandbox):
     # `enviar` se recibe para poder probar sin un Judge0 real.
-    def __init__(self, url: str, enviar=_post_json):
+    def __init__(self, url: str, enviar=post_json):
         self._url = url.rstrip("/")
         self._enviar = enviar
 

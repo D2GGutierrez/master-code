@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.mastercode.userapi.Detalle;
 import com.mastercode.userapi.admin.AdminCliente;
 import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.CodigoInvalidoException;
@@ -34,10 +35,6 @@ public class InscripcionController {
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     record Inscrita(long id, long cursoId, String nombre, String lenguaje, OffsetDateTime fecha) {
-    }
-
-    // Mismo cuerpo de error que admin-api (DRF): {"detail": "..."}.
-    record Detalle(String detail) {
     }
 
     private final AdminCliente admin;
