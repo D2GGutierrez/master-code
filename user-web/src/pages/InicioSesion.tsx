@@ -30,7 +30,6 @@ function erroresDelServidor(cuerpo: CuerpoSesion) {
 function InicioSesion() {
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState<Record<string, string>>({})
-  const [iniciada, setIniciada] = useState(false)
 
   async function entrar(valores: Record<string, string>) {
     setEnviando(true)
@@ -39,7 +38,9 @@ function InicioSesion() {
       const { ok, cuerpo } = await iniciarSesion(valores)
       if (ok && cuerpo.access && cuerpo.refresh) {
         guardarSesion(cuerpo.access, cuerpo.refresh)
-        setIniciada(true)
+        window.location.assign('/inicio')
+        // El botón sigue deshabilitado mientras el navegador cambia de página.
+        return
       } else {
         setErrores(erroresDelServidor(cuerpo))
       }
@@ -53,25 +54,19 @@ function InicioSesion() {
   return (
     <main>
       <h1>Inicio de sesión</h1>
-      {iniciada ? (
-        <p>Sesión iniciada.</p>
-      ) : (
-        <>
-          <Formulario
-            campos={CAMPOS}
-            textoBoton="Iniciar sesión"
-            enviando={enviando}
-            errores={errores}
-            onEnviar={entrar}
-          />
-          <p>
-            <a href="/olvide-contrasena">Olvidé mi contraseña</a>
-          </p>
-          <p>
-            <a href="/">¿No tienes cuenta? Regístrate</a>
-          </p>
-        </>
-      )}
+      <Formulario
+        campos={CAMPOS}
+        textoBoton="Iniciar sesión"
+        enviando={enviando}
+        errores={errores}
+        onEnviar={entrar}
+      />
+      <p>
+        <a href="/olvide-contrasena">Olvidé mi contraseña</a>
+      </p>
+      <p>
+        <a href="/">¿No tienes cuenta? Regístrate</a>
+      </p>
     </main>
   )
 }

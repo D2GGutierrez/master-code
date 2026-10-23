@@ -9,3 +9,14 @@ const MONACO_POR_LENGUAJE = new Map([
 export function idMonaco(lenguaje: string): string {
   return MONACO_POR_LENGUAJE.get(lenguaje.trim().toLowerCase()) ?? 'plaintext'
 }
+
+const ETIQUETA_POR_LENGUAJE = new Map([
+  ['python', 'Python'],
+  ['java', 'Java'],
+  ['javascript', 'JavaScript'],
+])
+
+// Un valor desconocido se muestra tal cual llegó.
+export function etiquetaLenguaje(lenguaje: string): string {
+  return ETIQUETA_POR_LENGUAJE.get(lenguaje.trim().toLowerCase()) ?? lenguaje
+}
