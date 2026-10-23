@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listarCursos, listarInscritos } from '../api/cursos.js'
 import Paginacion from '../components/Paginacion.jsx'
+import { aCsv, descargarCsv, nombreArchivoInscritos } from '../csv.js'
 
 // admin-api devuelve todos los inscritos de una vez: la tabla se pagina en el navegador.
 const INSCRITOS_POR_PAGINA = 20
@@ -10,6 +11,19 @@ function formatearFecha(texto) {
   const fecha = new Date(texto)
   return Number.isNaN(fecha.getTime()) ? texto : fecha.toLocaleDateString('es-PE')
 }
+
+// Mismas columnas y orden que la tabla. La fecha va como AAAA-MM-DD: la parte de fecha de la cadena ISO.
+const COLUMNAS_CSV = [
+  { encabezado: 'Nombre', valor: (inscrito) => inscrito.nombre },
+  { encabezado: 'Correo', valor: (inscrito) => inscrito.email },
+  {
+    encabezado: 'Fecha de inscripción',
+    valor: (inscrito) =>
+      Number.isNaN(new Date(inscrito.fecha_inscripcion).getTime())
+        ? inscrito.fecha_inscripcion
+        : inscrito.fecha_inscripcion.slice(0, 10),
+  },
+]
 
 function EstudiantesInscritos({ id }) {
   // null mientras carga; luego la lista (puede estar vacía).
@@ -61,6 +75,11 @@ function EstudiantesInscritos({ id }) {
     }
   }, [id, recargas])
 
+  // Toda la lista cargada, no solo la página visible de la tabla.
+  function descargar() {
+    descargarCsv(nombreArchivoInscritos(nombreCurso, id), aCsv(COLUMNAS_CSV, inscritos))
+  }
+
   function reintentar() {
     setError('')
     setPuedeReintentar(false)
@@ -83,14 +102,24 @@ function EstudiantesInscritos({ id }) {
   } else if (inscritos === null) {
     contenido = <p>Cargando estudiantes…</p>
   } else if (inscritos.length === 0) {
-    contenido = <p>Aún no hay estudiantes inscritos en este curso.</p>
+    contenido = (
+      <p>
+        Aún no hay estudiantes inscritos en este curso.{' '}
+        <button type="button" disabled title="No hay estudiantes para descargar">
+          Descargar CSV
+        </button>
+      </p>
+    )
   } else {
     const inicio = (pagina - 1) * INSCRITOS_POR_PAGINA
     const inscritosDeLaPagina = inscritos.slice(inicio, inicio + INSCRITOS_POR_PAGINA)
     contenido = (
       <>
         <p>
-          {inscritos.length} {inscritos.length === 1 ? 'estudiante inscrito' : 'estudiantes inscritos'}
+          {inscritos.length} {inscritos.length === 1 ? 'estudiante inscrito' : 'estudiantes inscritos'}{' '}
+          <button type="button" onClick={descargar}>
+            Descargar CSV
+          </button>
         </p>
         <table>
           <caption>Estudiantes inscritos en {nombreCurso}</caption>

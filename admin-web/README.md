@@ -92,3 +92,5 @@ La columna «Acciones» de `/cursos` tiene «Eliminar», con confirmación en la
 Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sobre `<dialog>`) resume qué cambia; si no cambió nada no se abre y aparece «No hay cambios para guardar.».
 
 «Ver inscritos» lleva a <http://localhost:3000/cursos/ID/inscritos>: la tabla de estudiantes inscritos (nombre, correo y fecha de inscripción), 20 por página; `admin-api` la obtiene de `user-api`, así que con `user-api` caído se muestra un error con «Reintentar».
+
+En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo la página visible) como `inscritos-<curso>-<fecha>.csv`, en UTF-8 con BOM, separado por comas y con las celdas que empiezan por `=`, `+`, `-` o `@` neutralizadas con `'`.
