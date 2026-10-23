@@ -23,6 +23,8 @@ class Resultado:
     estado: Estado
     salida: str = ""
     error: str = ""
+    # Milisegundos que tardó el programa; None si el motor no lo informa.
+    tiempo_ms: int | None = None
 
 
 class LenguajeNoSoportado(ValueError):

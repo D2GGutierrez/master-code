@@ -81,3 +81,15 @@ def test_lenguaje_no_soportado_lanza_error():
 
     with pytest.raises(LenguajeNoSoportado):
         ejecutar_en(proveedor, Ejecucion("x", "cobol"))
+
+
+def test_el_tiempo_se_convierte_a_milisegundos():
+    proveedor, _ = judge0_que_responde({"status": {"id": 3}, "stdout": "x", "time": "0.012"})
+
+    assert ejecutar_en(proveedor, Ejecucion("x", "python")).tiempo_ms == 12
+
+
+def test_sin_tiempo_queda_en_none():
+    proveedor, _ = judge0_que_responde({"status": {"id": 3}, "stdout": "x", "time": None})
+
+    assert ejecutar_en(proveedor, Ejecucion("x", "python")).tiempo_ms is None

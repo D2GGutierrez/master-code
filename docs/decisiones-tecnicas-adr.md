@@ -120,6 +120,8 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 ### D1. Quién llama al sandbox
 
 > **Decidido.** `user-api` llama a `ai-service` (`POST /execute`), y `ai-service` usa el proveedor activo (Judge0, Piston o mock, ver HU08). HU07-T3 pasa a ser el cliente Spring hacia `ai-service`, y el proveedor Judge0 en Python se agrega dentro de HU08-T1. Motivo: es lo que pide ADR-2 y permite cambiar de motor solo con una variable de entorno. Alternativa: `user-api` llama a Judge0 directo y los proveedores de `ai-service` no se usan.
+>
+> **Contrato de `POST /execute`** (el cliente de `user-api` ya lo usa; el endpoint en `ai-service` se construye en HU08-T3). Cuerpo: `{"codigo", "lenguaje", "entrada"}`. Respuesta 200: `{"estado", "salida", "error", "tiempo_ms"}`, con `estado` = `ok`, `error_ejecucion`, `error_compilacion`, `tiempo_agotado` o `error_servicio`; `tiempo_ms` puede ser `null`. Un código que falla es una respuesta 200 con su estado, no un error HTTP. Respuesta 400: lenguaje no soportado por el motor activo.
 
 ### D3. Autenticación entre servicios (API interna)
 

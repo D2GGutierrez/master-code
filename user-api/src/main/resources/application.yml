@@ -11,6 +11,12 @@ jwt:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
 
+# ai-service ejecuta el código de los estudiantes en el sandbox (ADR-7 D1).
+sandbox:
+  url: ${AI_SERVICE_URL:http://localhost:8002}
+  # Debe ser mayor que el tiempo máximo de ejecución del motor, o el cliente cortaría antes que él.
+  timeout-segundos: ${SANDBOX_TIMEOUT_SEGUNDOS:40}
+
 spring:
   datasource:
     # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).

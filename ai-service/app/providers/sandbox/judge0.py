@@ -28,6 +28,14 @@ def _post_json(url: str, cuerpo: dict) -> dict:
         return json.loads(respuesta.read())
 
 
+# Judge0 informa el tiempo en segundos, como texto ("0.012"), o null.
+def _a_milisegundos(segundos) -> int | None:
+    try:
+        return round(float(segundos) * 1000)
+    except (TypeError, ValueError):
+        return None
+
+
 class Judge0(ProveedorSandbox):
     # `enviar` se recibe para poder probar sin un Judge0 real.
     def __init__(self, url: str, enviar=_post_json):
@@ -55,4 +63,5 @@ class Judge0(ProveedorSandbox):
             estado,
             salida=datos.get("stdout") or "",
             error=datos.get("stderr") or datos.get("compile_output") or datos.get("message") or "",
+            tiempo_ms=_a_milisegundos(datos.get("time")),
         )

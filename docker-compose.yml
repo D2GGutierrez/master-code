@@ -71,6 +71,8 @@ services:
       # Solo la clave pública, por la red interna (ADR-4).
       JWKS_URI: http://admin-api:8000/.well-known/jwks.json
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      # Por la red interna: user-api le pide a ai-service que ejecute el código.
+      AI_SERVICE_URL: http://ai-service:8002
     ports:
       - "8081:8081"
     depends_on:
