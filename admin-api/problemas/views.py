@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -96,6 +96,29 @@ def problema_del_docente(request, pk):
     # (dentro de una transacción) evita que aprobar y descartar a la vez dejen un problema en dos estados.
     consulta = Problema.objects.select_for_update(of=("self",)).filter(curso__docente=request.user.docente)
     return get_object_or_404(consulta, pk=pk)
+
+
+# HU19-T1: leer un problema y corregirlo antes de aprobarlo. Solo el docente dueño del curso: uno ajeno da 404.
+# Solo PUT (reemplazo completo) y no PATCH: validate necesita plataforma y tipo_ejercicio juntos.
+# curso, generado_por_ia, aprobado_por_docente, fecha_aprobacion y archivado son de solo lectura en el
+# serializer: si el cuerpo los trae, se ignoran. Aprobar es su propia acción, con quién y cuándo (HU19-T2).
+class ProblemaView(RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, EsDocente]
+    serializer_class = ProblemaPendienteSerializer
+    http_method_names = ["get", "put", "head", "options"]
+
+    def get_queryset(self):
+        return (
+            Problema.objects.filter(curso__docente=self.request.user.docente)
+            .select_related("curso")
+            .prefetch_related("casos_prueba", "opciones")
+        )
+
+    def put(self, request, *args, **kwargs):
+        # Bloquea la fila mientras se guarda: así no se aprueba a la vez con los datos anteriores.
+        with transaction.atomic():
+            problema_del_docente(request, kwargs["pk"])
+            return super().put(request, *args, **kwargs)
 
 
 # HU19-T2: «Aprobar» deja el problema listo para publicarse: aprobado_por_docente=True y quién y cuándo (CA-19.4, 19.5).

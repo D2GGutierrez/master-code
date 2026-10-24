@@ -120,9 +120,29 @@ class ProblemaSerializer(serializers.ModelSerializer):
             OpcionRespuesta.objects.create(problema=problema, **opcion)
         return problema
 
+    # HU19-T1, PUT: reemplazo completo. Los casos y las alternativas enviados sustituyen a los anteriores
+    # (lo que no viene se borra) y una respuesta esperada que no viene queda vacía, para que un cambio de
+    # tipo no deje datos del tipo anterior. Los campos de solo lectura nunca llegan aquí.
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        casos = validated_data.pop("casos_prueba", [])
+        opciones = validated_data.pop("opciones", [])
+        validated_data.setdefault("respuesta_esperada", "")
+        for campo, valor in validated_data.items():
+            setattr(instance, campo, valor)
+        instance.save()
+        instance.casos_prueba.all().delete()
+        for caso in casos:
+            CasoPrueba.objects.create(problema=instance, **caso)
+        instance.opciones.all().delete()
+        for opcion in opciones:
+            OpcionRespuesta.objects.create(problema=instance, **opcion)
+        return instance
+
 
 # Bandeja de revisión (HU18): el problema completo, para revisarlo sin otra consulta, y el nombre del curso,
 # porque la bandeja mezcla problemas de varios cursos. generado_por_ia es la marca «generado por IA» (CA-18.2).
+# También lo usa la pantalla de revisión de un problema (HU19-T1, GET y PUT /api/problemas/<id>/).
 class ProblemaPendienteSerializer(ProblemaSerializer):
     curso_nombre = serializers.CharField(source="curso.nombre", read_only=True)
 
