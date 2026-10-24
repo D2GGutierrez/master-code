@@ -134,7 +134,10 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Rutas internas construidas** (la clave es la variable `INTERNAL_API_KEY`; sin ella, las dos APIs rechazan todo con 403):
 >
 > - `admin-api`: `GET /internal/cursos/por-codigo/<codigo>/` (200 con el curso; 404 si no existe; 410 si venció) y `GET /internal/cursos/?ids=1,2` (los cursos que existan). Las usa `user-api` en la inscripción (HU26-T3) y en «Mis cursos» (HU27-T1).
+> - `admin-api`, para el estudiante (HU25-T1, HU31, HU32-T1): `GET /internal/cursos/publicados/` (los cursos con al menos un problema visible, con su institución; filtros opcionales `?institucion=` y `?buscar=`), `GET /internal/cursos/<id>/problemas/` (los problemas visibles del curso, sin enunciado ni casos; 404 si el curso no existe; filtro opcional `?plataforma=web|movil`, que deja también los de `ambas`) y `GET /internal/problemas/<id>/` (un problema con solo sus casos públicos y su `curso_id`; 404 si no existe, no está aprobado o fue descartado, sin distinguir cuál). Las tres parten de `Problema.objects.visibles_para_estudiante()` (D5): es la única puerta por la que un problema llega a un estudiante, y «publicado» significa que el curso tiene al menos un problema así. No entregan casos ocultos, respuesta esperada ni cuál alternativa es correcta; las alternativas llegarán con HU46-T2.
 > - `user-api`: `GET /internal/cursos/{cursoId}/inscritos` (email y fecha de cada inscrito). La usa `admin-api` en la lista de inscritos del docente (HU28-T1), que además comprueba que el curso sea del docente (403 si es de otro).
+>
+> **Quién las consume en `user-api`** (HU29-T1, HU31-T2): `GET /api/cursos/{id}/problemas` (403 si el estudiante no está inscrito; `?plataforma=` opcional) y `GET /api/problemas/{id}` (404 si el problema no es visible o el estudiante no está inscrito en su curso, con el mismo cuerpo que un id inexistente). `user-api` comprueba la inscripción porque es quien la tiene (ADR-1); `admin-api` decide qué problemas son visibles.
 
 ### D4. CORS de `user-api`
 

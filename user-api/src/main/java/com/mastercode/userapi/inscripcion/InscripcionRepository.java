@@ -62,4 +62,17 @@ public class InscripcionRepository {
                 .query(Inscrito.class)
                 .list();
     }
+
+    // ¿Está el estudiante inscrito en el curso? Es la regla de acceso a los problemas (HU29, CA-29.1): se consulta
+    // por el estudiante del token y el curso pedido, así la inscripción de otra persona nunca da acceso.
+    public boolean estaInscrito(long estudianteId, long cursoId) {
+        return jdbc.sql("""
+                SELECT EXISTS (
+                    SELECT 1 FROM app_schema.app_inscripcion WHERE estudiante_id = ? AND curso_id = ?
+                )
+                """)
+                .params(estudianteId, cursoId)
+                .query(Boolean.class)
+                .single();
+    }
 }

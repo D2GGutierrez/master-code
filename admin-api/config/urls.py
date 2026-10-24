@@ -11,6 +11,7 @@ urlpatterns = [
     path(".well-known/jwks.json", JwksView.as_view()),
     # D3: API interna para user-api, protegida con X-Internal-Key y no con JWT.
     path("internal/cursos/", include("cursos.urls_internas")),
+    path("internal/", include("problemas.urls_internas")),
     path("api/auth/", include("cuentas.urls")),
     path("api/cursos/", include("cursos.urls")),
     path("api/cursos/<int:curso_id>/problemas/", include("problemas.urls")),

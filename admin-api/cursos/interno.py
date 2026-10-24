@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from cuentas.permissions import ClaveInterna
 from cursos.models import Curso
+from problemas.models import Problema
 
 MAX_IDS = 100
 
@@ -47,4 +48,22 @@ class CursosPorIdsView(VistaInterna):
         if len(ids) > MAX_IDS:
             return Response({"detail": f"Máximo {MAX_IDS} ids por consulta."}, status=status.HTTP_400_BAD_REQUEST)
         cursos = Curso.objects.filter(pk__in=ids).select_related("docente").order_by("pk")
+        return Response([datos_curso(curso) for curso in cursos])
+
+
+class CursosPublicadosView(VistaInterna):
+    # HU25-T1. Un curso está publicado cuando tiene al menos un problema que un estudiante puede ver
+    # (aprobado y no descartado). La regla sale de Problema.objects.visibles_para_estudiante() y no se repite aquí:
+    # así lo que hace publicado a un curso y lo que ve el estudiante dentro de él nunca se contradicen.
+    # Filtros opcionales: ?institucion= (HU25-T4, la del claim del token) y ?buscar= (HU25-T2, parte del nombre).
+    def get(self, request):
+        publicados = Problema.objects.visibles_para_estudiante().values("curso_id")
+        cursos = Curso.objects.filter(pk__in=publicados)
+        institucion = request.query_params.get("institucion", "").strip()
+        if institucion:
+            cursos = cursos.filter(docente__institucion__iexact=institucion)
+        buscar = request.query_params.get("buscar", "").strip()
+        if buscar:
+            cursos = cursos.filter(nombre__icontains=buscar)
+        cursos = cursos.select_related("docente").order_by("nombre", "pk")
         return Response([datos_curso(curso) for curso in cursos])

@@ -13,6 +13,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -28,12 +29,25 @@ import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.CodigoInvalidoException;
 import com.mastercode.userapi.admin.CodigoVencidoException;
 import com.mastercode.userapi.admin.CursoDto;
+import com.mastercode.userapi.admin.CursoNoExisteException;
+import com.mastercode.userapi.admin.ProblemaDto;
+import com.mastercode.userapi.admin.ProblemaNoVisibleException;
+import com.mastercode.userapi.admin.ProblemaResumenDto;
 
 // El cliente de la API interna de admin-api (D3). Sin admin-api real: MockRestServiceServer responde.
 class AdminClienteTest {
 
     private static final String CURSO_JSON =
             "{\"id\":10,\"nombre\":\"Algoritmos I\",\"lenguaje\":\"python\",\"institucion\":\"ejemplo.edu.pe\",\"otro\":1}";
+
+    // Una fila del listado y un problema, con los nombres snake_case que usa admin-api y un campo de más.
+    private static final String FILA_JSON = "{\"id\":7,\"titulo\":\"Suma\",\"lenguaje\":\"python\",\"dificultad\":\"facil\","
+            + "\"plataforma\":\"web\",\"tipo_ejercicio\":\"escritura_codigo\","
+            + "\"fecha_publicacion\":\"2026-10-28T15:00:00Z\",\"otro\":1}";
+    private static final String PROBLEMA_JSON = "{\"id\":7,\"titulo\":\"Suma\",\"enunciado\":\"Suma dos números.\","
+            + "\"lenguaje\":\"python\",\"dificultad\":\"facil\",\"plataforma\":\"web\","
+            + "\"tipo_ejercicio\":\"escritura_codigo\","
+            + "\"casos_prueba\":[{\"entrada\":\"2 3\",\"salida_esperada\":\"5\"}],\"curso_id\":10,\"otro\":1}";
 
     private MockRestServiceServer servidor;
     private AdminCliente cliente;
@@ -123,5 +137,97 @@ class AdminClienteTest {
                 .andRespond(withServerError());
 
         assertThrows(AdminNoDisponibleException.class, () -> cliente.cursosPorIds(List.of(10L)));
+    }
+
+    @Test
+    void problemas_del_curso_pide_la_ruta_interna_con_la_clave_y_lee_las_filas() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/10/problemas/"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess("[" + FILA_JSON + "]", MediaType.APPLICATION_JSON));
+
+        List<ProblemaResumenDto> problemas = cliente.problemasDelCurso(10, null);
+
+        // El campo desconocido «otro» se ignora y los nombres snake_case se leen bien.
+        assertThat(problemas).hasSize(1);
+        ProblemaResumenDto fila = problemas.get(0);
+        assertThat(fila.id()).isEqualTo(7);
+        assertThat(fila.titulo()).isEqualTo("Suma");
+        assertThat(fila.dificultad()).isEqualTo("facil");
+        assertThat(fila.tipoEjercicio()).isEqualTo("escritura_codigo");
+        assertThat(fila.fechaPublicacion().toInstant()).isEqualTo(Instant.parse("2026-10-28T15:00:00Z"));
+        servidor.verify();
+    }
+
+    @Test
+    void problemas_del_curso_con_plataforma_la_manda_como_parametro() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/10/problemas/?plataforma=movil"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(cliente.problemasDelCurso(10, "movil")).isEmpty();
+        servidor.verify();
+    }
+
+    @Test
+    void problemas_del_curso_un_404_es_curso_no_existe() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/99/problemas/"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThrows(CursoNoExisteException.class, () -> cliente.problemasDelCurso(99, null));
+    }
+
+    @Test
+    void problemas_del_curso_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/10/problemas/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problemasDelCurso(10, null));
+
+        // 403 = clave interna rechazada: para el estudiante es un fallo del servicio.
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/10/problemas/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problemasDelCurso(10, null));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/10/problemas/"))
+                .andRespond(withException(new IOException("sin conexión")));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problemasDelCurso(10, null));
+    }
+
+    @Test
+    void problema_pide_la_ruta_interna_con_la_clave_y_lee_el_detalle_con_su_curso() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess(PROBLEMA_JSON, MediaType.APPLICATION_JSON));
+
+        ProblemaDto problema = cliente.problema(7);
+
+        assertThat(problema.id()).isEqualTo(7);
+        assertThat(problema.enunciado()).isEqualTo("Suma dos números.");
+        assertThat(problema.tipoEjercicio()).isEqualTo("escritura_codigo");
+        assertThat(problema.cursoId()).isEqualTo(10);
+        assertThat(problema.casosPrueba()).containsExactly(new ProblemaDto.Caso("2 3", "5"));
+        servidor.verify();
+    }
+
+    @Test
+    void problema_un_404_es_problema_no_visible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/8/"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThrows(ProblemaNoVisibleException.class, () -> cliente.problema(8));
+    }
+
+    @Test
+    void problema_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problema(7));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problema(7));
     }
 }

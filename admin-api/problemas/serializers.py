@@ -150,9 +150,9 @@ class ProblemaPendienteSerializer(ProblemaSerializer):
         fields = [*ProblemaSerializer.Meta.fields, "curso_nombre"]
 
 
-# Vista del estudiante (CA-012.4). Todavía no los usa ninguna ruta: son para la futura API del
-# estudiante (HU25/HU32), que debe usarlos a ellos y no ProblemaSerializer, que expone los ocultos.
-# No borrarlos por parecer código sin uso.
+# Vista del estudiante (CA-012.4). La usa la API interna que consume user-api (problemas/interno.py):
+# cualquier ruta que entregue un problema a un estudiante debe usar estos serializers y no
+# ProblemaSerializer, que expone los casos ocultos, la respuesta esperada y cuál alternativa es correcta.
 class CasoPruebaEstudianteSerializer(serializers.ModelSerializer):
     # Sin es_publico ni id: al estudiante solo le llegan casos públicos y no necesita saber más.
     class Meta:
@@ -181,3 +181,20 @@ class ProblemaEstudianteSerializer(serializers.ModelSerializer):
         # Único lugar donde se filtra: los ocultos solo sirven para calificar y nunca salen.
         publicos = problema.casos_prueba.filter(es_publico=True)
         return CasoPruebaEstudianteSerializer(publicos, many=True).data
+
+
+# Detalle para user-api (HU31-T2): lo mismo que ve el estudiante más el curso, porque user-api necesita
+# saber de qué curso es el problema para comprobar que el estudiante está inscrito en él.
+class ProblemaInternoSerializer(ProblemaEstudianteSerializer):
+    class Meta(ProblemaEstudianteSerializer.Meta):
+        fields = [*ProblemaEstudianteSerializer.Meta.fields, "curso_id"]
+
+
+# Fila del listado de problemas de un curso (HU29): sin enunciado ni casos, que solo hacen falta al abrir uno.
+# fecha_publicacion es la fecha de aprobación: desde ese momento el estudiante lo ve (HU29-T3 ordena por ella).
+class ProblemaResumenSerializer(serializers.ModelSerializer):
+    fecha_publicacion = serializers.DateTimeField(source="fecha_aprobacion", read_only=True)
+
+    class Meta:
+        model = Problema
+        fields = ["id", "titulo", "lenguaje", "dificultad", "plataforma", "tipo_ejercicio", "fecha_publicacion"]

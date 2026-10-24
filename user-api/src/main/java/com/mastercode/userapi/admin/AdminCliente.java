@@ -62,4 +62,49 @@ public class AdminCliente {
             throw new AdminNoDisponibleException("admin-api no pudo entregar los cursos", e);
         }
     }
+
+    // HU29-T1 y HU31-T1: los problemas que el estudiante puede ver en un curso; admin-api ya deja solo los aprobados.
+    // plataforma "web" o "movil" (validada antes de llegar aquí) deja los de esa plataforma y los de ambas; null no filtra.
+    public List<ProblemaResumenDto> problemasDelCurso(long cursoId, String plataforma) {
+        String ruta = "/internal/cursos/{id}/problemas/" + (plataforma == null ? "" : "?plataforma={plataforma}");
+        Object[] variables = plataforma == null ? new Object[] { cursoId } : new Object[] { cursoId, plataforma };
+        List<ProblemaResumenDto> problemas;
+        try {
+            problemas = http.get()
+                    .uri(ruta, variables)
+                    .retrieve()
+                    .onStatus(estado -> estado.value() == 404, (peticion, respuesta) -> {
+                        throw new CursoNoExisteException();
+                    })
+                    .body(new ParameterizedTypeReference<List<ProblemaResumenDto>>() {
+                    });
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar los problemas del curso", e);
+        }
+        if (problemas == null) {
+            throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+        }
+        return problemas;
+    }
+
+    // HU31-T2 y HU32-T1: un problema por id. Lanza ProblemaNoVisibleException si admin-api responde 404 (no existe,
+    // no está aprobado o fue descartado).
+    public ProblemaDto problema(long problemaId) {
+        ProblemaDto problema;
+        try {
+            problema = http.get()
+                    .uri("/internal/problemas/{id}/", problemaId)
+                    .retrieve()
+                    .onStatus(estado -> estado.value() == 404, (peticion, respuesta) -> {
+                        throw new ProblemaNoVisibleException();
+                    })
+                    .body(ProblemaDto.class);
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar el problema", e);
+        }
+        if (problema == null) {
+            throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+        }
+        return problema;
+    }
 }
