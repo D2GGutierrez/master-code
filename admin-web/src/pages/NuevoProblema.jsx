@@ -12,7 +12,7 @@ const LENGUAJES = [
   { valor: 'java', etiqueta: 'Java' },
   { valor: 'javascript', etiqueta: 'JavaScript' },
 ]
-const DIFICULTADES = [
+export const DIFICULTADES = [
   { valor: 'facil', etiqueta: 'Fácil' },
   { valor: 'medio', etiqueta: 'Medio' },
   { valor: 'dificil', etiqueta: 'Difícil' },

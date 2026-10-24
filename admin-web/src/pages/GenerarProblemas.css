@@ -1,0 +1,31 @@
+.generacion-progreso-barra {
+  position: relative;
+  overflow: hidden;
+  height: 4px;
+  background: #e0e0e0;
+}
+
+.generacion-progreso-barra::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: #1a73e8;
+  animation: generacion-indeterminada 1.2s ease-in-out infinite;
+}
+
+@keyframes generacion-indeterminada {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* Sin movimiento: queda solo el texto. */
+@media (prefers-reduced-motion: reduce) {
+  .generacion-progreso-barra {
+    display: none;
+  }
+}

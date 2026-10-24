@@ -80,6 +80,8 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
                 id={campo.nombre}
                 name={campo.nombre}
                 type={campo.tipo}
+                min={campo.min}
+                max={campo.max}
                 value={valores[campo.nombre] ?? ''}
                 onChange={manejarCambio}
                 required
