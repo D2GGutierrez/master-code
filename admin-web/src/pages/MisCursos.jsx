@@ -182,6 +182,9 @@ function MisCursos() {
   return (
     <main>
       <h1>MASTER CODE · Mis cursos</h1>
+      <p>
+        <a href="/revision">Bandeja de revisión</a>
+      </p>
       {mostrarBuscador && (
         // Búsqueda por envío (botón o Enter), no en vivo: una petición por búsqueda, no por tecla.
         <form onSubmit={buscar}>

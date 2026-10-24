@@ -96,3 +96,5 @@ Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sob
 En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo la página visible) como `inscritos-<curso>-<fecha>.csv`, en UTF-8 con BOM, separado por comas y con las celdas que empiezan por `=`, `+`, `-` o `@` neutralizadas con `'`.
 
 «Generar con IA» lleva a <http://localhost:3000/cursos/ID/generar>: tema, nivel, lenguaje (el del curso por defecto) y cantidad (1 a 10); `admin-api` pide los problemas a `ai-service` y los guarda pendientes de revisión. Mientras tanto se ve un indicador de progreso y el botón queda bloqueado; el navegador corta a los 120 s.
+
+<http://localhost:3000/revision> es la bandeja de revisión: los problemas generados por IA que el docente aún no aprueba, 20 por página, cada uno marcado «Generado por IA». Se llega desde «Mis cursos» y desde el mensaje de éxito de «Generar con IA».

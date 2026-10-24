@@ -145,7 +145,7 @@ function GenerarProblemas({ id }) {
           <button type="button" onClick={() => setCreados(null)}>
             Generar más
           </button>{' '}
-          <a href="/cursos">Volver a Mis cursos</a>
+          <a href="/revision">Ir a la bandeja de revisión</a> <a href="/cursos">Volver a Mis cursos</a>
         </p>
       </>
     )

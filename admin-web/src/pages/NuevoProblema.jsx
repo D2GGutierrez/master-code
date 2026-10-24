@@ -17,12 +17,12 @@ export const DIFICULTADES = [
   { valor: 'medio', etiqueta: 'Medio' },
   { valor: 'dificil', etiqueta: 'Difícil' },
 ]
-const PLATAFORMAS = [
+export const PLATAFORMAS = [
   { valor: 'web', etiqueta: 'Web' },
   { valor: 'movil', etiqueta: 'Móvil' },
   { valor: 'ambas', etiqueta: 'Ambas' },
 ]
-const TIPOS_EJERCICIO = [
+export const TIPOS_EJERCICIO = [
   { valor: 'escritura_codigo', etiqueta: 'Escritura de código' },
   { valor: 'prediccion_salida', etiqueta: 'Predecir la salida' },
   { valor: 'opcion_multiple', etiqueta: 'Opción múltiple' },

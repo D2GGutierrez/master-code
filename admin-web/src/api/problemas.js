@@ -26,3 +26,10 @@ export async function generarProblemas(cursoId, datos) {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// Lista completa, sin paginar: lo generado por IA que el docente aún no aprueba ni descarta, de sus cursos.
+export async function listarPendientes() {
+  const respuesta = await peticion('/api/problemas/pendientes/')
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}

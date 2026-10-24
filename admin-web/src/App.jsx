@@ -1,5 +1,6 @@
 import { haySesion } from './api/sesion.js'
 import BotonCerrarSesion from './components/BotonCerrarSesion.jsx'
+import BandejaRevision from './pages/BandejaRevision.jsx'
 import EditarCurso from './pages/EditarCurso.jsx'
 import EstudiantesInscritos from './pages/EstudiantesInscritos.jsx'
 import GenerarProblemas from './pages/GenerarProblemas.jsx'
@@ -38,6 +39,9 @@ function pantalla(ruta) {
   const generacion = ruta.match(/^\/cursos\/(\d+)\/generar$/)
   if (generacion) {
     return <GenerarProblemas id={Number(generacion[1])} />
+  }
+  if (ruta === '/revision') {
+    return <BandejaRevision />
   }
   if (ruta === '/problemas/nuevo') {
     return <NuevoProblema />
