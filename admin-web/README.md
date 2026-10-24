@@ -98,3 +98,5 @@ En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo l
 «Generar con IA» lleva a <http://localhost:3000/cursos/ID/generar>: tema, nivel, lenguaje (el del curso por defecto) y cantidad (1 a 10); `admin-api` pide los problemas a `ai-service` y los guarda pendientes de revisión. Mientras tanto se ve un indicador de progreso y el botón queda bloqueado; el navegador corta a los 120 s.
 
 <http://localhost:3000/revision> es la bandeja de revisión: los problemas generados por IA que el docente aún no aprueba, 20 por página, cada uno marcado «Generado por IA». Se llega desde «Mis cursos» y desde el mensaje de éxito de «Generar con IA».
+
+En la bandeja, el filtro «Curso» (en el navegador, sobre la lista cargada) reduce la tabla a un curso, vuelve a la página 1 y muestra «N de M problemas»; «Quitar filtros» lo restablece. No hay filtro de estado: `admin-api` solo devuelve pendientes.

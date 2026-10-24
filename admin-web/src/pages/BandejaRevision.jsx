@@ -13,6 +13,11 @@ function etiqueta(opciones, valor) {
   return opciones.find((opcion) => opcion.valor === valor)?.etiqueta ?? valor
 }
 
+// HU18-T3: se filtra en el navegador sobre la lista cargada. curso llega como número y el <select> da texto.
+function filtrar(problemas, curso) {
+  return curso ? problemas.filter((problema) => String(problema.curso) === curso) : problemas
+}
+
 // HU18-T2: solo lectura. Aprobar, descartar y editar son HU19 y HU20; el enunciado no se muestra.
 function BandejaRevision() {
   // null mientras carga; luego la lista (puede estar vacía).
@@ -21,6 +26,8 @@ function BandejaRevision() {
   // Cambiarlo vuelve a ejecutar el efecto de carga.
   const [recargas, setRecargas] = useState(0)
   const [pagina, setPagina] = useState(1)
+  // Id del curso elegido como texto; '' = todos los cursos.
+  const [cursoFiltro, setCursoFiltro] = useState('')
 
   useEffect(() => {
     // Si se sale de la pantalla antes de la respuesta, no se actualiza un componente desmontado.
@@ -57,6 +64,37 @@ function BandejaRevision() {
     setRecargas(recargas + 1)
   }
 
+  // La página actual puede no existir en el resultado filtrado: se vuelve a la 1.
+  function cambiarCurso(valor) {
+    setCursoFiltro(valor)
+    setPagina(1)
+  }
+
+  // Cursos con problemas en la lista cargada, sin repetir y ordenados por nombre.
+  const cursos = [...new Map((problemas ?? []).map((problema) => [String(problema.curso), problema.curso_nombre]))].sort(
+    ([, a], [, b]) => a.localeCompare(b, 'es'),
+  )
+  const filtrados = problemas && filtrar(problemas, cursoFiltro)
+  const filtros = (
+    <fieldset>
+      <legend>Filtros</legend>
+      <label htmlFor="filtro-curso">Curso</label>{' '}
+      <select id="filtro-curso" value={cursoFiltro} onChange={(evento) => cambiarCurso(evento.target.value)}>
+        <option value="">Todos los cursos</option>
+        {cursos.map(([idCurso, nombre]) => (
+          <option key={idCurso} value={idCurso}>
+            {nombre}
+          </option>
+        ))}
+      </select>{' '}
+      {cursoFiltro && (
+        <button type="button" onClick={() => cambiarCurso('')}>
+          Quitar filtros
+        </button>
+      )}
+    </fieldset>
+  )
+
   let contenido
   if (error) {
     contenido = (
@@ -75,14 +113,23 @@ function BandejaRevision() {
         No tienes problemas pendientes de revisión. <a href="/cursos">Ir a Mis cursos para generar más con IA</a>
       </p>
     )
-  } else {
-    const inicio = (pagina - 1) * PROBLEMAS_POR_PAGINA
-    const problemasDeLaPagina = problemas.slice(inicio, inicio + PROBLEMAS_POR_PAGINA)
+  } else if (filtrados.length === 0) {
     contenido = (
       <>
-        <p>
-          {problemas.length}{' '}
-          {problemas.length === 1 ? 'problema pendiente de revisión' : 'problemas pendientes de revisión'}
+        {filtros}
+        <p aria-live="polite">Ningún problema coincide con los filtros.</p>
+      </>
+    )
+  } else {
+    const inicio = (pagina - 1) * PROBLEMAS_POR_PAGINA
+    const problemasDeLaPagina = filtrados.slice(inicio, inicio + PROBLEMAS_POR_PAGINA)
+    contenido = (
+      <>
+        {filtros}
+        <p aria-live="polite">
+          {cursoFiltro && filtrados.length !== problemas.length
+            ? `${filtrados.length} de ${problemas.length} problemas`
+            : `${filtrados.length} ${filtrados.length === 1 ? 'problema pendiente de revisión' : 'problemas pendientes de revisión'}`}
         </p>
         <table>
           <caption>Problemas pendientes de revisión</caption>
@@ -116,7 +163,7 @@ function BandejaRevision() {
         <Paginacion
           pagina={pagina}
           hayAnterior={pagina > 1}
-          haySiguiente={inicio + PROBLEMAS_POR_PAGINA < problemas.length}
+          haySiguiente={inicio + PROBLEMAS_POR_PAGINA < filtrados.length}
           onCambiar={setPagina}
         />
       </>
