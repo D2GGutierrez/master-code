@@ -10,4 +10,13 @@
     <string name="login_error_pendiente">Tu cuenta está pendiente de activación por el administrador.</string>
     <string name="login_error_conexion">No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</string>
     <string name="login_error_inesperado">Ocurrió un error inesperado. Inténtalo más tarde.</string>
+    <string name="mis_cursos_titulo">Mis cursos</string>
+    <string name="mis_cursos_cargando">Cargando tus cursos</string>
+    <string name="mis_cursos_vacio">Aún no estás inscrito en ningún curso. Inscríbete en la web con el código que te dio tu docente.</string>
+    <string name="mis_cursos_error_conexion">No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</string>
+    <string name="mis_cursos_error_inesperado">No se pudieron cargar tus cursos. Inténtalo de nuevo.</string>
+    <string name="mis_cursos_reintentar">Reintentar</string>
+    <string name="mis_cursos_lenguaje">Lenguaje: %1$s</string>
+    <string name="mis_cursos_inscrito_el">Inscrito el %1$s</string>
+    <string name="mis_cursos_abrir">Abrir curso</string>
 </resources>

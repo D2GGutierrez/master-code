@@ -21,10 +21,12 @@ android {
         debug {
             // 10.0.2.2 es la PC anfitriona vista desde el emulador de Android.
             buildConfigField("String", "ADMIN_API_URL", "\"http://10.0.2.2:8000/\"")
+            buildConfigField("String", "USER_API_URL", "\"http://10.0.2.2:8081/\"")
         }
         release {
-            // Pendiente: todavía no hay URL de producción de admin-api.
+            // Pendiente: todavía no hay URL de producción de admin-api ni de user-api.
             buildConfigField("String", "ADMIN_API_URL", "\"\"")
+            buildConfigField("String", "USER_API_URL", "\"\"")
             optimization {
                 enable = false
             }
