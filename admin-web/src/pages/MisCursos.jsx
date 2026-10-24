@@ -148,6 +148,7 @@ function MisCursos() {
                 <td>
                   <a href={`/cursos/${curso.id}/editar`}>Editar</a>{' '}
                   <a href={`/cursos/${curso.id}/inscritos`}>Ver inscritos</a>{' '}
+                  <a href={`/cursos/${curso.id}/generar`}>Generar con IA</a>{' '}
                   {confirmando === curso.id ? (
                     <>
                       ¿Eliminar “{curso.nombre}”?{' '}

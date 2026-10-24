@@ -2,6 +2,7 @@ import { haySesion } from './api/sesion.js'
 import BotonCerrarSesion from './components/BotonCerrarSesion.jsx'
 import EditarCurso from './pages/EditarCurso.jsx'
 import EstudiantesInscritos from './pages/EstudiantesInscritos.jsx'
+import GenerarProblemas from './pages/GenerarProblemas.jsx'
 import InicioSesion from './pages/InicioSesion.jsx'
 import MisCursos from './pages/MisCursos.jsx'
 import NuevaContrasena from './pages/NuevaContrasena.jsx'
@@ -33,6 +34,10 @@ function pantalla(ruta) {
   const inscritos = ruta.match(/^\/cursos\/(\d+)\/inscritos$/)
   if (inscritos) {
     return <EstudiantesInscritos id={Number(inscritos[1])} />
+  }
+  const generacion = ruta.match(/^\/cursos\/(\d+)\/generar$/)
+  if (generacion) {
+    return <GenerarProblemas id={Number(generacion[1])} />
   }
   if (ruta === '/problemas/nuevo') {
     return <NuevoProblema />
