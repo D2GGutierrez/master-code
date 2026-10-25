@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { eliminarCurso, listarCursos } from '../api/cursos.js'
 import Aviso from '../components/Aviso.jsx'
+import EnlaceBandeja from '../components/EnlaceBandeja.jsx'
 import Paginacion from '../components/Paginacion.jsx'
 
 const ERROR_GENERAL = 'No se pudieron cargar tus cursos. Inténtalo de nuevo.'
@@ -183,7 +184,7 @@ function MisCursos() {
     <main>
       <h1>MASTER CODE · Mis cursos</h1>
       <p>
-        <a href="/revision">Bandeja de revisión</a>
+        <EnlaceBandeja />
       </p>
       {mostrarBuscador && (
         // Búsqueda por envío (botón o Enter), no en vivo: una petición por búsqueda, no por tecla.

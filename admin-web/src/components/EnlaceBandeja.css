@@ -1,0 +1,12 @@
+/* El número ya dice cuántos hay; el fondo solo lo destaca. */
+.distintivo-pendientes {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e8eaed;
+  color: #202124;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-align: center;
+}
