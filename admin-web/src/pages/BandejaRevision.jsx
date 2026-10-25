@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
-import { listarPendientes } from '../api/problemas.js'
+import { useEffect, useRef, useState } from 'react'
+import { descartarProblema, listarPendientes } from '../api/problemas.js'
+import Aviso from '../components/Aviso.jsx'
+import Confirmacion from '../components/Confirmacion.jsx'
 import Paginacion from '../components/Paginacion.jsx'
 import { DIFICULTADES, PLATAFORMAS, TIPOS_EJERCICIO } from './NuevoProblema.jsx'
 import './BandejaRevision.css'
@@ -7,6 +9,7 @@ import './BandejaRevision.css'
 // admin-api devuelve todos los pendientes de una vez: la tabla se pagina en el navegador.
 const PROBLEMAS_POR_PAGINA = 20
 const ERROR_CARGA = 'No se pudo cargar la bandeja. Inténtalo de nuevo.'
+const ERROR_DESCARTAR = 'No se pudo descartar el problema. Inténtalo de nuevo.'
 
 // admin-api guarda valores internos (p. ej. escritura_codigo); un valor desconocido se muestra tal cual.
 function etiqueta(opciones, valor) {
@@ -28,6 +31,13 @@ function BandejaRevision() {
   const [pagina, setPagina] = useState(1)
   // Id del curso elegido como texto; '' = todos los cursos.
   const [cursoFiltro, setCursoFiltro] = useState('')
+  // HU20-T3: el problema cuyo descarte se está confirmando (el cuadro es modal: uno a la vez) o null.
+  const [aDescartar, setADescartar] = useState(null)
+  const [descartando, setDescartando] = useState(false)
+  // El estado tarda un render en deshabilitar el botón; la marca bloquea al instante un segundo clic.
+  const enCurso = useRef(false)
+  const [aviso, setAviso] = useState('')
+  const [errorDescartar, setErrorDescartar] = useState('')
 
   useEffect(() => {
     // Si se sale de la pantalla antes de la respuesta, no se actualiza un componente desmontado.
@@ -68,6 +78,62 @@ function BandejaRevision() {
   function cambiarCurso(valor) {
     setCursoFiltro(valor)
     setPagina(1)
+    setAviso('')
+    setErrorDescartar('')
+  }
+
+  function pedirConfirmacion(problema) {
+    setAviso('')
+    setErrorDescartar('')
+    setADescartar(problema)
+  }
+
+  // Se quita de la lista ya cargada, sin volver a pedirla. Si la página actual queda vacía, se pasa a la
+  // anterior; si el curso filtrado se queda sin problemas, el filtro ya no tiene opción y se quita.
+  function quitarDeLaLista(id) {
+    const restantes = problemas.filter((problema) => problema.id !== id)
+    setProblemas(restantes)
+    if (cursoFiltro && !restantes.some((problema) => String(problema.curso) === cursoFiltro)) {
+      setCursoFiltro('')
+      setPagina(1)
+      return
+    }
+    const ultimaPagina = Math.max(1, Math.ceil(filtrar(restantes, cursoFiltro).length / PROBLEMAS_POR_PAGINA))
+    if (pagina > ultimaPagina) {
+      setPagina(ultimaPagina)
+    }
+  }
+
+  async function descartar() {
+    if (enCurso.current) {
+      return
+    }
+    enCurso.current = true
+    setDescartando(true)
+    try {
+      const { ok, status, cuerpo } = await descartarProblema(aDescartar.id)
+      if (ok) {
+        quitarDeLaLista(aDescartar.id)
+        setAviso('Problema descartado.')
+      } else if (status === 404) {
+        quitarDeLaLista(aDescartar.id)
+        setErrorDescartar('El problema ya no existe. Se actualizó la lista.')
+      } else if (status === 403) {
+        setErrorDescartar('No tienes permiso para descartar este problema.')
+      } else if ((status === 400 || status === 409) && typeof cuerpo.detail === 'string') {
+        // Por ejemplo, un problema que ya se aprobó y está publicado (409).
+        setErrorDescartar(cuerpo.detail)
+      } else {
+        setErrorDescartar(ERROR_DESCARTAR)
+      }
+    } catch {
+      // fetch solo lanza error cuando no hay conexión con el servidor: el problema sigue en la lista.
+      setErrorDescartar(ERROR_DESCARTAR)
+    } finally {
+      enCurso.current = false
+      setDescartando(false)
+      setADescartar(null)
+    }
   }
 
   // Cursos con problemas en la lista cargada, sin repetir y ordenados por nombre.
@@ -141,6 +207,7 @@ function BandejaRevision() {
               <th scope="col">Tipo de ejercicio</th>
               <th scope="col">Plataforma</th>
               <th scope="col">Creado</th>
+              <th scope="col">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -156,6 +223,15 @@ function BandejaRevision() {
                 <td>{etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}</td>
                 <td>{etiqueta(PLATAFORMAS, problema.plataforma)}</td>
                 <td>{new Date(problema.fecha_creacion).toLocaleDateString('es-PE')}</td>
+                <td>
+                  <button
+                    type="button"
+                    aria-label={`Descartar “${problema.titulo}”`}
+                    onClick={() => pedirConfirmacion(problema)}
+                  >
+                    Descartar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -177,7 +253,26 @@ function BandejaRevision() {
       <p>
         <a href="/cursos">Volver a Mis cursos</a>
       </p>
+      {/* Encima del contenido: siguen a la vista aunque la lista quede vacía tras descartar. */}
+      <Aviso mensaje={aviso} />
+      {errorDescartar && <p role="alert">{errorDescartar}</p>}
       {contenido}
+      <Confirmacion
+        abierto={aDescartar !== null}
+        titulo="¿Descartar este problema?"
+        textoConfirmar="Sí, descartar"
+        textoCancelar="Cancelar"
+        enviando={descartando}
+        onConfirmar={descartar}
+        onCancelar={() => setADescartar(null)}
+      >
+        {aDescartar && (
+          <>
+            <p>“{aDescartar.titulo}”</p>
+            <p>Saldrá de la bandeja y del catálogo del curso, y ningún estudiante lo verá.</p>
+          </>
+        )}
+      </Confirmacion>
     </main>
   )
 }

@@ -33,3 +33,15 @@ export async function listarPendientes() {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// Archiva el problema, no lo borra. admin-api exige confirmar=true para que ninguna llamada suelta descarte
+// por accidente: este envío solo ocurre tras el cuadro de confirmación de la bandeja (HU20-T1).
+export async function descartarProblema(id) {
+  const respuesta = await peticion(`/api/problemas/${id}/descartar/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ confirmar: true }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}

@@ -102,3 +102,5 @@ En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo l
 En la bandeja, el filtro «Curso» (en el navegador, sobre la lista cargada) reduce la tabla a un curso, vuelve a la página 1 y muestra «N de M problemas»; «Quitar filtros» lo restablece. No hay filtro de estado: `admin-api` solo devuelve pendientes.
 
 En «Mis cursos», el enlace «Bandeja de revisión» (`components/EnlaceBandeja.jsx`) muestra cuántos problemas hay pendientes (99+ desde 100); si la petición tarda o falla, se ve solo el enlace.
+
+Cada fila de la bandeja tiene «Descartar»: tras confirmar, `admin-api` archiva el problema (no lo borra), sale de la lista sin recargarla y aparece «Problema descartado.».
