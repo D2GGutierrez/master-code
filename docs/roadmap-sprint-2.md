@@ -180,7 +180,7 @@ Ya resuelto en `docs/registro-cambios.md`: curso «publicado» = tiene al menos 
 2. **Campos nuevos en `Problema` sin migración propia.** `generado_por_ia`, `aprobado_por_docente`, quién y cuándo aprobó, y `archivado` no existen todavía en `admin-api`. HU17-T5 debería abrir con esa migración, porque HU18, HU19, HU20, HU25 y HU31 dependen de ella.
 3. **HU17-T3 supone una capa de proveedores de LLM que no existe.** H7 solo dejó `/health`; las 2 h de la tarea deben incluir esa capa y un proveedor mock.
 4. **HU17-T5 hace más de lo que dice.** Admin-api llama a `ai-service`, valida el JSON y guarda cada problema con sus casos reutilizando las reglas de HU15 y HU16. Es 1 h en el plan: probablemente 2 a 3 h.
-5. **HU30-T2 no puede calcular «resuelto» todavía.** `app_envio` no tiene `resultado` hasta HU36-T1; se prueba con envíos sembrados (decisión abierta nº 5 del registro).
+5. **HU30-T2 no puede calcular «resuelto» todavía.** `app_envio` no tiene `resultado` hasta HU36-T1; se prueba con envíos sembrados (decisión abierta nº 5 del registro). *Resuelto el 28 de octubre:* la migración V4 de user-api agrega `resultado` antes de HU36-T1 (ADR-7, D6).
 6. **HU26-T1 debe generar el código también para los cursos que ya existen** (30 días de vigencia), o los cursos creados en el Sprint 1 no se podrán usar.
 7. **HU28-T1 solo puede listar el correo**: `app_estudiante` no guarda el nombre.
 

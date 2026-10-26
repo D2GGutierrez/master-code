@@ -137,7 +137,13 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > - `admin-api`, para el estudiante (HU25-T1, HU31, HU32-T1): `GET /internal/cursos/publicados/` (los cursos con al menos un problema visible, con su institución; filtros opcionales `?institucion=` y `?buscar=`), `GET /internal/cursos/<id>/problemas/` (los problemas visibles del curso, sin enunciado ni casos; 404 si el curso no existe; filtro opcional `?plataforma=web|movil`, que deja también los de `ambas`) y `GET /internal/problemas/<id>/` (un problema con solo sus casos públicos y su `curso_id`; 404 si no existe, no está aprobado o fue descartado, sin distinguir cuál). Las tres parten de `Problema.objects.visibles_para_estudiante()` (D5): es la única puerta por la que un problema llega a un estudiante, y «publicado» significa que el curso tiene al menos un problema así. No entregan casos ocultos, respuesta esperada ni cuál alternativa es correcta; las alternativas llegarán con HU46-T2.
 > - `user-api`: `GET /internal/cursos/{cursoId}/inscritos` (email y fecha de cada inscrito). La usa `admin-api` en la lista de inscritos del docente (HU28-T1), que además comprueba que el curso sea del docente (403 si es de otro).
 >
-> **Quién las consume en `user-api`** (HU29-T1, HU31-T2): `GET /api/cursos/{id}/problemas` (403 si el estudiante no está inscrito; `?plataforma=` opcional) y `GET /api/problemas/{id}` (404 si el problema no es visible o el estudiante no está inscrito en su curso, con el mismo cuerpo que un id inexistente). `user-api` comprueba la inscripción porque es quien la tiene (ADR-1); `admin-api` decide qué problemas son visibles.
+> **Quién las consume en `user-api`** (HU25-T2 y T4, HU29-T1, HU30, HU31-T2):
+>
+> - `GET /api/cursos`: el catálogo. Los cursos publicados de la institución del claim `institucion` del token, con `?buscar=` opcional (parte del nombre). La institución nunca se acepta por parámetro y `user-api` la vuelve a aplicar sobre lo que entrega `admin-api`. Sin coincidencias responde 200 con lista vacía (la pantalla muestra «sin resultados»).
+> - `GET /api/cursos/{id}/problemas`: 403 si el estudiante no está inscrito. Filtros opcionales y combinables `?plataforma=web|movil`, `?dificultad=facil|medio|dificil` y `?estado=sin_abrir|intentado|resuelto` (ver D6). Un valor de filtro que no existe es 400; una combinación sin coincidencias es 200 con lista vacía. Cada fila trae su `estado`.
+> - `GET /api/problemas/{id}`: 404 si el problema no es visible o el estudiante no está inscrito en su curso, con el mismo cuerpo que un id inexistente.
+>
+> `user-api` comprueba la inscripción porque es quien la tiene (ADR-1); `admin-api` decide qué problemas son visibles.
 
 ### D4. CORS de `user-api`
 
@@ -159,6 +165,14 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > - `POST /api/problemas/<id>/descartar/`, cuerpo `{"confirmar": true}`: archiva el problema, no lo borra. Sin `confirmar: true` responde 400 y no cambia nada (el cuadro de confirmación es de la pantalla; esto evita descartar por una llamada suelta). 409 si ya está aprobado. Repetirlo es 200.
 >
 > **Pendiente:** editar un problema antes de aprobarlo (CA-19.1 a CA-19.3) necesita un `PATCH /api/problemas/<id>/` que todavía no existe en `admin-api`.
+
+### D6. Estado de un problema para el estudiante (HU30; decidido el 28 de octubre de 2026)
+
+> **Decidido.** El estado se calcula en `user-api` con los envíos del estudiante (`app_envio`) y no se guarda: `sin_abrir` = ningún envío; `intentado` = hay envíos, pero ninguno correcto; `resuelto` = al menos un envío con `resultado = 'correcto'` (basta uno, venga de web o de móvil: son de la misma cuenta). Abrir un problema no deja rastro, así que «sin abrir» significa «sin envíos». Un envío sin calificar (`resultado` vacío) cuenta como intento. La ejecución de prueba («Ejecutar») no crea envíos y no cambia el estado.
+>
+> **Migración V4 de `user-api`:** agrega `app_envio.resultado` (`'correcto'` o `'incorrecto'`; vacío si no se calificó) y el índice `(estudiante_id, problema_id)`. Se adelantó desde HU36-T1 porque HU30-T2 no puede distinguir «resuelto» sin ella. **HU36-T1 no debe volver a crear la columna:** completa la tabla con código, puntaje y número de intento, y puede ampliar el CHECK de `resultado` si HU36-T2 necesita más valores.
+>
+> Los filtros de dificultad y de estado se aplican en `user-api` sobre los problemas visibles que entrega `admin-api` (un curso tiene pocos problemas), así que el contrato interno no cambia.
 
 ### Ya decidido en `registro-cambios.md`
 

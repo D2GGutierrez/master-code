@@ -230,4 +230,74 @@ class AdminClienteTest {
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
         assertThrows(AdminNoDisponibleException.class, () -> cliente.problema(7));
     }
+
+    @Test
+    void cursos_publicados_pide_la_ruta_interna_con_los_filtros_y_la_clave() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/?institucion=ejemplo.edu.pe&buscar=algoritmos"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess("[" + CURSO_JSON + "]", MediaType.APPLICATION_JSON));
+
+        List<CursoDto> cursos = cliente.cursosPublicados("ejemplo.edu.pe", "algoritmos");
+
+        assertThat(cursos).containsExactly(new CursoDto(10, "Algoritmos I", "python", "ejemplo.edu.pe"));
+        servidor.verify();
+    }
+
+    @Test
+    void cursos_publicados_sin_filtros_no_manda_parametros() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(cliente.cursosPublicados(null, null)).isEmpty();
+        servidor.verify();
+    }
+
+    @Test
+    void cursos_publicados_manda_solo_el_filtro_que_se_pidio() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/?institucion=ejemplo.edu.pe"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        assertThat(cliente.cursosPublicados("ejemplo.edu.pe", null)).isEmpty();
+        servidor.verify();
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/?buscar=java"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+        assertThat(cliente.cursosPublicados(null, "java")).isEmpty();
+        servidor.verify();
+    }
+
+    @Test
+    void cursos_publicados_codifica_la_busqueda_para_que_no_agregue_parametros() {
+        // «&» y «#» dentro del texto no deben partir la consulta: si pasaran sin codificar, el texto podría
+        // agregar o cambiar el parámetro institucion y saltarse el filtro por institución (CA-25.3).
+        servidor.expect(requestTo(org.hamcrest.Matchers.startsWith("http://admin-api:8000/internal/cursos/publicados/?")))
+                .andExpect(request -> {
+                    String[] partes = request.getURI().getRawQuery().split("&");
+                    assertThat(partes).hasSize(2);
+                    assertThat(URLDecoder.decode(partes[0], StandardCharsets.UTF_8)).isEqualTo("institucion=ejemplo.edu.pe");
+                    assertThat(URLDecoder.decode(partes[1], StandardCharsets.UTF_8)).isEqualTo("buscar=C# & institucion=otra");
+                })
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(cliente.cursosPublicados("ejemplo.edu.pe", "C# & institucion=otra")).isEmpty();
+        servidor.verify();
+    }
+
+    @Test
+    void cursos_publicados_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.cursosPublicados(null, null));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.cursosPublicados(null, null));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/"))
+                .andRespond(withException(new IOException("sin conexión")));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.cursosPublicados(null, null));
+    }
 }

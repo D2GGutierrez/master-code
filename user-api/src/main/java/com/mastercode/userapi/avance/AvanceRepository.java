@@ -20,7 +20,7 @@ public class AvanceRepository {
     }
 
     // Una sola consulta agrupada: nunca una por problema.
-    // Mide intentos, no resueltos: app_envio aún no tiene resultado (llega en HU36).
+    // Mide intentos, no resueltos. Qué problemas están resueltos lo calcula EstadoProblemasRepository (HU30-T2).
     private static final String POR_PROBLEMA = """
             SELECT problema_id,
                    COUNT(*) AS envios,

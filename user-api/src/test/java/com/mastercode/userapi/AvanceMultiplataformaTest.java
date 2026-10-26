@@ -20,8 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mastercode.userapi.perfil.EstudianteRepository;
 
-// HU24: el avance es de la cuenta, no del dispositivo. Se mide lo enviado o intentado: app_envio
-// todavía no guarda si el envío fue correcto; la distinción resuelto/no resuelto llega con HU36.
+// HU24: el avance es de la cuenta, no del dispositivo. Se mide lo enviado o intentado; qué problemas
+// están resueltos lo calcula el listado de problemas (HU30-T2, EstadoProblemasRepository).
 // @Transactional: cada prueba deshace al final lo que creó, también lo que crea el filtro del perfil.
 @SpringBootTest
 @AutoConfigureMockMvc

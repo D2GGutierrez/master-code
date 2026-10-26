@@ -96,7 +96,7 @@ Estas las detecté, pero no las resolví porque cambian el diseño y las decide 
 2. **De dónde sale el «tema» de un problema.** HU56 muestra «los temas en los que más falló», pero ADMIN_PROBLEMA no tiene un campo `tema` (HU13-T1 define título, enunciado, lenguaje y dificultad). Hay que agregarlo al modelo o cambiar el criterio.
 3. **Si los ejercicios móviles se guardan como envíos.** HU24 y HU45-T3 asumen que cada intento móvil se guarda en APP_ENVIO. Si no es así, CA-24.4 y el progreso por cuenta cambian.
 4. **Capacidad.** El Sprint 1 tiene 94 h y el Sprint 2 tiene 91 h frente a 90 h de capacidad. El reparto es muy desigual en los sprints 2 a 4: Juan Diego 49 h, Carlos 29 h y Gael 13 h en el Sprint 2; Juan Diego 45 h, Carlos 0 h y Gael 45 h en el Sprint 4 (el Sprint 4 es casi todo móvil y backend, y Carlos, que es frontend web, queda sin tareas). Conviene rebalancear antes de cada Planning.
-5. **Estados de HU30.** «Resuelto» e «intentado» se calculan con los envíos (APP_ENVIO), que solo existen de verdad desde el Sprint 3. En el Sprint 2 se prueba con datos sembrados (HU30-T2).
+5. **Estados de HU30.** «Resuelto» e «intentado» se calculan con los envíos (APP_ENVIO), que solo existen de verdad desde el Sprint 3. En el Sprint 2 se prueba con datos sembrados (HU30-T2). **Resuelto el 28 de octubre de 2026:** la migración V4 de user-api agrega `app_envio.resultado` antes de HU36-T1 para que «resuelto» se pueda calcular (ver ADR-7, D6); HU36-T1 ya no crea esa columna.
 
 ## 6. Cambios de proceso que quedan fuera de estos documentos
 

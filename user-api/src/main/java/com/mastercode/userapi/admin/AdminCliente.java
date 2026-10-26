@@ -1,5 +1,6 @@
 package com.mastercode.userapi.admin;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,6 +61,37 @@ public class AdminCliente {
             return cursos;
         } catch (RestClientException e) {
             throw new AdminNoDisponibleException("admin-api no pudo entregar los cursos", e);
+        }
+    }
+
+    // HU25-T2 y HU25-T4: los cursos publicados (con al menos un problema visible). institucion y buscar son opcionales
+    // (null no filtra). Los valores van como variables de la plantilla y no pegados a la ruta, para que RestClient
+    // los codifique: un buscar con «&» o «#» no puede agregar ni cambiar otros parámetros.
+    public List<CursoDto> cursosPublicados(String institucion, String buscar) {
+        StringBuilder ruta = new StringBuilder("/internal/cursos/publicados/");
+        List<Object> variables = new ArrayList<>();
+        String separador = "?";
+        if (institucion != null) {
+            ruta.append(separador).append("institucion={institucion}");
+            variables.add(institucion);
+            separador = "&";
+        }
+        if (buscar != null) {
+            ruta.append(separador).append("buscar={buscar}");
+            variables.add(buscar);
+        }
+        try {
+            List<CursoDto> cursos = http.get()
+                    .uri(ruta.toString(), variables.toArray())
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<CursoDto>>() {
+                    });
+            if (cursos == null) {
+                throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+            }
+            return cursos;
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar los cursos publicados", e);
         }
     }
 

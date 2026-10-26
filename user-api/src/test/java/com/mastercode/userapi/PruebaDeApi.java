@@ -61,6 +61,23 @@ abstract class PruebaDeApi {
                 .update();
     }
 
+    // Un envío sembrado por la prueba (los envíos reales llegan con HU36-T2 y HU45-T3).
+    // resultado: "correcto", "incorrecto" o null para un envío sin calificar.
+    protected void registrarEnvio(long estudianteId, long problemaId, String plataforma, String resultado) {
+        if (resultado == null) {
+            jdbc.sql("INSERT INTO app_schema.app_envio (estudiante_id, problema_id, plataforma) VALUES (?, ?, ?)")
+                    .params(estudianteId, problemaId, plataforma)
+                    .update();
+        } else {
+            jdbc.sql("""
+                    INSERT INTO app_schema.app_envio (estudiante_id, problema_id, plataforma, resultado)
+                    VALUES (?, ?, ?, ?)
+                    """)
+                    .params(estudianteId, problemaId, plataforma, resultado)
+                    .update();
+        }
+    }
+
     protected int inscripcionesDe(long estudianteId) {
         return jdbc.sql("SELECT count(*) FROM app_schema.app_inscripcion WHERE estudiante_id = ?")
                 .param(estudianteId)
@@ -70,8 +87,13 @@ abstract class PruebaDeApi {
 
     // jwt() arma el token en la prueba, sin admin-api: mismos claims que lee AsegurarPerfilFiltro.
     protected static RequestPostProcessor tokenDe(String email, String rol) {
+        return tokenDe(email, rol, "ejemplo.edu.pe");
+    }
+
+    // Igual, para un estudiante de otra institución (HU25-T4).
+    protected static RequestPostProcessor tokenDe(String email, String rol, String institucion) {
         return jwt()
-                .jwt(token -> token.claim("email", email).claim("institucion", "ejemplo.edu.pe").claim("rol", rol))
+                .jwt(token -> token.claim("email", email).claim("institucion", institucion).claim("rol", rol))
                 .authorities(new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase()));
     }
 }
