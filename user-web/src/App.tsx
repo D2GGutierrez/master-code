@@ -1,6 +1,7 @@
 import { programarRenovacion } from './api/sesion.ts'
 import Avance from './pages/Avance.tsx'
 import BuscarCursos from './pages/BuscarCursos.tsx'
+import DetalleProblema from './pages/DetalleProblema.tsx'
 import EditorPrueba from './pages/EditorPrueba.tsx'
 import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
@@ -39,6 +40,10 @@ function App() {
   const problemasCurso = window.location.pathname.match(/^\/cursos\/(\d+)\/problemas$/)
   if (problemasCurso) {
     return <ProblemasCurso id={Number(problemasCurso[1])} />
+  }
+  const detalleProblema = window.location.pathname.match(/^\/problemas\/(\d+)$/)
+  if (detalleProblema) {
+    return <DetalleProblema id={Number(detalleProblema[1])} />
   }
   return <RegistroEstudiante />
 }

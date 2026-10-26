@@ -23,6 +23,11 @@
   font-weight: bold;
 }
 
+.problema-titulo:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+}
+
 /* Lo dice el texto; el borde solo lo agrupa. */
 .etiqueta-problema {
   display: inline-block;

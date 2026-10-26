@@ -80,7 +80,9 @@ function ProblemasCurso({ id }: { id: number }) {
         <ul className="lista-problemas">
           {problemas.map((problema) => (
             <li key={problema.id} className="problema">
-              <span className="problema-titulo">{problema.titulo}</span>
+              <a className="problema-titulo" href={`/problemas/${problema.id}`}>
+                {problema.titulo}
+              </a>
               <span className="etiqueta-problema">{etiquetaDificultad(problema.dificultad)}</span>{' '}
               <span className="etiqueta-problema">{etiquetaTipoEjercicio(problema.tipo_ejercicio)}</span>
             </li>

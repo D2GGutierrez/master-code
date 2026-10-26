@@ -1,0 +1,54 @@
+.detalle-problema {
+  padding: 0 16px;
+  /* Títulos o palabras largas sin espacios se parten en vez de ensanchar la página. */
+  overflow-wrap: anywhere;
+}
+
+.detalle-problema .etiqueta-problema {
+  display: inline-block;
+  border: 1px solid #999;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.85em;
+}
+
+/* Contenido del enunciado ya sanitizado. */
+.enunciado {
+  max-width: 100%;
+}
+
+.enunciado-texto {
+  white-space: pre-wrap;
+}
+
+.enunciado blockquote {
+  margin: 0 0 1em;
+  padding-left: 12px;
+  border-left: 3px solid #ccc;
+}
+
+.enunciado code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #f2f2f2;
+}
+
+/* El código del enunciado y de los ejemplos se desplaza dentro de su bloque, nunca la página. */
+.enunciado pre,
+.ejemplo pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 8px;
+  border-radius: 4px;
+  background: #f2f2f2;
+}
+
+.enunciado pre code {
+  padding: 0;
+  background: none;
+}
+
+.ejemplo-rotulo {
+  margin-bottom: 4px;
+  font-weight: bold;
+}

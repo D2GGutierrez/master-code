@@ -22,3 +22,32 @@ export async function listarProblemas(cursoId: number): Promise<RespuestaProblem
   }
   return { ok: true, problemas: await respuesta.json() }
 }
+
+// Mismos campos que el record ProblemaDetalle de user-api (GET /api/problemas/{id}). casos_prueba son solo los
+// públicos: admin-api nunca manda los ocultos.
+export type CasoDeEjemplo = {
+  entrada: string
+  salida_esperada: string
+}
+
+export type ProblemaDetalle = {
+  id: number
+  curso_id: number
+  titulo: string
+  enunciado: string
+  lenguaje: string
+  dificultad: string
+  plataforma: string
+  tipo_ejercicio: string
+  casos_prueba: CasoDeEjemplo[]
+}
+
+export type RespuestaProblema = { ok: true; problema: ProblemaDetalle } | { ok: false; status: number }
+
+export async function obtenerProblema(id: number): Promise<RespuestaProblema> {
+  const respuesta = await pedirConSesion(`/api/problemas/${id}`)
+  if (!respuesta.ok) {
+    return { ok: false, status: respuesta.status }
+  }
+  return { ok: true, problema: await respuesta.json() }
+}
