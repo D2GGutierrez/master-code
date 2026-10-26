@@ -1,0 +1,33 @@
+.problemas-curso {
+  padding: 0 16px;
+}
+
+.lista-problemas {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.problema {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
+  overflow-wrap: anywhere;
+}
+
+.problema-titulo {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* Lo dice el texto; el borde solo lo agrupa. */
+.etiqueta-problema {
+  display: inline-block;
+  border: 1px solid #999;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.85em;
+}

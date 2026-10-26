@@ -5,6 +5,7 @@ import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import OlvideContrasena from './pages/OlvideContrasena.tsx'
+import ProblemasCurso from './pages/ProblemasCurso.tsx'
 import RegistroEstudiante from './pages/RegistroEstudiante.tsx'
 
 // Se ejecuta una vez al cargar: si quedó una sesión guardada (p. ej. al recargar), se reanuda su renovación.
@@ -29,6 +30,11 @@ function App() {
   }
   if (window.location.pathname === '/editor-prueba') {
     return <EditorPrueba />
+  }
+  // Anclada y solo con dígitos: un id no numérico cae en la pantalla por defecto.
+  const problemasCurso = window.location.pathname.match(/^\/cursos\/(\d+)\/problemas$/)
+  if (problemasCurso) {
+    return <ProblemasCurso id={Number(problemasCurso[1])} />
   }
   return <RegistroEstudiante />
 }

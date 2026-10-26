@@ -3,13 +3,15 @@ import { misCursos, type MiCurso } from '../api/cursos.ts'
 import { etiquetaLenguaje } from '../lenguajes.ts'
 import './Inicio.css'
 
-// Solo informativa: HU29-T2 la convertirá en enlace a los problemas del curso.
+// Toda la tarjeta es el enlace a los problemas del curso (HU29-T2).
 function TarjetaCurso({ curso }: { curso: MiCurso }) {
   return (
     <li className="tarjeta-curso">
-      <h2>{curso.nombre}</h2>
-      <p>{etiquetaLenguaje(curso.lenguaje)}</p>
-      <p>Inscrito el {new Date(curso.fecha_inscripcion).toLocaleDateString('es-PE')}</p>
+      <a className="tarjeta-curso-enlace" href={`/cursos/${curso.curso_id}/problemas`}>
+        <h2>{curso.nombre}</h2>
+        <p>{etiquetaLenguaje(curso.lenguaje)}</p>
+        <p>Inscrito el {new Date(curso.fecha_inscripcion).toLocaleDateString('es-PE')}</p>
+      </a>
     </li>
   )
 }
