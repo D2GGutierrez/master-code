@@ -1,5 +1,6 @@
 import { programarRenovacion } from './api/sesion.ts'
 import Avance from './pages/Avance.tsx'
+import BuscarCursos from './pages/BuscarCursos.tsx'
 import EditorPrueba from './pages/EditorPrueba.tsx'
 import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
@@ -30,6 +31,9 @@ function App() {
   }
   if (window.location.pathname === '/editor-prueba') {
     return <EditorPrueba />
+  }
+  if (window.location.pathname === '/cursos/buscar') {
+    return <BuscarCursos />
   }
   // Anclada y solo con dígitos: un id no numérico cae en la pantalla por defecto.
   const problemasCurso = window.location.pathname.match(/^\/cursos\/(\d+)\/problemas$/)

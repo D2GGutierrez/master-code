@@ -40,6 +40,9 @@ function Inicio() {
   return (
     <main className="inicio">
       <h1>Mis cursos</h1>
+      <p>
+        <a href="/cursos/buscar">Buscar cursos</a>
+      </p>
       {error ? (
         <>
           <p role="alert">No se pudieron cargar tus cursos. Inténtalo de nuevo.</p>

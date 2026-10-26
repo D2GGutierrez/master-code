@@ -65,3 +65,5 @@ Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://loc
 Al iniciar sesión se llega a <http://localhost:3001/inicio>: una tarjeta por curso inscrito (nombre, lenguaje y fecha de inscripción) con `GET /api/mis-cursos` de `user-api`; sin sesión lleva a `/login`.
 
 Cada tarjeta de `/inicio` lleva a <http://localhost:3001/cursos/ID/problemas>: los problemas publicados del curso para la web (`GET /api/cursos/{id}/problemas?plataforma=web` de `user-api`), con su dificultad y tipo de ejercicio; aún no se abren (HU32).
+
+<http://localhost:3001/cursos/buscar> («Buscar cursos» en `/inicio`) lista los cursos publicados de la institución del estudiante y los busca por nombre con `GET /api/cursos?buscar=` de `user-api`; para inscribirse hace falta el código de invitación del docente.

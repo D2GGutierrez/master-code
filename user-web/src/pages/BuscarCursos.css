@@ -1,0 +1,31 @@
+.buscar-cursos {
+  padding: 0 16px;
+}
+
+/* Misma cuadrícula que las tarjetas de /inicio: una columna en pantalla angosta. */
+.buscar-cursos-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+
+.curso-disponible {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  /* Un nombre de curso largo y sin espacios se parte en vez de ensanchar la tarjeta. */
+  overflow-wrap: anywhere;
+}
+
+.curso-disponible-institucion {
+  font-size: 0.85em;
+  color: #555;
+}
+
+/* El campo se encoge en pantallas angostas en vez de desbordar. */
+.buscar-cursos input {
+  max-width: 100%;
+  box-sizing: border-box;
+}
