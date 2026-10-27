@@ -1,8 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { misCursos } from '../api/cursos.ts'
 import { listarProblemas, type ProblemaDeLista } from '../api/problemas.ts'
-import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
+import { etiquetaDificultad, etiquetaEstado, etiquetaTipoEjercicio } from '../etiquetas.ts'
 import './ProblemasCurso.css'
+
+// --- HU30-T3: filtros que aplica user-api y el último filtro recordado. ---
+// Valores exactos de user-api; de aquí salen los botones y la validación de lo guardado.
+const DIFICULTADES = ['facil', 'medio', 'dificil'] as const
+const ESTADOS = ['resuelto', 'intentado', 'sin_abrir'] as const
+// Una sola clave para todos los cursos: el filtro se recuerda, no se guarda por curso.
+const CLAVE_FILTRO = 'mc_filtro_problemas'
+
+// '' = «todos» (sin parámetro).
+type Filtro = { dificultad: (typeof DIFICULTADES)[number] | ''; estado: (typeof ESTADOS)[number] | '' }
+const SIN_FILTRO: Filtro = { dificultad: '', estado: '' }
+
+// Lo guardado puede estar corrupto o venir de otra versión: cada campo se valida y lo inválido es «todos».
+function leerFiltro(): Filtro {
+  try {
+    const guardado: unknown = JSON.parse(localStorage.getItem(CLAVE_FILTRO) ?? 'null')
+    if (typeof guardado !== 'object' || guardado === null || Array.isArray(guardado)) {
+      return SIN_FILTRO
+    }
+    const { dificultad, estado } = guardado as Record<string, unknown>
+    return {
+      dificultad: DIFICULTADES.find((valor) => valor === dificultad) ?? '',
+      estado: ESTADOS.find((valor) => valor === estado) ?? '',
+    }
+  } catch {
+    // JSON roto o almacenamiento bloqueado (p. ej. navegación privada): sin filtro.
+    return SIN_FILTRO
+  }
+}
+
+function guardarFiltro(filtro: Filtro) {
+  try {
+    localStorage.setItem(CLAVE_FILTRO, JSON.stringify(filtro))
+  } catch {
+    // Sin almacenamiento la pantalla funciona igual; solo no recuerda el filtro.
+  }
+}
+// --- fin de los filtros ---
 
 // --- HU29-T3: orden y paginación en el navegador, sobre la lista que ya llega (user-api no ordena ni pagina). ---
 const PROBLEMAS_POR_PAGINA = 10
@@ -89,6 +127,9 @@ function ProblemasCurso({ id }: { id: number }) {
   const [recargas, setRecargas] = useState(0)
   const [orden, setOrden] = useState<Orden>('dificultad-asc')
   const [pagina, setPagina] = useState(1)
+  // Se lee una sola vez, al montar.
+  const [filtro, setFiltro] = useState(leerFiltro)
+  const hayFiltros = filtro.dificultad !== '' || filtro.estado !== ''
   const lista = useRef<HTMLUListElement>(null)
 
   // Una copia: el arreglo que llegó del servidor no se modifica.
@@ -98,6 +139,17 @@ function ProblemasCurso({ id }: { id: number }) {
 
   function cambiarOrden(valor: Orden) {
     setOrden(valor)
+    setPagina(1)
+  }
+
+  // El orden elegido se conserva; la página vuelve a 1 porque la lista cambia.
+  function cambiarFiltro(nuevo: Filtro) {
+    if (nuevo.dificultad === filtro.dificultad && nuevo.estado === filtro.estado) {
+      return
+    }
+    setFiltro(nuevo)
+    guardarFiltro(nuevo)
+    setProblemas(null)
     setPagina(1)
   }
 
@@ -116,8 +168,13 @@ function ProblemasCurso({ id }: { id: number }) {
       window.location.assign('/login')
       return
     }
-    listarProblemas(id).then(
+    // Si el filtro cambia antes de la respuesta, esta petición se cancela: una respuesta vieja nunca pisa a una nueva.
+    const peticion = new AbortController()
+    listarProblemas(id, filtro, peticion.signal).then(
       (respuesta) => {
+        if (peticion.signal.aborted) {
+          return
+        }
         if (respuesta.ok) {
           setProblemas(respuesta.problemas)
         } else if (mensajeDeError(respuesta.status)) {
@@ -126,9 +183,14 @@ function ProblemasCurso({ id }: { id: number }) {
           setError(true)
         }
       },
-      () => setError(true),
+      () => {
+        if (!peticion.signal.aborted) {
+          setError(true)
+        }
+      },
     )
-  }, [id, recargas])
+    return () => peticion.abort()
+  }, [id, recargas, filtro])
 
   useEffect(() => {
     // La lista de problemas no trae el nombre del curso: sale de «Mis cursos». Si falla, el título es genérico.
@@ -137,6 +199,40 @@ function ProblemasCurso({ id }: { id: number }) {
       () => setNombreCurso('Curso'),
     )
   }, [id])
+
+  // Se muestran mientras carga y con un resultado vacío, para poder cambiar o quitar el filtro.
+  const botonesFiltro = (
+    <div className="filtros-problemas">
+      <div role="group" aria-labelledby="filtro-dificultad" className="grupo-filtro">
+        <span id="filtro-dificultad">Dificultad</span>
+        {(['', ...DIFICULTADES] as const).map((valor) => (
+          <button
+            key={valor || 'todas'}
+            type="button"
+            className="boton-filtro"
+            aria-pressed={filtro.dificultad === valor}
+            onClick={() => cambiarFiltro({ ...filtro, dificultad: valor })}
+          >
+            {valor ? etiquetaDificultad(valor) : 'Todas'}
+          </button>
+        ))}
+      </div>
+      <div role="group" aria-labelledby="filtro-estado" className="grupo-filtro">
+        <span id="filtro-estado">Estado</span>
+        {(['', ...ESTADOS] as const).map((valor) => (
+          <button
+            key={valor || 'todos'}
+            type="button"
+            className="boton-filtro"
+            aria-pressed={filtro.estado === valor}
+            onClick={() => cambiarFiltro({ ...filtro, estado: valor })}
+          >
+            {valor ? etiquetaEstado(valor) : 'Todos'}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <main className="problemas-curso">
@@ -153,11 +249,25 @@ function ProblemasCurso({ id }: { id: number }) {
           <button type="button" onClick={reintentar}>Reintentar</button>
         </>
       ) : !problemas ? (
-        <p>Cargando problemas…</p>
+        <>
+          {botonesFiltro}
+          <p>Cargando problemas…</p>
+        </>
+      ) : problemas.length === 0 && hayFiltros ? (
+        <>
+          {botonesFiltro}
+          <p aria-live="polite">
+            Ningún problema coincide con los filtros.{' '}
+            <button type="button" onClick={() => cambiarFiltro(SIN_FILTRO)}>
+              Quitar filtros
+            </button>
+          </p>
+        </>
       ) : problemas.length === 0 ? (
         <p>Este curso todavía no tiene problemas publicados.</p>
       ) : (
         <>
+          {botonesFiltro}
           <div className="controles-problemas">
             <label htmlFor="orden-problemas">Ordenar por</label>
             <select id="orden-problemas" value={orden} onChange={(evento) => cambiarOrden(evento.target.value as Orden)}>
@@ -177,6 +287,7 @@ function ProblemasCurso({ id }: { id: number }) {
                   {problema.titulo}
                 </a>
                 <span className="etiqueta-problema">{etiquetaDificultad(problema.dificultad)}</span>{' '}
+                <span className="etiqueta-problema">{etiquetaEstado(problema.estado)}</span>{' '}
                 <span className="etiqueta-problema">{etiquetaTipoEjercicio(problema.tipo_ejercicio)}</span>
               </li>
             ))}

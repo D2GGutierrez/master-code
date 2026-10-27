@@ -14,9 +14,24 @@ export type ProblemaDeLista = {
 
 export type RespuestaProblemas = { ok: true; problemas: ProblemaDeLista[] } | { ok: false; status: number }
 
+// HU30: vacío = sin filtro (no se envía el parámetro). Valores exactos de user-api.
+export type FiltrosProblemas = { dificultad?: string; estado?: string }
+
 // plataforma=web: user-api deja los de la web y los de ambas; los solo móviles no se pueden resolver aquí.
-export async function listarProblemas(cursoId: number): Promise<RespuestaProblemas> {
-  const respuesta = await pedirConSesion(`/api/cursos/${cursoId}/problemas?plataforma=web`)
+// signal permite cancelar una petición que ya no sirve (el estudiante cambió el filtro antes de la respuesta).
+export async function listarProblemas(
+  cursoId: number,
+  filtros: FiltrosProblemas = {},
+  signal?: AbortSignal,
+): Promise<RespuestaProblemas> {
+  const consulta = new URLSearchParams({ plataforma: 'web' })
+  if (filtros.dificultad) {
+    consulta.set('dificultad', filtros.dificultad)
+  }
+  if (filtros.estado) {
+    consulta.set('estado', filtros.estado)
+  }
+  const respuesta = await pedirConSesion(`/api/cursos/${cursoId}/problemas?${consulta}`, { signal })
   if (!respuesta.ok) {
     return { ok: false, status: respuesta.status }
   }

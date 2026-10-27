@@ -48,3 +48,36 @@
 .controles-problemas select {
   max-width: 100%;
 }
+
+.filtros-problemas {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Los botones se envuelven a la línea siguiente en pantallas angostas. */
+.grupo-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.boton-filtro {
+  border: 1px solid #999;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: #fff;
+}
+
+/* Activo: borde más grueso y negrita, no solo color. */
+.boton-filtro[aria-pressed='true'] {
+  border: 2px solid #1a1a1a;
+  font-weight: bold;
+  background: #e8eaed;
+}
+
+.boton-filtro:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+}

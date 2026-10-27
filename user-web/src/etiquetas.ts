@@ -8,6 +8,10 @@ const ETIQUETA_POR_VALOR = new Map([
   ['prediccion_salida', 'Predecir la salida'],
   ['opcion_multiple', 'Opción múltiple'],
   ['completar_espacio', 'Completar espacio'],
+  // Estado del problema para el estudiante (user-api, EstadoProblema).
+  ['resuelto', 'Resuelto'],
+  ['intentado', 'Intentado'],
+  ['sin_abrir', 'Sin abrir'],
 ])
 
 // Un valor desconocido se muestra tal cual llegó.
@@ -20,5 +24,9 @@ export function etiquetaDificultad(valor: string): string {
 }
 
 export function etiquetaTipoEjercicio(valor: string): string {
+  return etiqueta(valor)
+}
+
+export function etiquetaEstado(valor: string): string {
   return etiqueta(valor)
 }
