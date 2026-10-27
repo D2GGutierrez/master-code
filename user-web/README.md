@@ -69,3 +69,5 @@ Cada tarjeta de `/inicio` lleva a <http://localhost:3001/cursos/ID/problemas>: l
 <http://localhost:3001/cursos/buscar> («Buscar cursos» en `/inicio`) lista los cursos publicados de la institución del estudiante y los busca por nombre con `GET /api/cursos?buscar=` de `user-api`; para inscribirse hace falta el código de invitación del docente.
 
 <http://localhost:3001/problemas/ID> muestra un problema (enlace desde el título en el listado del curso): título, dificultad, tipo, enunciado y los ejemplos públicos. El enunciado se guarda como HTML sin sanitizar, así que `src/enunciado.ts` lo limpia con `dompurify` (solo etiquetas de texto y enlaces http/https/mailto) antes de mostrarlo; es el único `dangerouslySetInnerHTML` del proyecto.
+
+El listado de `/cursos/ID/problemas` se ordena en el navegador (dificultad de fácil a difícil por defecto, o por fecha de publicación) y se pagina de 10 en 10.

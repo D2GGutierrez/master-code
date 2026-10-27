@@ -36,3 +36,15 @@
   padding: 0 8px;
   font-size: 0.85em;
 }
+
+/* Se apilan en pantallas angostas en vez de desbordar. */
+.controles-problemas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.controles-problemas select {
+  max-width: 100%;
+}
