@@ -73,3 +73,5 @@ Cada tarjeta de `/inicio` lleva a <http://localhost:3001/cursos/ID/problemas>: l
 El listado de `/cursos/ID/problemas` se ordena en el navegador (dificultad de fácil a difícil por defecto, o por fecha de publicación) y se pagina de 10 en 10.
 
 El listado se filtra por dificultad y por estado (resuelto, intentado o sin abrir) con botones; el filtro lo aplica `user-api` y el último usado se recuerda en `localStorage` (`mc_filtro_problemas`), igual para todos los cursos.
+
+En un problema de escritura de código, «Ir al editor de código» lleva a <http://localhost:3001/problemas/ID/editor>: el editor con «Ejecutar» en el lenguaje del problema (pantalla mínima; HU33 agregará el enunciado al lado). Los demás tipos no abren el editor.

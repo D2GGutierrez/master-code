@@ -5,6 +5,9 @@ import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
 import { etiquetaLenguaje } from '../lenguajes.ts'
 import './DetalleProblema.css'
 
+// Solo la escritura de código usa el editor (HU32-T3); la misma regla que en EditorProblema.tsx.
+const TIPO_CON_EDITOR = 'escritura_codigo'
+
 // Mensaje según el código de user-api. Hoy responde 404 también si no está inscrito, para no revelar qué existe.
 function mensajeDeError(status: number) {
   if (status === 403) {
@@ -87,6 +90,15 @@ function DetalleProblema({ id }: { id: number }) {
         <p>Este problema es solo para la app móvil.</p>
       ) : (
         <>
+          {problema.tipo_ejercicio === TIPO_CON_EDITOR ? (
+            <p>
+              <a className="boton-editor" href={`/problemas/${problema.id}/editor`}>
+                Ir al editor de código
+              </a>
+            </p>
+          ) : (
+            <p>Este problema no usa el editor de código.</p>
+          )}
           <section>
             <h2>Enunciado</h2>
             {'html' in enunciado ? (
