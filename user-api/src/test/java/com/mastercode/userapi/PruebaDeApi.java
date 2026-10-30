@@ -61,8 +61,8 @@ abstract class PruebaDeApi {
                 .update();
     }
 
-    // Un envío sembrado por la prueba (los envíos reales llegan con HU36-T2 y HU45-T3).
-    // resultado: "correcto", "incorrecto" o null para un envío sin calificar.
+    // Un envío sembrado por la prueba, sin pasar por la API (los reales los guarda EnviosController, HU36-T2).
+    // resultado: "correcto", "parcial", "incorrecto" o null para un envío sin calificar.
     protected void registrarEnvio(long estudianteId, long problemaId, String plataforma, String resultado) {
         if (resultado == null) {
             jdbc.sql("INSERT INTO app_schema.app_envio (estudiante_id, problema_id, plataforma) VALUES (?, ?, ?)")
@@ -88,6 +88,14 @@ abstract class PruebaDeApi {
     // jwt() arma el token en la prueba, sin admin-api: mismos claims que lee AsegurarPerfilFiltro.
     protected static RequestPostProcessor tokenDe(String email, String rol) {
         return tokenDe(email, rol, "ejemplo.edu.pe");
+    }
+
+    // Igual, con el claim cliente que admin-api pone al iniciar sesión: «user-web» o «mobile» (HU36-T2).
+    protected static RequestPostProcessor tokenDeCliente(String email, String cliente) {
+        return jwt()
+                .jwt(token -> token.claim("email", email).claim("institucion", "ejemplo.edu.pe")
+                        .claim("rol", "estudiante").claim("cliente", cliente))
+                .authorities(new SimpleGrantedAuthority("ROLE_ESTUDIANTE"));
     }
 
     // Igual, para un estudiante de otra institución (HU25-T4).

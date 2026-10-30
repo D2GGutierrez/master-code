@@ -69,3 +69,14 @@ export async function renovarTokens(refresh: string) {
   const cuerpo: CuerpoSesion = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, cuerpo }
 }
+
+// Revoca el refresh en el servidor (204 sin cuerpo). Usa fetch y no pedirConSesion: con el access vencido,
+// pedirConSesion renovaría (rotando este mismo refresh) y aquí solo se quiere revocarlo.
+export async function cerrarSesionEnServidor(refresh: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/logout/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  })
+  return { ok: respuesta.ok }
+}

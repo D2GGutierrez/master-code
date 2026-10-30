@@ -1,0 +1,57 @@
+/* Buscador: etiqueta, campo y botones en una fila que se parte limpiamente en pantallas angostas. */
+.busqueda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
+  box-shadow: var(--sombra-suave);
+}
+
+.busqueda input {
+  min-width: 14rem;
+}
+
+/* Enlaces y botones de cada fila: una línea, o varias si no caben, siempre con el mismo espacio. */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 1rem;
+}
+
+/* Dentro de la tabla las acciones van en una sola línea: la caja se desplaza, las filas no se estiran. */
+.tabla-cursos .acciones {
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+/* En pantallas angostas la tabla se desplaza dentro de su caja en vez de apretar cada columna. */
+.tabla-cursos table {
+  min-width: 52rem;
+}
+
+/* La miniatura de la portada va antes del nombre del curso. */
+.celda-curso .portada-mini {
+  width: 3.25rem;
+}
+
+.celda-curso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  font-weight: 600;
+}
+
+.tabla-cursos td {
+  vertical-align: middle;
+}
+
+.celda-curso > span {
+  min-width: 9rem;
+}

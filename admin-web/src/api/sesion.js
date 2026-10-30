@@ -17,6 +17,18 @@ export function borrarTokens() {
   localStorage.removeItem('refresh')
 }
 
+// El correo de quien tiene la sesión abierta: claim email del access. null si no hay sesión o el token no se lee.
+export function correoDeSesion() {
+  try {
+    const parte = (leerAccess() ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const correo = JSON.parse(atob(parte)).email
+    return typeof correo === 'string' ? correo : null
+  } catch {
+    // Sin token, token con otro formato o almacenamiento bloqueado.
+    return null
+  }
+}
+
 // Basta con el refresh: con él se puede renovar el access aunque haya vencido.
 export function haySesion() {
   return leerRefresh() !== null

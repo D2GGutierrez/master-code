@@ -1,32 +1,4 @@
-.inicio {
-  padding: 0 16px;
-}
-
-.inicio-cursos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-  list-style: none;
-  padding: 0;
-}
-
-.tarjeta-curso {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  /* Un nombre de curso largo y sin espacios se parte en vez de ensanchar la tarjeta. */
-  overflow-wrap: anywhere;
-}
-
-/* El padding pasa al enlace para que toda la tarjeta se pueda pulsar; el texto conserva su aspecto. */
-.tarjeta-curso-enlace {
-  display: block;
-  padding: 12px;
-  border-radius: 8px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.tarjeta-curso-enlace:focus-visible {
-  outline: 3px solid #1a73e8;
-  outline-offset: 2px;
+/* El hero abre la pantalla y los cursos quedan a un respiro de distancia. */
+.inicio .hero {
+  margin-bottom: 3rem;
 }

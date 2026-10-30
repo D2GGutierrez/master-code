@@ -30,6 +30,7 @@ import com.mastercode.userapi.admin.CodigoInvalidoException;
 import com.mastercode.userapi.admin.CodigoVencidoException;
 import com.mastercode.userapi.admin.CursoDto;
 import com.mastercode.userapi.admin.CursoNoExisteException;
+import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.ProblemaResumenDto;
@@ -48,6 +49,12 @@ class AdminClienteTest {
             + "\"lenguaje\":\"python\",\"dificultad\":\"facil\",\"plataforma\":\"web\","
             + "\"tipo_ejercicio\":\"escritura_codigo\","
             + "\"casos_prueba\":[{\"entrada\":\"2 3\",\"salida_esperada\":\"5\"}],\"curso_id\":10,\"otro\":1}";
+
+    // La respuesta de la ruta de calificación: un caso público y uno oculto, y un campo de más.
+    private static final String CALIFICACION_JSON = "{\"id\":7,\"curso_id\":10,\"lenguaje\":\"python\","
+            + "\"tipo_ejercicio\":\"escritura_codigo\",\"casos_prueba\":["
+            + "{\"entrada\":\"2 3\",\"salida_esperada\":\"5\",\"es_publico\":true},"
+            + "{\"entrada\":\"10 20\",\"salida_esperada\":\"30\",\"es_publico\":false}],\"otro\":1}";
 
     private MockRestServiceServer servidor;
     private AdminCliente cliente;
@@ -299,5 +306,46 @@ class AdminClienteTest {
         servidor.expect(requestTo("http://admin-api:8000/internal/cursos/publicados/"))
                 .andRespond(withException(new IOException("sin conexión")));
         assertThrows(AdminNoDisponibleException.class, () -> cliente.cursosPublicados(null, null));
+    }
+
+    @Test
+    void para_calificar_pide_la_ruta_interna_con_la_clave_y_lee_todos_los_casos() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/calificacion/"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess(CALIFICACION_JSON, MediaType.APPLICATION_JSON));
+
+        ProblemaCalificableDto problema = cliente.problemaParaCalificar(7);
+
+        assertThat(problema.id()).isEqualTo(7);
+        assertThat(problema.cursoId()).isEqualTo(10);
+        assertThat(problema.lenguaje()).isEqualTo("python");
+        assertThat(problema.tipoEjercicio()).isEqualTo("escritura_codigo");
+        // Llegan los dos, con su marca de público: el oculto solo sirve para calificar.
+        assertThat(problema.casosPrueba()).containsExactly(
+                new ProblemaCalificableDto.Caso("2 3", "5", true),
+                new ProblemaCalificableDto.Caso("10 20", "30", false));
+        servidor.verify();
+    }
+
+    @Test
+    void para_calificar_un_404_es_problema_no_visible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/8/calificacion/"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThrows(ProblemaNoVisibleException.class, () -> cliente.problemaParaCalificar(8));
+    }
+
+    @Test
+    void para_calificar_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/calificacion/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problemaParaCalificar(7));
+
+        // 403 = clave interna rechazada: para el estudiante es un fallo del servicio.
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/calificacion/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.problemaParaCalificar(7));
     }
 }

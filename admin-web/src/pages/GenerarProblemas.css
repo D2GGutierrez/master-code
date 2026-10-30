@@ -1,8 +1,14 @@
+.generacion-progreso {
+  max-width: 28rem;
+  margin-top: 1.5rem;
+}
+
 .generacion-progreso-barra {
   position: relative;
   overflow: hidden;
-  height: 4px;
-  background: #e0e0e0;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--borde);
 }
 
 .generacion-progreso-barra::before {
@@ -10,7 +16,8 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: #1a73e8;
+  border-radius: 999px;
+  background: var(--acento);
   animation: generacion-indeterminada 1.2s ease-in-out infinite;
 }
 

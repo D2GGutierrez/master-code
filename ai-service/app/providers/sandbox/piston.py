@@ -33,6 +33,15 @@ _ESTADO_POR_CODIGO = {
 }
 
 
+# El Java que instala Piston (15) ejecuta el .java directo, sin una etapa de compilación aparte: un error de
+# compilación llega como un fallo de la ejecución (status RE, código 1) con esta línea al final de stderr.
+_JAVA_NO_COMPILO = "error: compilation failed"
+
+
+def _fallo_la_compilacion(resultado: Resultado) -> bool:
+    return resultado.estado == Estado.ERROR_EJECUCION and resultado.error.rstrip().endswith(_JAVA_NO_COMPILO)
+
+
 def _milisegundos(etapa: dict) -> int | None:
     # Piston informa cpu_time y wall_time en milisegundos; se prefiere el de CPU, como Judge0.
     valor = etapa.get("cpu_time", etapa.get("wall_time"))
@@ -59,15 +68,33 @@ class Piston(ProveedorSandbox):
             "files": [{"name": archivo, "content": ejecucion.codigo}],
             "stdin": ejecucion.entrada,
         }
+        resultado = self._pedir(cuerpo, ejecucion.lenguaje)
+        if lenguaje == "java" and _fallo_la_compilacion(resultado):
+            return self._confirmar_compilacion(cuerpo, resultado)
+        return resultado
+
+    def _pedir(self, cuerpo: dict, lenguaje: str) -> Resultado:
         try:
             datos = self._enviar(f"{self._url}/api/v2/execute", cuerpo)
         except urllib.error.HTTPError as error:
             # Por ejemplo 400 si el lenguaje no está instalado en Piston: es un problema del servicio.
-            _log.warning("Piston respondió HTTP %s al ejecutar %s", error.code, ejecucion.lenguaje)
+            _log.warning("Piston respondió HTTP %s al ejecutar %s", error.code, lenguaje)
             return Resultado(Estado.ERROR_SERVICIO, error="El motor de ejecución no pudo ejecutar el código.")
         except (urllib.error.URLError, TimeoutError, ValueError):
             return Resultado(Estado.ERROR_SERVICIO, error="El motor de ejecución no respondió.")
         return _traducir(datos)
+
+    def _confirmar_compilacion(self, cuerpo: dict, resultado: Resultado) -> Resultado:
+        # user-api le muestra al estudiante el texto de un error de compilación porque no depende de la entrada (un
+        # caso oculto no se filtra). Aquí el programa sí corrió con la entrada: uno que imprima su stdin por stderr
+        # y termine con el mensaje de arriba se haría pasar por un error de compilación y dejaría ver un caso oculto.
+        # Por eso se repite sin entrada: el texto de esa corrida no puede llevar nada de ella.
+        repetido = self._pedir({**cuerpo, "stdin": ""}, "java")
+        if not _fallo_la_compilacion(repetido):
+            return resultado
+        # Piston guarda el archivo como Main.java.java, y ese nombre saldría en el mensaje.
+        error = repetido.error.replace("Main.java.java", "Main.java")
+        return Resultado(Estado.ERROR_COMPILACION, error=error, tiempo_ms=repetido.tiempo_ms)
 
 
 def _traducir(datos: dict) -> Resultado:

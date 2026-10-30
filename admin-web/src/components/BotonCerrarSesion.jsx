@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { cerrarSesionEnServidor } from '../api/cuentas.js'
 import { borrarRutaGuardada, borrarTokens, leerRefresh } from '../api/sesion.js'
+import Icono from './Icono.jsx'
 
 function BotonCerrarSesion() {
   const [cerrando, setCerrando] = useState(false)
@@ -17,6 +18,7 @@ function BotonCerrarSesion() {
 
   return (
     <button type="button" onClick={cerrar} disabled={cerrando}>
+      <Icono nombre="salir" />
       {cerrando ? 'Cerrando sesión…' : 'Cerrar sesión'}
     </button>
   )

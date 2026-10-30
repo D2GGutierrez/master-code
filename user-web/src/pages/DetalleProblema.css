@@ -1,15 +1,33 @@
 .detalle-problema {
-  padding: 0 16px;
   /* Títulos o palabras largas sin espacios se parten en vez de ensanchar la página. */
   overflow-wrap: anywhere;
 }
 
-.detalle-problema .etiqueta-problema {
-  display: inline-block;
-  border: 1px solid #999;
-  border-radius: 999px;
-  padding: 0 8px;
-  font-size: 0.85em;
+/* Enunciado a la izquierda y ejemplos a la derecha en pantallas anchas; en las angostas, uno bajo el otro. */
+.problema-lectura {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .problema-lectura.con-ejemplos {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* Cada bloque de lectura es una tarjeta. */
+.lectura {
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
+  box-shadow: var(--sombra-suave);
+}
+
+.lectura h2 {
+  margin: 0 0 1rem;
 }
 
 /* Contenido del enunciado ya sanitizado. */
@@ -23,49 +41,32 @@
 
 .enunciado blockquote {
   margin: 0 0 1em;
-  padding-left: 12px;
-  border-left: 3px solid #ccc;
-}
-
-.enunciado code {
-  padding: 0 4px;
-  border-radius: 4px;
-  background: #f2f2f2;
+  padding-left: 1rem;
+  border-left: 3px solid var(--acento);
+  color: var(--texto-suave);
 }
 
 /* El código del enunciado y de los ejemplos se desplaza dentro de su bloque, nunca la página. */
 .enunciado pre,
 .ejemplo pre {
   max-width: 100%;
-  overflow-x: auto;
-  padding: 8px;
-  border-radius: 4px;
-  background: #f2f2f2;
 }
 
-.enunciado pre code {
-  padding: 0;
-  background: none;
+.ejemplo {
+  margin-bottom: 1.5rem;
+}
+
+.ejemplo:last-child {
+  margin-bottom: 0;
+}
+
+.ejemplo h3 {
+  margin-top: 0;
 }
 
 .ejemplo-rotulo {
-  margin-bottom: 4px;
-  font-weight: bold;
-}
-
-/* Enlace con aspecto de botón: lleva a otra pantalla, por eso no es un <button>. */
-.boton-editor {
-  display: inline-block;
-  padding: 6px 14px;
-  border: 1px solid #1a1a1a;
-  border-radius: 6px;
-  background: #e8eaed;
-  color: inherit;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.boton-editor:focus-visible {
-  outline: 3px solid #1a73e8;
-  outline-offset: 2px;
+  margin: 0.75rem 0 0.25rem;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 500;
 }

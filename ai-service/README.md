@@ -23,6 +23,10 @@ Con `mock`, `curl -X POST http://localhost:8002/generate -H "Content-Type: appli
 
 Con un LLM real, `python -m scripts.probar_prompt` pide problemas de cinco temas y valida cada respuesta (ver el encabezado del script).
 
+## Probar la ejecución
+
+Con `SANDBOX_PROVIDER=piston` (o `judge0`) y el motor levantado, `python ai-service/scripts/probar_sandbox.py` ejecuta programas buenos y malos (bucle infinito, memoria, red) a través de `POST /execute` y dice si el motor los trata como se espera (ver `docs/piston.md`, sección 5).
+
 ## Local
 
 ```bash

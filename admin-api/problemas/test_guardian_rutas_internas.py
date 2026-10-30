@@ -15,6 +15,10 @@ AUDITADAS = {
     "internal/cursos/<int:curso_id>/problemas/",
     # OK: get_object_or_404 sobre visibles_para_estudiante() (problemas/interno.py, ProblemaView).
     "internal/problemas/<int:problema_id>/",
+    # OK: get_object_or_404 sobre visibles_para_estudiante() (problemas/interno.py, ProblemaParaCalificarView).
+    # Entrega los casos ocultos a propósito: solo con la clave interna y para que user-api califique (HU36-T2).
+    # user-api no los reenvía; lo comprueban sus pruebas (HU39).
+    "internal/problemas/<int:problema_id>/calificacion/",
 }
 
 

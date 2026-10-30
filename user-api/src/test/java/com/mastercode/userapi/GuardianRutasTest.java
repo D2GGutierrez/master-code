@@ -25,13 +25,16 @@ class GuardianRutasTest extends PruebaDeApi {
             "GET /api/cursos",
             // NO APLICA: código y entrada libres, sin id de problema; no guarda nada.
             "POST /api/ejecuciones",
-            // NO APLICA hoy: solo los envíos del propio estudiante por id, sin contenido. Nada escribe app_envio
-            // todavía; cuando HU36 lo haga, el envío debe validar el id contra /internal/problemas/{id}/.
+            // NO APLICA: solo los envíos del propio estudiante por id, sin contenido.
             "GET /api/avance",
             // OK: la lista sale de /internal/cursos/{id}/problemas/ de admin-api (visibles_para_estudiante()).
             "GET /api/cursos/{cursoId}/problemas",
             // OK: el problema sale de /internal/problemas/{id}/ de admin-api; sin aprobar da el mismo 404.
             "GET /api/problemas/{problemaId}",
+            // OK: el problema sale de /internal/problemas/{id}/calificacion/ de admin-api (visibles_para_estudiante()),
+            // sin aprobar da el mismo 404 y no se ejecuta nada. Califica con los casos ocultos pero a quien envía solo
+            // le devuelve si cada uno pasó o falló (HU39); lo comprueba EnviosApiTest.
+            "POST /api/problemas/{problemaId}/envios",
             // NO APLICA: la usa admin-api con X-Internal-Key; correos de inscritos, sin problemas.
             "GET /internal/cursos/{cursoId}/inscritos");
 

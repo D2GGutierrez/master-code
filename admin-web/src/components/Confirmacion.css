@@ -1,0 +1,7 @@
+/* El aspecto del cuadro viene de diseno.css; aquí solo la fila de botones. */
+.acciones-dialogo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}

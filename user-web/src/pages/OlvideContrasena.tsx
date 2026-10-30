@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { solicitarRecuperacion } from '../api/cuentas.ts'
 import Formulario, { type Campo } from '../components/Formulario.tsx'
+import { Acceso } from '../components/Pantalla.tsx'
 
 const CAMPOS: Campo[] = [{ nombre: 'email', etiqueta: 'Correo institucional', tipo: 'email' }]
 
@@ -29,7 +30,7 @@ function OlvideContrasena() {
   }
 
   return (
-    <main>
+    <Acceso lema="Recupera tu acceso" descripcion="Te enviamos un enlace al correo para que elijas una contraseña nueva.">
       <h1>MASTER CODE · Olvidé mi contraseña</h1>
       {enviado ? (
         // Mensaje genérico: no revela si el correo está registrado.
@@ -43,7 +44,7 @@ function OlvideContrasena() {
           onEnviar={solicitar}
         />
       )}
-    </main>
+    </Acceso>
   )
 }
 

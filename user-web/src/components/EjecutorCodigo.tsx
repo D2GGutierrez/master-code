@@ -53,7 +53,9 @@ function EjecutorCodigo({ valor, onCambio, lenguaje, altura }: Props) {
 
   return (
     <div className="ejecutor">
-      <EditorCodigo valor={valor} onCambio={onCambio} lenguaje={lenguaje} altura={altura} />
+      <div className="editor-caja">
+        <EditorCodigo valor={valor} onCambio={onCambio} lenguaje={lenguaje} altura={altura} />
+      </div>
       <label htmlFor={idEntrada}>Entrada (opcional)</label>
       <textarea id={idEntrada} rows={3} value={entrada} onChange={(evento) => setEntrada(evento.target.value)} />
       <button type="button" onClick={ejecutar}>

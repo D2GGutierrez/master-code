@@ -9,7 +9,7 @@ jwt:
 
 # Orígenes de user-web permitidos por el navegador (ADR-7 / D4). Lista separada por comas.
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3005}
 
 # D3: clave de la API interna entre admin-api y user-api. Vacía = la API interna rechaza todo.
 internal:
@@ -21,7 +21,7 @@ admin:
 
 # ai-service ejecuta el código de los estudiantes en el sandbox (ADR-7 D1).
 sandbox:
-  url: ${AI_SERVICE_URL:http://localhost:8002}
+  url: ${AI_SERVICE_URL:http://localhost:3005}
   # Debe ser mayor que el tiempo máximo de ejecución del motor, o el cliente cortaría antes que él.
   timeout-segundos: ${SANDBOX_TIMEOUT_SEGUNDOS:40}
 

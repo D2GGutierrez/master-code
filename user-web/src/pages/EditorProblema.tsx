@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
 import EjecutorCodigo from '../components/EjecutorCodigo.tsx'
-import { etiquetaLenguaje } from '../lenguajes.ts'
+import EnvioSolucion from '../components/EnvioSolucion.tsx'
+import Icono from '../components/Icono.tsx'
+import { Hero } from '../components/Pantalla.tsx'
+import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import './EditorProblema.css'
 
 // --- HU32-T3: cuándo un problema usa el editor. ---
@@ -24,8 +27,8 @@ function mensajeDeError(status: number) {
   return ''
 }
 
-// Pantalla mínima: HU33 la reemplazará por los paneles con el enunciado junto al editor. Sin código base (HU34),
-// borrador (HU35) ni envío de la solución (HU36).
+// Pantalla mínima: HU33 la reemplazará por los paneles con el enunciado junto al editor. Sin código base (HU34) ni
+// borrador (HU35). «Enviar solución» es HU36.
 function EditorProblema({ id }: { id: number }) {
   const [problema, setProblema] = useState<ProblemaDetalle | null>(null)
   // 403 y 404 tienen su mensaje y no se reintentan; cualquier otro fallo permite «Reintentar».
@@ -95,13 +98,21 @@ function EditorProblema({ id }: { id: number }) {
 
   return (
     <main className="editor-problema">
-      <p>{volver}</p>
-      <h1>{problema.titulo}</h1>
-      <p>
-        <span className="etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
-      </p>
+      <Hero clase={`hero-compacto hero-curso leng-${claveLenguaje(problema.lenguaje)}`}>
+        <p className="hero-volver">
+          <a href={`/problemas/${id}`}>
+            <Icono nombre="atras" />
+            Volver al problema
+          </a>
+        </p>
+        <h1>{problema.titulo}</h1>
+        <p className="hero-meta">
+          <span className="hero-etiqueta etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
+        </p>
+      </Hero>
       {/* Igual que /editor-prueba: EjecutorCodigo ya incluye el editor y traduce el lenguaje con idMonaco. */}
       <EjecutorCodigo valor={codigo} onCambio={setCodigo} lenguaje={problema.lenguaje} />
+      <EnvioSolucion problemaId={id} codigo={codigo} />
     </main>
   )
 }

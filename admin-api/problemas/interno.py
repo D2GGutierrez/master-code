@@ -9,7 +9,11 @@ from rest_framework.response import Response
 from cursos.interno import VistaInterna
 from cursos.models import Curso
 from problemas.models import Plataforma, Problema
-from problemas.serializers import ProblemaInternoSerializer, ProblemaResumenSerializer
+from problemas.serializers import (
+    ProblemaCalificacionSerializer,
+    ProblemaInternoSerializer,
+    ProblemaResumenSerializer,
+)
 
 # Quien consulta es un cliente web o móvil, nunca «ambas»: un problema para ambas plataformas sale en las dos.
 PLATAFORMAS_CLIENTE = (Plataforma.WEB, Plataforma.MOVIL)
@@ -37,3 +41,12 @@ class ProblemaView(VistaInterna):
     def get(self, request, problema_id):
         problema = get_object_or_404(Problema.objects.visibles_para_estudiante(), pk=problema_id)
         return Response(ProblemaInternoSerializer(problema).data)
+
+
+class ProblemaParaCalificarView(VistaInterna):
+    # HU36-T2. Los casos COMPLETOS de un problema visible, ocultos incluidos: user-api los necesita para calificar un
+    # envío. Es la única ruta que los entrega y solo con la clave interna; user-api nunca los reenvía al estudiante
+    # (HU39). Parte de visibles_para_estudiante() como las demás: un problema sin aprobar o descartado da 404.
+    def get(self, request, problema_id):
+        problema = get_object_or_404(Problema.objects.visibles_para_estudiante(), pk=problema_id)
+        return Response(ProblemaCalificacionSerializer(problema).data)

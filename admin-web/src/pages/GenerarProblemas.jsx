@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { listarCursos } from '../api/cursos.js'
 import { generarProblemas } from '../api/problemas.js'
 import Formulario from '../components/Formulario.jsx'
+import Icono from '../components/Icono.jsx'
+import { Ilustracion } from '../components/Ilustracion.jsx'
+import { Hero } from '../components/Pantalla.jsx'
 import { CAMPOS as CAMPOS_CURSO } from './NuevoCurso.jsx'
 import { DIFICULTADES } from './NuevoProblema.jsx'
 import './GenerarProblemas.css'
@@ -130,6 +133,7 @@ function GenerarProblemas({ id }) {
   } else if (creados !== null) {
     contenido = (
       <>
+        <Ilustracion nombre="exito" className="generacion-exito" />
         <p>
           {creados.length === 1 ? 'Se generó 1 problema.' : `Se generaron ${creados.length} problemas.`} Quedaron
           pendientes de revisión: ningún estudiante los verá hasta que los apruebes.
@@ -180,12 +184,17 @@ function GenerarProblemas({ id }) {
 
   return (
     <main>
-      <h1>MASTER CODE · Generar problemas con IA</h1>
-      {curso && <p>{curso.nombre}</p>}
-      <p>
-        <a href="/cursos">Volver a Mis cursos</a>
-      </p>
-      {contenido}
+      <Hero clase="hero-compacto">
+        <p className="hero-volver">
+          <a href="/cursos">
+            <Icono nombre="atras" />
+            Volver a Mis cursos
+          </a>
+        </p>
+        <h1>Generar problemas con IA</h1>
+        {curso && <p>{curso.nombre}</p>}
+      </Hero>
+      {curso && creados === null ? <div className="panel-formulario">{contenido}</div> : contenido}
     </main>
   )
 }

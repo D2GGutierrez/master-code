@@ -1,9 +1,9 @@
-/* Azul suave y no rojo: es información para el docente, no una falla del sistema. */
+/* Información para el docente, no una falla del sistema: neutro, sin color de alerta. */
 .aviso {
-  background: #e8f1fb;
-  border: 1px solid #9cc3ea;
-  color: #1f4e79;
-  padding: 0.5rem 0.75rem;
-  margin: 1rem 0;
   max-width: 40rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo-suave);
 }

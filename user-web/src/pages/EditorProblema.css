@@ -1,13 +1,4 @@
 .editor-problema {
-  padding: 0 16px;
   /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
   overflow-wrap: anywhere;
-}
-
-.editor-problema .etiqueta-lenguaje {
-  display: inline-block;
-  border: 1px solid #999;
-  border-radius: 999px;
-  padding: 0 8px;
-  font-size: 0.85em;
 }

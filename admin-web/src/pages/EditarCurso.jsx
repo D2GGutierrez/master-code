@@ -3,6 +3,8 @@ import { actualizarCurso, listarCursos } from '../api/cursos.js'
 import Aviso from '../components/Aviso.jsx'
 import Confirmacion from '../components/Confirmacion.jsx'
 import Formulario from '../components/Formulario.jsx'
+import Icono from '../components/Icono.jsx'
+import { Hero } from '../components/Pantalla.jsx'
 import { CAMPOS } from './NuevoCurso.jsx'
 
 const ERROR_GUARDAR = 'No se pudo guardar el curso. Inténtalo de nuevo.'
@@ -166,8 +168,17 @@ function EditarCurso({ id }) {
 
   return (
     <main>
-      <h1>MASTER CODE · Editar curso</h1>
-      {contenido}
+      <Hero clase="hero-compacto">
+        <p className="hero-volver">
+          <a href="/cursos">
+            <Icono nombre="atras" />
+            Volver a Mis cursos
+          </a>
+        </p>
+        <h1>Editar curso</h1>
+        {curso && <p>{curso.nombre}</p>}
+      </Hero>
+      <div className="panel-formulario">{contenido}</div>
     </main>
   )
 }

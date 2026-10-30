@@ -6,4 +6,5 @@ from problemas import interno
 urlpatterns = [
     path("cursos/<int:curso_id>/problemas/", interno.ProblemasDelCursoView.as_view()),
     path("problemas/<int:problema_id>/", interno.ProblemaView.as_view()),
+    path("problemas/<int:problema_id>/calificacion/", interno.ProblemaParaCalificarView.as_view()),
 ]

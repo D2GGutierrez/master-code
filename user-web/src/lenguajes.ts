@@ -20,3 +20,16 @@ const ETIQUETA_POR_LENGUAJE = new Map([
 export function etiquetaLenguaje(lenguaje: string): string {
   return ETIQUETA_POR_LENGUAJE.get(lenguaje.trim().toLowerCase()) ?? lenguaje
 }
+
+// Cada lenguaje tiene su paleta (clases leng-* de diseno.css). Lo que no se conoce usa la paleta «otro».
+export type ClaveLenguaje = 'python' | 'java' | 'javascript' | 'otro'
+
+const CLAVE_POR_LENGUAJE = new Map<string, ClaveLenguaje>([
+  ['python', 'python'],
+  ['java', 'java'],
+  ['javascript', 'javascript'],
+])
+
+export function claveLenguaje(lenguaje: string): ClaveLenguaje {
+  return CLAVE_POR_LENGUAJE.get(lenguaje.trim().toLowerCase()) ?? 'otro'
+}

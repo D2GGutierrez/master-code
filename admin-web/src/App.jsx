@@ -1,5 +1,4 @@
-import { haySesion } from './api/sesion.js'
-import BotonCerrarSesion from './components/BotonCerrarSesion.jsx'
+import Cabecera from './components/Cabecera.jsx'
 import BandejaRevision from './pages/BandejaRevision.jsx'
 import EditarCurso from './pages/EditarCurso.jsx'
 import EstudiantesInscritos from './pages/EstudiantesInscritos.jsx'
@@ -56,11 +55,7 @@ function App() {
   const ruta = window.location.pathname
   return (
     <>
-      {haySesion() && ruta !== '/login' && (
-        <header style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <BotonCerrarSesion />
-        </header>
-      )}
+      <Cabecera />
       {pantalla(ruta)}
     </>
   )

@@ -12,7 +12,8 @@ export function guardarSesion(access: string, refresh: string) {
   programarRenovacion()
 }
 
-function borrarSesion() {
+// Cierra la sesión de este navegador: borra los tokens y detiene la renovación.
+export function borrarSesion() {
   clearTimeout(temporizador)
   localStorage.removeItem('access')
   localStorage.removeItem('refresh')
@@ -51,4 +52,16 @@ export async function renovar() {
   }
   borrarSesion()
   return false
+}
+
+// El correo de quien tiene la sesión abierta: claim email del access. null si no hay sesión o el token no se lee.
+export function correoDeSesion(): string | null {
+  try {
+    const parte = (localStorage.getItem('access') ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const correo: unknown = JSON.parse(atob(parte)).email
+    return typeof correo === 'string' ? correo : null
+  } catch {
+    // Sin token, token con otro formato o almacenamiento bloqueado.
+    return null
+  }
 }

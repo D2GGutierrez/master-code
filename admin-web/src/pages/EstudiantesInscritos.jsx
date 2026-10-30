@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { listarCursos, listarInscritos } from '../api/cursos.js'
 import Paginacion from '../components/Paginacion.jsx'
 import { aCsv, descargarCsv, nombreArchivoInscritos } from '../csv.js'
+import './EstudiantesInscritos.css'
+import Icono from '../components/Icono.jsx'
+import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
 
 // admin-api devuelve todos los inscritos de una vez: la tabla se pagina en el navegador.
 const INSCRITOS_POR_PAGINA = 20
@@ -103,12 +106,14 @@ function EstudiantesInscritos({ id }) {
     contenido = <p>Cargando estudiantes…</p>
   } else if (inscritos.length === 0) {
     contenido = (
-      <p>
-        Aún no hay estudiantes inscritos en este curso.{' '}
-        <button type="button" disabled title="No hay estudiantes para descargar">
-          Descargar CSV
-        </button>
-      </p>
+      <EstadoVacio>
+        <p>
+          Aún no hay estudiantes inscritos en este curso.{' '}
+          <button type="button" disabled title="No hay estudiantes para descargar">
+            Descargar CSV
+          </button>
+        </p>
+      </EstadoVacio>
     )
   } else {
     const inicio = (pagina - 1) * INSCRITOS_POR_PAGINA
@@ -121,26 +126,29 @@ function EstudiantesInscritos({ id }) {
             Descargar CSV
           </button>
         </p>
-        <table>
-          <caption>Estudiantes inscritos en {nombreCurso}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Nombre</th>
-              <th scope="col">Correo</th>
-              <th scope="col">Fecha de inscripción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inscritosDeLaPagina.map((inscrito) => (
-              // user-api guarda una sola inscripción por estudiante y curso: el correo no se repite.
-              <tr key={inscrito.email}>
-                <td>{inscrito.nombre}</td>
-                <td>{inscrito.email}</td>
-                <td>{formatearFecha(inscrito.fecha_inscripcion)}</td>
+        {/* Sin enlaces ni botones dentro, la caja que se desplaza necesita foco propio para poder moverla con el teclado. */}
+        <div className="tabla tabla-inscritos" role="region" aria-label="Estudiantes inscritos" tabIndex={0}>
+          <table>
+            <caption>Estudiantes inscritos en {nombreCurso}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Correo</th>
+                <th scope="col">Fecha de inscripción</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {inscritosDeLaPagina.map((inscrito) => (
+                // user-api guarda una sola inscripción por estudiante y curso: el correo no se repite.
+                <tr key={inscrito.email}>
+                  <td>{inscrito.nombre}</td>
+                  <td>{inscrito.email}</td>
+                  <td>{formatearFecha(inscrito.fecha_inscripcion)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <Paginacion
           pagina={pagina}
           hayAnterior={pagina > 1}
@@ -153,12 +161,17 @@ function EstudiantesInscritos({ id }) {
 
   return (
     <main>
-      <h1>MASTER CODE · Estudiantes inscritos</h1>
-      {nombreCurso && <p>{nombreCurso}</p>}
+      <Hero clase="hero-compacto">
+        <p className="hero-volver">
+          <a href="/cursos">
+            <Icono nombre="atras" />
+            Volver a Mis cursos
+          </a>
+        </p>
+        <h1>Estudiantes inscritos</h1>
+        {nombreCurso && <p>{nombreCurso}</p>}
+      </Hero>
       {contenido}
-      <p>
-        <a href="/cursos">Volver a Mis cursos</a>
-      </p>
     </main>
   )
 }

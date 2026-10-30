@@ -106,6 +106,97 @@ def test_un_error_de_compilacion_se_reconoce_aunque_no_haya_run():
     assert "expected" in resultado.error
 
 
+# Respuesta real de Piston (Java 15.0.2) a un programa con un punto y coma de menos: sin etapa compile, status RE.
+JAVA_NO_COMPILA = {
+    "language": "java",
+    "version": "15.0.2",
+    "run": {
+        "signal": None,
+        "stdout": "",
+        "stderr": "Main.java.java:1: error: ';' expected\nSystem.out.println(\"x\") }\n  ^\n1 error\nerror: compilation failed\n",
+        "code": 1,
+        "message": "Exited with error status 1",
+        "status": "RE",
+        "cpu_time": 1705,
+        "wall_time": 899,
+    },
+}
+
+
+def piston_con_respuestas(*respuestas):
+    enviados = []
+    pendientes = list(respuestas)
+
+    def enviar(url, cuerpo):
+        enviados.append(cuerpo)
+        return pendientes.pop(0)
+
+    return Piston("http://piston:2000", enviar), enviados
+
+
+def test_java_que_no_compila_es_error_de_compilacion_aunque_piston_lo_diga_como_fallo_de_ejecucion():
+    proveedor, _ = piston_con_respuestas(JAVA_NO_COMPILA, JAVA_NO_COMPILA)
+
+    resultado = ejecutar_en(proveedor, Ejecucion("x", "java", entrada="5"))
+
+    assert resultado.estado == Estado.ERROR_COMPILACION
+    assert "';' expected" in resultado.error
+    # El nombre doble que le pone Piston al archivo no llega al estudiante.
+    assert "Main.java:1:" in resultado.error
+    assert "Main.java.java" not in resultado.error
+
+
+def test_el_error_de_compilacion_de_java_se_confirma_repitiendo_sin_entrada():
+    proveedor, enviados = piston_con_respuestas(JAVA_NO_COMPILA, JAVA_NO_COMPILA)
+
+    ejecutar_en(proveedor, Ejecucion("x", "java", entrada="5"))
+
+    assert [cuerpo["stdin"] for cuerpo in enviados] == ["5", ""]
+
+
+def test_un_programa_que_finge_no_compilar_no_filtra_su_entrada():
+    # Imprime lo que lee por stderr y termina con el mensaje del compilador: con la entrada de un caso oculto.
+    finge = {
+        "run": {"status": "RE", "code": 1, "stderr": "ENTRADA-OCULTA\nerror: compilation failed\n", "stdout": ""}
+    }
+    sin_entrada = {"run": {"status": "RE", "code": 1, "stderr": "\nerror: compilation failed\n", "stdout": ""}}
+    proveedor, _ = piston_con_respuestas(finge, sin_entrada)
+
+    resultado = ejecutar_en(proveedor, Ejecucion("x", "java", entrada="ENTRADA-OCULTA"))
+
+    assert "ENTRADA-OCULTA" not in resultado.error
+
+
+def test_si_sin_entrada_ya_no_falla_asi_sigue_siendo_error_de_ejecucion():
+    finge = {"run": {"status": "RE", "code": 1, "stderr": "ENTRADA-OCULTA\nerror: compilation failed\n"}}
+    distinto = {"run": {"status": "RE", "code": 1, "stderr": "Exception in thread main"}}
+    proveedor, _ = piston_con_respuestas(finge, distinto)
+
+    resultado = ejecutar_en(proveedor, Ejecucion("x", "java", entrada="ENTRADA-OCULTA"))
+
+    assert resultado.estado == Estado.ERROR_EJECUCION
+
+
+def test_solo_java_se_reclasifica_y_sin_una_segunda_llamada():
+    texto = {"run": {"status": "RE", "code": 1, "stderr": "error: compilation failed\n"}}
+    proveedor, enviados = piston_con_respuestas(texto)
+
+    resultado = ejecutar_en(proveedor, Ejecucion("x", "python"))
+
+    assert resultado.estado == Estado.ERROR_EJECUCION
+    assert len(enviados) == 1
+
+
+def test_un_java_que_falla_en_ejecucion_no_se_repite():
+    falla = {"run": {"status": "RE", "code": 1, "stderr": "Exception in thread main java.lang.ArithmeticException"}}
+    proveedor, enviados = piston_con_respuestas(falla)
+
+    resultado = ejecutar_en(proveedor, Ejecucion("x", "java"))
+
+    assert resultado.estado == Estado.ERROR_EJECUCION
+    assert len(enviados) == 1
+
+
 def test_una_compilacion_correcta_deja_pasar_a_la_ejecucion():
     proveedor, _ = piston_que_responde(
         {"compile": {"code": 0, "stderr": ""}, "run": {"stdout": "7\n", "code": 0, "cpu_time": 80}}

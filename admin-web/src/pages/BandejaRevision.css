@@ -1,9 +1,10 @@
-/* El texto dice que es de IA; el fondo neutro solo lo destaca. */
+/* El texto dice que es de IA; el contorno de diseno.css solo lo destaca. */
 .distintivo-ia {
-  display: inline-block;
-  padding: 0 6px;
-  border-radius: 4px;
-  background: #e8eaed;
-  color: #202124;
-  font-size: 0.8em;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
+/* En pantallas angostas la tabla se desplaza dentro de su caja en vez de apretar cada columna. */
+.tabla-revision table {
+  min-width: 52rem;
 }

@@ -139,4 +139,25 @@ public class AdminCliente {
         }
         return problema;
     }
+
+    // HU36-T2: un problema con TODOS sus casos (ocultos incluidos), solo para calificar un envío. Lanza
+    // ProblemaNoVisibleException si admin-api responde 404, igual que problema(): sin aprobar, descartado o inexistente.
+    public ProblemaCalificableDto problemaParaCalificar(long problemaId) {
+        ProblemaCalificableDto problema;
+        try {
+            problema = http.get()
+                    .uri("/internal/problemas/{id}/calificacion/", problemaId)
+                    .retrieve()
+                    .onStatus(estado -> estado.value() == 404, (peticion, respuesta) -> {
+                        throw new ProblemaNoVisibleException();
+                    })
+                    .body(ProblemaCalificableDto.class);
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar el problema para calificar", e);
+        }
+        if (problema == null) {
+            throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+        }
+        return problema;
+    }
 }

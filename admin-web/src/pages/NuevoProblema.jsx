@@ -5,6 +5,7 @@ import Aviso from '../components/Aviso.jsx'
 import CasosPrueba from '../components/CasosPrueba.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
 import Formulario from '../components/Formulario.jsx'
+import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
 
 // Valores de las listas fijas que acepta admin-api; la etiqueta es solo para mostrar.
 const LENGUAJES = [
@@ -160,12 +161,12 @@ function NuevoProblema() {
   let contenido
   if (creado) {
     contenido = (
-      <>
+      <EstadoVacio ilustracion="exito">
         <p>Problema creado: {creado}.</p>
         <p>
           <a href="/problemas/nuevo">Crear otro problema</a> · <a href="/cursos">Ver mis cursos</a>
         </p>
-      </>
+      </EstadoVacio>
     )
   } else if (errorCarga) {
     contenido = <p>No se pudieron cargar tus cursos. Inténtalo de nuevo.</p>
@@ -201,8 +202,12 @@ function NuevoProblema() {
 
   return (
     <main>
-      <h1>MASTER CODE · Nuevo problema</h1>
-      {contenido}
+      <Hero clase="hero-compacto">
+        <p className="hero-sobretitulo">Panel docente</p>
+        <h1>Nuevo problema</h1>
+        <p>Escribe el enunciado y los casos de prueba de un problema para uno de tus cursos.</p>
+      </Hero>
+      {creado ? contenido : <div className="panel-formulario panel-formulario-ancho">{contenido}</div>}
     </main>
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import './Confirmacion.css'
 
 // <dialog> nativo: showModal() atrapa el foco y bloquea la página sin librerías.
 function Confirmacion({ abierto, titulo, children, textoConfirmar, textoCancelar, enviando, onConfirmar, onCancelar }) {
@@ -26,12 +27,14 @@ function Confirmacion({ abierto, titulo, children, textoConfirmar, textoCancelar
     <dialog ref={dialogo} aria-labelledby="confirmacion-titulo" onCancel={manejarEsc}>
       <h2 id="confirmacion-titulo">{titulo}</h2>
       {children}
-      <button type="button" disabled={enviando} onClick={onConfirmar}>
-        {enviando ? 'Guardando…' : textoConfirmar}
-      </button>{' '}
-      <button type="button" disabled={enviando} onClick={onCancelar}>
-        {textoCancelar}
-      </button>
+      <div className="acciones-dialogo">
+        <button type="button" className="boton-primario" disabled={enviando} onClick={onConfirmar}>
+          {enviando ? 'Guardando…' : textoConfirmar}
+        </button>
+        <button type="button" disabled={enviando} onClick={onCancelar}>
+          {textoCancelar}
+        </button>
+      </div>
     </dialog>
   )
 }

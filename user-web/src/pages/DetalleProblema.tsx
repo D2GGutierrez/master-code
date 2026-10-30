@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
+import Icono from '../components/Icono.tsx'
+import { Hero } from '../components/Pantalla.tsx'
 import { limpiarEnunciado } from '../enunciado.ts'
 import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
-import { etiquetaLenguaje } from '../lenguajes.ts'
+import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import './DetalleProblema.css'
 
 // Solo la escritura de código usa el editor (HU32-T3); la misma regla que en EditorProblema.tsx.
@@ -77,52 +79,62 @@ function DetalleProblema({ id }: { id: number }) {
   }
 
   const enunciado = limpiarEnunciado(problema.enunciado)
+  const conEjemplos = problema.plataforma !== 'movil' && problema.casos_prueba.length > 0
   return (
     <main className="detalle-problema">
-      <p>{volver}</p>
-      <h1>{problema.titulo}</h1>
-      <p>
-        <span className="etiqueta-problema">{etiquetaDificultad(problema.dificultad)}</span>{' '}
-        <span className="etiqueta-problema">{etiquetaTipoEjercicio(problema.tipo_ejercicio)}</span>{' '}
-        <span className="etiqueta-problema">{etiquetaLenguaje(problema.lenguaje)}</span>
-      </p>
+      <Hero clase={`hero-compacto hero-curso leng-${claveLenguaje(problema.lenguaje)}`}>
+        <p className="hero-volver">
+          <a href={`/cursos/${problema.curso_id}/problemas`}>
+            <Icono nombre="atras" />
+            Volver a los problemas del curso
+          </a>
+        </p>
+        <h1>{problema.titulo}</h1>
+        <p className="hero-meta">
+          <span className="hero-etiqueta">{etiquetaDificultad(problema.dificultad)}</span>
+          <span className="hero-etiqueta">{etiquetaTipoEjercicio(problema.tipo_ejercicio)}</span>
+          <span className="hero-etiqueta">{etiquetaLenguaje(problema.lenguaje)}</span>
+        </p>
+        {problema.plataforma !== 'movil' && problema.tipo_ejercicio === TIPO_CON_EDITOR && (
+          <div className="hero-acciones">
+            <a className="boton-hero" href={`/problemas/${problema.id}/editor`}>
+              Ir al editor de código
+              <Icono nombre="flecha" />
+            </a>
+          </div>
+        )}
+      </Hero>
       {problema.plataforma === 'movil' ? (
         <p>Este problema es solo para la app móvil.</p>
       ) : (
         <>
-          {problema.tipo_ejercicio === TIPO_CON_EDITOR ? (
-            <p>
-              <a className="boton-editor" href={`/problemas/${problema.id}/editor`}>
-                Ir al editor de código
-              </a>
-            </p>
-          ) : (
-            <p>Este problema no usa el editor de código.</p>
-          )}
-          <section>
-            <h2>Enunciado</h2>
-            {'html' in enunciado ? (
-              // Único HTML insertado en user-web: ya pasó por DOMPurify en limpiarEnunciado.
-              <div className="enunciado" dangerouslySetInnerHTML={{ __html: enunciado.html }} />
-            ) : (
-              <p className="enunciado enunciado-texto">{enunciado.texto}</p>
-            )}
-          </section>
-          {problema.casos_prueba.length > 0 && (
-            <section>
-              <h2>Ejemplos</h2>
-              {problema.casos_prueba.map((caso, indice) => (
-                // Los casos no traen id; el orden lo fija el servidor y no cambia en esta pantalla.
-                <div key={indice} className="ejemplo">
-                  <h3>Ejemplo {indice + 1}</h3>
-                  <p className="ejemplo-rotulo">Entrada</p>
-                  <pre>{caso.entrada}</pre>
-                  <p className="ejemplo-rotulo">Salida esperada</p>
-                  <pre>{caso.salida_esperada}</pre>
-                </div>
-              ))}
+          {problema.tipo_ejercicio !== TIPO_CON_EDITOR && <p>Este problema no usa el editor de código.</p>}
+          <div className={conEjemplos ? 'problema-lectura con-ejemplos' : 'problema-lectura'}>
+            <section className="lectura">
+              <h2>Enunciado</h2>
+              {'html' in enunciado ? (
+                // Único HTML insertado en user-web: ya pasó por DOMPurify en limpiarEnunciado.
+                <div className="enunciado" dangerouslySetInnerHTML={{ __html: enunciado.html }} />
+              ) : (
+                <p className="enunciado enunciado-texto">{enunciado.texto}</p>
+              )}
             </section>
-          )}
+            {conEjemplos && (
+              <section className="lectura">
+                <h2>Ejemplos</h2>
+                {problema.casos_prueba.map((caso, indice) => (
+                  // Los casos no traen id; el orden lo fija el servidor y no cambia en esta pantalla.
+                  <div key={indice} className="ejemplo">
+                    <h3>Ejemplo {indice + 1}</h3>
+                    <p className="ejemplo-rotulo">Entrada</p>
+                    <pre>{caso.entrada}</pre>
+                    <p className="ejemplo-rotulo">Salida esperada</p>
+                    <pre>{caso.salida_esperada}</pre>
+                  </div>
+                ))}
+              </section>
+            )}
+          </div>
         </>
       )}
     </main>

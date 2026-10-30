@@ -1,20 +1,46 @@
-.ejecutor textarea {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
+.ejecutor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ejecutor > button {
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+/* El borde fino enmarca el editor: sin él, el área de código se pierde en la página. */
+.editor-caja {
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.ejecutor-salida {
+  padding: 1rem 1rem 0.25rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.ejecutor-salida h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
 }
 
 .ejecutor-salida pre {
-  white-space: pre-wrap;
-  overflow-x: auto;
   max-height: 240px;
+  padding: 0;
   overflow-y: auto;
+  border: 0;
+  background: transparent;
+  white-space: pre-wrap;
 }
 
 .ejecutor-error {
-  color: #b00020;
+  color: var(--error);
 }
 
 .ejecutor-estado {
-  font-size: 0.85em;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
 }

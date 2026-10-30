@@ -1,83 +1,183 @@
-.problemas-curso {
-  padding: 0 16px;
+/* Anillo de progreso a la derecha del hero del curso. */
+.hero-anillo {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .hero-anillo {
+    padding-inline: 2.5rem;
+  }
+}
+
+.hero-anillo p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.875rem;
+}
+
+.esqueleto-anillo {
+  width: 9rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
 }
 
 .lista-problemas {
   display: grid;
-  gap: 12px;
-  list-style: none;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
   padding: 0;
+  list-style: none;
 }
 
+/* Cada problema es una tarjeta: el estado a la izquierda, el título y sus etiquetas, y una flecha. */
 .problema {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 12px;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  box-shadow: var(--sombra-suave);
   /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
   overflow-wrap: anywhere;
 }
 
+.problema:hover,
+.problema:focus-within {
+  border-color: color-mix(in srgb, var(--acento) 45%, var(--borde));
+  box-shadow: var(--sombra-alta);
+  transform: translateX(4px);
+}
+
+.problema > .icono {
+  color: var(--texto-suave);
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+
+.problema:hover > .icono {
+  color: var(--acento);
+  transform: translateX(3px);
+}
+
 .problema-titulo {
   display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* El enlace se estira sobre toda la tarjeta: se puede pulsar en cualquier parte. */
+.problema-titulo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .problema-titulo:focus-visible {
-  outline: 3px solid #1a73e8;
-  outline-offset: 2px;
+  outline-offset: 4px;
 }
 
-/* Lo dice el texto; el borde solo lo agrupa. */
-.etiqueta-problema {
+.problema-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* La dificultad lleva un punto de color; el nombre sigue estando en el texto. */
+.dificultad::before {
+  content: '';
   display: inline-block;
-  border: 1px solid #999;
-  border-radius: 999px;
-  padding: 0 8px;
-  font-size: 0.85em;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin-right: 0.375rem;
+  border-radius: 50%;
+  background: var(--texto-suave);
+  vertical-align: 0.0625rem;
+}
+
+.dificultad-facil::before {
+  background: #22c55e;
+}
+
+.dificultad-medio::before {
+  background: #f59e0b;
+}
+
+.dificultad-dificil::before {
+  background: #ef4444;
+}
+
+/* Estado del problema: un círculo que se lee de un vistazo (y el texto está al lado). */
+.estado-icono {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  font-size: 1.125rem;
+}
+
+.estado-sin_abrir {
+  border: 2px dashed var(--borde-fuerte);
+}
+
+/* Medio círculo de color: se empezó pero falta. */
+.estado-intentado {
+  background: conic-gradient(var(--acento) 0 50%, var(--acento-suave) 0);
+  box-shadow: inset 0 0 0 2px var(--fondo);
+}
+
+.estado-resuelto {
+  background: var(--exito);
+  color: var(--fondo);
 }
 
 /* Se apilan en pantallas angostas en vez de desbordar. */
 .controles-problemas {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .controles-problemas select {
   max-width: 100%;
 }
 
+nav.controles-problemas {
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+/* Los filtros viven en un panel propio, sobre la lista. */
 .filtros-problemas {
   display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
+  box-shadow: var(--sombra-suave);
 }
 
 /* Los botones se envuelven a la línea siguiente en pantallas angostas. */
 .grupo-filtro {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
   align-items: center;
+  gap: 0.5rem;
 }
 
-.boton-filtro {
-  border: 1px solid #999;
-  border-radius: 999px;
-  padding: 2px 10px;
-  background: #fff;
-}
-
-/* Activo: borde más grueso y negrita, no solo color. */
-.boton-filtro[aria-pressed='true'] {
-  border: 2px solid #1a1a1a;
-  font-weight: bold;
-  background: #e8eaed;
-}
-
-.boton-filtro:focus-visible {
-  outline: 3px solid #1a73e8;
-  outline-offset: 2px;
+.grupo-filtro > span {
+  min-width: 5.5rem;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
 }

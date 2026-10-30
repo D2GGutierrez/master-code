@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { iniciarSesion } from '../api/cuentas.js'
 import { hayRutaGuardada, tomarRutaGuardada } from '../api/sesion.js'
 import Formulario from '../components/Formulario.jsx'
+import { Acceso } from '../components/Pantalla.jsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS = [
@@ -49,7 +50,7 @@ function InicioSesion() {
   }
 
   return (
-    <main>
+    <Acceso lema="Tus cursos, con ayuda de la IA" descripcion="Crea cursos, genera problemas con inteligencia artificial y sigue el avance de tus estudiantes.">
       <h1>MASTER CODE · Inicio de sesión</h1>
       {/* Solo hay ruta guardada si se llegó aquí porque la sesión expiró. */}
       {hayRutaGuardada() && <p>Tu sesión expiró. Inicia sesión para continuar.</p>}
@@ -63,7 +64,7 @@ function InicioSesion() {
       <p>
         <a href="/olvide-contrasena">¿Olvidaste tu contraseña?</a>
       </p>
-    </main>
+    </Acceso>
   )
 }
 

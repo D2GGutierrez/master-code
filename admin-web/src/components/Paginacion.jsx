@@ -1,3 +1,5 @@
+import './Paginacion.css'
+
 function Paginacion({ pagina, hayAnterior, haySiguiente, onCambiar }) {
   return (
     <nav aria-label="Paginación">

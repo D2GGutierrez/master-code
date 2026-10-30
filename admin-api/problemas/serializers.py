@@ -190,6 +190,26 @@ class ProblemaInternoSerializer(ProblemaEstudianteSerializer):
         fields = [*ProblemaEstudianteSerializer.Meta.fields, "curso_id"]
 
 
+# Para calificar un envío (HU36-T2): TODOS los casos, ocultos incluidos, con su entrada y su salida. Solo la sirve
+# la ruta interna con clave (problemas/interno.py); user-api califica con ellos y al estudiante solo le devuelve si
+# cada caso pasó o falló, nunca el contenido de uno oculto (HU39).
+class CasoPruebaCalificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CasoPrueba
+        fields = ["entrada", "salida_esperada", "es_publico"]
+
+
+class ProblemaCalificacionSerializer(serializers.ModelSerializer):
+    casos_prueba = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Problema
+        fields = ["id", "curso_id", "lenguaje", "tipo_ejercicio", "casos_prueba"]
+
+    def get_casos_prueba(self, problema):
+        return CasoPruebaCalificacionSerializer(problema.casos_prueba.order_by("id"), many=True).data
+
+
 # Fila del listado de problemas de un curso (HU29): sin enunciado ni casos, que solo hacen falta al abrir uno.
 # fecha_publicacion es la fecha de aprobación: desde ese momento el estudiante lo ve (HU29-T3 ordena por ella).
 class ProblemaResumenSerializer(serializers.ModelSerializer):

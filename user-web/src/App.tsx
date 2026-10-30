@@ -1,4 +1,5 @@
 import { programarRenovacion } from './api/sesion.ts'
+import Cabecera from './components/Cabecera.tsx'
 import Avance from './pages/Avance.tsx'
 import BuscarCursos from './pages/BuscarCursos.tsx'
 import DetalleProblema from './pages/DetalleProblema.tsx'
@@ -6,6 +7,7 @@ import EditorProblema from './pages/EditorProblema.tsx'
 import EditorPrueba from './pages/EditorPrueba.tsx'
 import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
+import Inscribirse from './pages/Inscribirse.tsx'
 import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import OlvideContrasena from './pages/OlvideContrasena.tsx'
 import ProblemasCurso from './pages/ProblemasCurso.tsx'
@@ -15,7 +17,7 @@ import RegistroEstudiante from './pages/RegistroEstudiante.tsx'
 programarRenovacion()
 
 // Sin enrutador todavía: la pantalla se elige por la ruta de la URL.
-function App() {
+function pantalla() {
   if (window.location.pathname === '/login') {
     return <InicioSesion />
   }
@@ -37,6 +39,9 @@ function App() {
   if (window.location.pathname === '/cursos/buscar') {
     return <BuscarCursos />
   }
+  if (window.location.pathname === '/cursos/inscribirse') {
+    return <Inscribirse />
+  }
   // Anclada y solo con dígitos: un id no numérico cae en la pantalla por defecto.
   const problemasCurso = window.location.pathname.match(/^\/cursos\/(\d+)\/problemas$/)
   if (problemasCurso) {
@@ -51,6 +56,15 @@ function App() {
     return <DetalleProblema id={Number(detalleProblema[1])} />
   }
   return <RegistroEstudiante />
+}
+
+function App() {
+  return (
+    <>
+      <Cabecera />
+      {pantalla()}
+    </>
+  )
 }
 
 export default App

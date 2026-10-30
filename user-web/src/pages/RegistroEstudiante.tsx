@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { registrarEstudiante } from '../api/cuentas.ts'
 import Formulario, { type Campo } from '../components/Formulario.tsx'
+import { Acceso } from '../components/Pantalla.tsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS: Campo[] = [
@@ -46,7 +47,7 @@ function RegistroEstudiante() {
   }
 
   return (
-    <main>
+    <Acceso lema="Empieza a entrenar tu lógica" descripcion="Crea tu cuenta con tu correo institucional y únete a tus cursos con el código de tu docente.">
       <h1>Registro de estudiante</h1>
       {registrado ? (
         <p>Cuenta creada. Ya puedes iniciar sesión.</p>
@@ -62,7 +63,7 @@ function RegistroEstudiante() {
       <p>
         <a href="/login">¿Ya tienes cuenta? Inicia sesión</a>
       </p>
-    </main>
+    </Acceso>
   )
 }
 

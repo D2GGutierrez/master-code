@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { restablecerContrasena } from '../api/cuentas.js'
 import Formulario from '../components/Formulario.jsx'
+import { Acceso } from '../components/Pantalla.jsx'
 
 // confirmacion solo existe en el front: al servidor se envía únicamente password.
 const CAMPOS = [
@@ -67,10 +68,10 @@ function NuevaContrasena() {
   }
 
   return (
-    <main>
+    <Acceso lema="Recupera tu acceso" descripcion="Elige una contraseña nueva para volver a entrar a tus cursos.">
       <h1>MASTER CODE · Nueva contraseña</h1>
       {contenido}
-    </main>
+    </Acceso>
   )
 }
 

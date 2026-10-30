@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { iniciarSesion, type CuerpoSesion } from '../api/cuentas.ts'
 import { guardarSesion } from '../api/sesion.ts'
 import Formulario, { type Campo } from '../components/Formulario.tsx'
+import { Acceso } from '../components/Pantalla.tsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS: Campo[] = [
@@ -52,7 +53,7 @@ function InicioSesion() {
   }
 
   return (
-    <main>
+    <Acceso lema="Practica programación a tu ritmo" descripcion="Resuelve los problemas de tus cursos, envía tu solución y mira cómo avanzas.">
       <h1>Inicio de sesión</h1>
       <Formulario
         campos={CAMPOS}
@@ -67,7 +68,7 @@ function InicioSesion() {
       <p>
         <a href="/">¿No tienes cuenta? Regístrate</a>
       </p>
-    </main>
+    </Acceso>
   )
 }
 

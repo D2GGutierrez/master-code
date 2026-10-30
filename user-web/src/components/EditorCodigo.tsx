@@ -17,7 +17,7 @@ function EditorCodigo({ valor, onCambio, lenguaje = '',soloLectura = false, altu
       onChange={(texto) => onCambio(texto ?? '')}
       language={idMonaco(lenguaje)}
       height={altura}
-      theme="vs"
+      theme={window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'vs-dark' : 'vs'}
       loading="Cargando editor…"
       wrapperProps={{ 'aria-label': 'Editor de código' }}
       options={{

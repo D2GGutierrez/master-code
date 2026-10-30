@@ -4,7 +4,7 @@ import './EnlaceBandeja.css'
 
 // HU18-T4: el enlace a la bandeja con cuántos pendientes hay. El número es secundario: mientras carga
 // o si la petición falla, se muestra solo el enlace, sin errores ni reintentos.
-function EnlaceBandeja() {
+function EnlaceBandeja({ clase }) {
   const [pendientes, setPendientes] = useState(0)
 
   useEffect(() => {
@@ -32,6 +32,7 @@ function EnlaceBandeja() {
   return (
     <a
       href="/revision"
+      className={clase}
       aria-label={
         pendientes > 0
           ? `Bandeja de revisión, ${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`

@@ -17,6 +17,28 @@ export async function misCursos(): Promise<MiCurso[]> {
   return respuesta.json()
 }
 
+// Mismos campos que el record Inscrita de user-api (POST /api/inscripciones), en snake_case.
+export type Inscripcion = {
+  id: number
+  curso_id: number
+  nombre: string
+  lenguaje: string
+  fecha: string
+}
+
+// El código se escribe como lo da el docente: user-api lo pasa a mayúsculas y le quita los espacios.
+// 201 trae la inscripción; 400 (código incorrecto o vencido), 409 (ya inscrito) y 503 traen { detail }.
+export async function inscribirse(codigo: string) {
+  const respuesta = await pedirConSesion('/api/inscripciones', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codigo }),
+  })
+  // Si el cuerpo no es JSON (p. ej. una página de error), se devuelve vacío en vez de fallar.
+  const cuerpo: Partial<Inscripcion> & { detail?: string } = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
 // Mismos campos que el record CursoDisponible de user-api (GET /api/cursos): los cursos publicados de la
 // institución del token. No trae docente ni si el estudiante ya está inscrito.
 export type CursoDisponible = {

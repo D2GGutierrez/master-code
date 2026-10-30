@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { registrarDocente } from '../api/cuentas.js'
 import Formulario from '../components/Formulario.jsx'
+import { Acceso } from '../components/Pantalla.jsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS = [
@@ -46,7 +47,7 @@ function RegistroDocente() {
   }
 
   return (
-    <main>
+    <Acceso lema="Crea problemas en minutos" descripcion="Regístrate con tu correo institucional. Tu cuenta se activa cuando el Product Owner la apruebe.">
       <h1>MASTER CODE · Registro del docente</h1>
       {registrado ? (
         <p>Registro recibido. Tu cuenta quedará pendiente hasta que el Product Owner la active.</p>
@@ -59,7 +60,7 @@ function RegistroDocente() {
           onEnviar={registrar}
         />
       )}
-    </main>
+    </Acceso>
   )
 }
 

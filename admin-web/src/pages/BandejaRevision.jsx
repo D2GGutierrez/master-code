@@ -5,6 +5,8 @@ import Confirmacion from '../components/Confirmacion.jsx'
 import Paginacion from '../components/Paginacion.jsx'
 import { DIFICULTADES, PLATAFORMAS, TIPOS_EJERCICIO } from './NuevoProblema.jsx'
 import './BandejaRevision.css'
+import Icono from '../components/Icono.jsx'
+import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
 
 // admin-api devuelve todos los pendientes de una vez: la tabla se pagina en el navegador.
 const PROBLEMAS_POR_PAGINA = 20
@@ -175,9 +177,11 @@ function BandejaRevision() {
     contenido = <p>Cargando problemas…</p>
   } else if (problemas.length === 0) {
     contenido = (
-      <p>
-        No tienes problemas pendientes de revisión. <a href="/cursos">Ir a Mis cursos para generar más con IA</a>
-      </p>
+      <EstadoVacio>
+        <p>
+          No tienes problemas pendientes de revisión. <a href="/cursos">Ir a Mis cursos para generar más con IA</a>
+        </p>
+      </EstadoVacio>
     )
   } else if (filtrados.length === 0) {
     contenido = (
@@ -197,45 +201,47 @@ function BandejaRevision() {
             ? `${filtrados.length} de ${problemas.length} problemas`
             : `${filtrados.length} ${filtrados.length === 1 ? 'problema pendiente de revisión' : 'problemas pendientes de revisión'}`}
         </p>
-        <table>
-          <caption>Problemas pendientes de revisión</caption>
-          <thead>
-            <tr>
-              <th scope="col">Título</th>
-              <th scope="col">Curso</th>
-              <th scope="col">Dificultad</th>
-              <th scope="col">Tipo de ejercicio</th>
-              <th scope="col">Plataforma</th>
-              <th scope="col">Creado</th>
-              <th scope="col">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {problemasDeLaPagina.map((problema) => (
-              <tr key={problema.id}>
-                <td>
-                  {problema.titulo}{' '}
-                  {/* La bandeja solo trae problemas generados por IA: el distintivo va en todos. */}
-                  <span className="distintivo-ia">Generado por IA</span>
-                </td>
-                <td>{problema.curso_nombre}</td>
-                <td>{etiqueta(DIFICULTADES, problema.dificultad)}</td>
-                <td>{etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}</td>
-                <td>{etiqueta(PLATAFORMAS, problema.plataforma)}</td>
-                <td>{new Date(problema.fecha_creacion).toLocaleDateString('es-PE')}</td>
-                <td>
-                  <button
-                    type="button"
-                    aria-label={`Descartar “${problema.titulo}”`}
-                    onClick={() => pedirConfirmacion(problema)}
-                  >
-                    Descartar
-                  </button>
-                </td>
+        <div className="tabla tabla-revision">
+          <table>
+            <caption>Problemas pendientes de revisión</caption>
+            <thead>
+              <tr>
+                <th scope="col">Título</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Dificultad</th>
+                <th scope="col">Tipo de ejercicio</th>
+                <th scope="col">Plataforma</th>
+                <th scope="col">Creado</th>
+                <th scope="col">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {problemasDeLaPagina.map((problema) => (
+                <tr key={problema.id}>
+                  <td>
+                    {problema.titulo}{' '}
+                    {/* La bandeja solo trae problemas generados por IA: el distintivo va en todos. */}
+                    <span className="distintivo-ia">Generado por IA</span>
+                  </td>
+                  <td>{problema.curso_nombre}</td>
+                  <td>{etiqueta(DIFICULTADES, problema.dificultad)}</td>
+                  <td>{etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}</td>
+                  <td>{etiqueta(PLATAFORMAS, problema.plataforma)}</td>
+                  <td>{new Date(problema.fecha_creacion).toLocaleDateString('es-PE')}</td>
+                  <td>
+                    <button
+                      type="button"
+                      aria-label={`Descartar “${problema.titulo}”`}
+                      onClick={() => pedirConfirmacion(problema)}
+                    >
+                      Descartar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <Paginacion
           pagina={pagina}
           hayAnterior={pagina > 1}
@@ -248,11 +254,16 @@ function BandejaRevision() {
 
   return (
     <main>
-      <h1>MASTER CODE · Bandeja de revisión</h1>
-      <p>Estos problemas fueron creados por IA. Ningún estudiante los verá hasta que los apruebes.</p>
-      <p>
-        <a href="/cursos">Volver a Mis cursos</a>
-      </p>
+      <Hero clase="hero-compacto">
+        <p className="hero-volver">
+          <a href="/cursos">
+            <Icono nombre="atras" />
+            Volver a Mis cursos
+          </a>
+        </p>
+        <h1>Bandeja de revisión</h1>
+        <p>Estos problemas fueron creados por IA. Ningún estudiante los verá hasta que los apruebes.</p>
+      </Hero>
       {/* Encima del contenido: siguen a la vista aunque la lista quede vacía tras descartar. */}
       <Aviso mensaje={aviso} />
       {errorDescartar && <p role="alert">{errorDescartar}</p>}

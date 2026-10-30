@@ -203,7 +203,9 @@ services:
   # A diferencia de Judge0 1.13.1, Piston pide cgroup v2 (el de Docker Desktop con WSL2).
   # Los lenguajes se instalan una vez, ver docs/piston.md.
   piston:
-    image: ghcr.io/engineer-man/piston
+    # Fijada por su digest: el proyecto no publica etiquetas de versión y un cambio de la imagen podría alterar
+    # los límites o los códigos de estado que traduce ai-service. Verificada el 29 de oct. de 2026 (docs/piston.md).
+    image: ghcr.io/engineer-man/piston@sha256:2f66b7456189c4d713aa986d98eccd0b6ee16d26c7ec5f21b30e942756fd127a
     profiles: ["piston"]
     # Aísla cada programa con mecanismos del kernel: sin esto no puede crear su entorno.
     privileged: true
@@ -219,9 +221,15 @@ services:
       # Tiempo en milisegundos: corta un bucle infinito.
       PISTON_RUN_TIMEOUT: "5000"
       PISTON_COMPILE_TIMEOUT: "10000"
+      # Tiempo de CPU: por defecto son 3 s, así que sin esto un bucle infinito moriría a los 3 s y no a los 5 del reloj.
+      PISTON_RUN_CPU_TIME: "5000"
+      PISTON_COMPILE_CPU_TIME: "10000"
       # Memoria en bytes (256 MB).
       PISTON_RUN_MEMORY_LIMIT: "268435456"
       PISTON_COMPILE_MEMORY_LIMIT: "268435456"
+      # Tamaño máximo de la salida (stdout y stderr) de cada ejecución. El valor por defecto de Piston es 1024: un
+      # programa que imprime más es matado como «salida demasiado larga» aunque esté bien resuelto.
+      PISTON_OUTPUT_MAX_SIZE: "65536"
       # Procesos por ejecución: frena una bomba de procesos (fork bomb).
       PISTON_MAX_PROCESS_COUNT: "64"
       # Sin red: el programa no puede abrir conexiones. Es el valor por defecto; se deja escrito a propósito.

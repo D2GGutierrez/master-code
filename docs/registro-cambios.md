@@ -30,6 +30,7 @@ Todas las tareas conservan su ID original. Las nuevas se numeran a continuación
 | HU24-T1 | Crea APP_ENVIO con una migración mínima (id, estudiante_id, problema_id, plataforma, fecha). | Pedía agregar un campo a una tabla que no existe hasta HU36-T1 (Sprint 3). |
 | HU24-T4 | Se prueba con un envío sembrado. | No hay envíos reales hasta el Sprint 4. La prueba con envío real queda en HU45-T3. |
 | HU36-T1 | Completa APP_ENVIO en lugar de crearla. | Evita crear la tabla dos veces. |
+| HU36-T1, HU36-T2, HU38-T1, HU38-T2 | Se adelantan al Sprint 2: el backend de «Enviar solución» (migración V5, ruta interna de calificación en admin-api, `POST /api/problemas/{id}/envios` en user-api) y la fórmula del puntaje. HU36-T3 a T5 y HU38-T3 (pantalla) se hicieron junto con ellas. | Sin un envío oficial el estudiante no puede resolver un problema y la app no funciona de punta a punta (ver ADR-7 D7). Quedan para el Sprint 3 el resultado por caso (HU37-T1), el historial (HU41) y los mensajes de error completos (HU40). |
 | HU45-T3 | Cada intento móvil se guarda en APP_ENVIO con plataforma movil. | Es donde se verifica de punta a punta CA-24.4. |
 | HU25-T1 | Define «publicado»: curso con al menos un problema aprobado. | El término no estaba definido en HU9. |
 | HU26-T1 | El código de invitación vence a los 30 días y se genera también para los cursos existentes. | CA-26.4 pedía rechazar códigos vencidos y ninguna tarea los hacía vencer. |

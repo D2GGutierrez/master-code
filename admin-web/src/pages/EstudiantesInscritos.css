@@ -1,0 +1,4 @@
+/* En pantallas angostas la tabla se desplaza dentro de su caja: un correo no se parte en trozos de cuatro letras. */
+.tabla-inscritos table {
+  min-width: 32rem;
+}

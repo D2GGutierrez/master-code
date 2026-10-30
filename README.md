@@ -41,6 +41,8 @@ Levanta la base y los cinco servicios: `admin-api` en http://localhost:8000, `ad
 
 - Ver logs: `docker compose logs -f admin-api` (o el servicio que quieras).
 - Bajar sin perder datos: `docker compose down`. Los datos quedan en el volumen de la base.
+- Comprobar que todo funciona de punta a punta (docente crea un curso, estudiante se inscribe, resuelve y envía su solución): `make humo` o `python infra/scripts/humo.py`. Con el motor de ejecución simulado omite lo que necesita uno real; para activarlo, `docs/piston.md`.
+- Dejar la plataforma con datos para la demostración (1 docente, 2 cursos, problemas generados con IA y 6 estudiantes con inscripciones y envíos): `DEMO_CLAVE=<una clave tuya> make datos-demo` o `python infra/scripts/datos_demo.py`. Se puede repetir sin duplicar nada; las cuentas y los códigos de los cursos se muestran al final. Los envíos solo se califican si el motor de ejecución es real (`docs/piston.md`).
 
 El SQL de `infra/db/init/` solo se ejecuta cuando el volumen está vacío; si lo cambias, hay que recrear el volumen con `docker compose down -v` (borra los datos de la base local).
 
