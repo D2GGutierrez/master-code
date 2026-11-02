@@ -45,3 +45,24 @@ export async function enviarSolucion(problemaId: number, codigo: string): Promis
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: false, status: respuesta.status, detail: typeof cuerpo.detail === 'string' ? cuerpo.detail : undefined }
 }
+
+// Mismos campos que EnvioRepository.Resumen de user-api (GET /api/problemas/{id}/envios, HU41-T1). numero_intento,
+// resultado y puntaje pueden ser null en un envío que no se calificó.
+export type EnvioResumen = {
+  id: number
+  numero_intento: number | null
+  fecha_envio: string
+  resultado: ResultadoEnvio | null
+  puntaje: number | null
+}
+
+export type RespuestaEnvios = { ok: true; envios: EnvioResumen[] } | { ok: false; status: number }
+
+// Todos los envíos del estudiante en el problema, del más reciente al más antiguo (user-api no pagina).
+export async function listarEnvios(problemaId: number, signal?: AbortSignal): Promise<RespuestaEnvios> {
+  const respuesta = await pedirConSesion(`/api/problemas/${problemaId}/envios`, { signal })
+  if (!respuesta.ok) {
+    return { ok: false, status: respuesta.status }
+  }
+  return { ok: true, envios: await respuesta.json() }
+}

@@ -4,7 +4,8 @@ import type { EnvioCalificado } from '../api/envios.ts'
 import EnvioSolucion from './EnvioSolucion.tsx'
 
 // El componente no habla con user-api en estas pruebas: se simula lo que responde enviarSolucion().
-const api = vi.hoisted(() => ({ enviarSolucion: vi.fn() }))
+// listarEnvios (HU36-T3) responde sin envíos previos: estas pruebas no miran el número de intento.
+const api = vi.hoisted(() => ({ enviarSolucion: vi.fn(), listarEnvios: vi.fn(async () => ({ ok: true, envios: [] })) }))
 vi.mock('../api/envios.ts', () => api)
 
 const CORRECTO: EnvioCalificado = {

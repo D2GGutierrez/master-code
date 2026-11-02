@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { enviarSolucion, type CasoCalificado, type EnvioCalificado } from '../api/envios.ts'
+import { enviarSolucion, listarEnvios, type CasoCalificado, type EnvioCalificado } from '../api/envios.ts'
+import { numeroDeIntento } from '../intento.ts'
 import Icono from './Icono.tsx'
 import { Ilustracion } from './Ilustracion.tsx'
 import './EnvioSolucion.css'
@@ -116,6 +117,10 @@ function EnvioSolucion({ problemaId, codigo }: Props) {
   const [envio, setEnvio] = useState<EnvioCalificado | null>(null)
   // Un segundo clic en el mismo instante llega antes de que React deshabilite el botón: esto lo frena.
   const enCurso = useRef(false)
+  // HU36-T3: número del intento que será este envío; 'sin_dato' si no se pudo calcular (el envío sale igual).
+  const [intento, setIntento] = useState<number | 'calculando' | 'sin_dato'>('calculando')
+  // La consulta de la última apertura de la confirmación: al cerrarla o reabrirla, la anterior se cancela.
+  const consultaIntento = useRef<AbortController | null>(null)
 
   function pedirConfirmacion() {
     if (!codigo.trim()) {
@@ -124,12 +129,39 @@ function EnvioSolucion({ problemaId, codigo }: Props) {
     }
     setMensaje('')
     setFase('confirmando')
+    calcularIntento()
+  }
+
+  // Se pide al abrir la confirmación, no al montar, para que cuente también los envíos recién hechos.
+  function calcularIntento() {
+    consultaIntento.current?.abort()
+    const controlador = new AbortController()
+    consultaIntento.current = controlador
+    setIntento('calculando')
+    listarEnvios(problemaId, controlador.signal).then(
+      (respuesta) => {
+        if (!controlador.signal.aborted) {
+          setIntento(numeroDeIntento(respuesta.ok ? respuesta.envios : null) ?? 'sin_dato')
+        }
+      },
+      () => {
+        if (!controlador.signal.aborted) {
+          setIntento('sin_dato')
+        }
+      },
+    )
+  }
+
+  function cancelar() {
+    consultaIntento.current?.abort()
+    setFase('reposo')
   }
 
   async function enviar() {
     if (enCurso.current) {
       return
     }
+    consultaIntento.current?.abort()
     enCurso.current = true
     setFase('evaluando')
     setMensaje('')
@@ -156,10 +188,17 @@ function EnvioSolucion({ problemaId, codigo }: Props) {
       {fase === 'confirmando' ? (
         <div className="envio-confirmacion" role="group" aria-label="Confirmar envío">
           <p>¿Enviar tu solución? Se evaluará con todos los casos de prueba y contará como un intento oficial.</p>
+          <p aria-live="polite">
+            {intento === 'calculando'
+              ? 'Calculando tu número de intento…'
+              : intento === 'sin_dato'
+                ? 'No pudimos calcular tu número de intento; el envío se registrará igual.'
+                : `Este será tu intento N.º ${intento} en este problema.`}
+          </p>
           <button type="button" className="boton-primario" onClick={enviar}>
             Confirmar envío
           </button>{' '}
-          <button type="button" onClick={() => setFase('reposo')}>
+          <button type="button" onClick={cancelar}>
             Cancelar
           </button>
         </div>
