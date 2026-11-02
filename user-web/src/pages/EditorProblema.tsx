@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
-import EjecutorCodigo from '../components/EjecutorCodigo.tsx'
-import EnvioSolucion from '../components/EnvioSolucion.tsx'
+import DosPaneles from '../components/DosPaneles.tsx'
 import Icono from '../components/Icono.tsx'
-import { Hero } from '../components/Pantalla.tsx'
-import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
+import PanelEditor from '../components/PanelEditor.tsx'
+import PanelEnunciado from '../components/PanelEnunciado.tsx'
+import { etiquetaLenguaje } from '../lenguajes.ts'
 import './EditorProblema.css'
 
 // --- HU32-T3: cuándo un problema usa el editor. ---
@@ -27,8 +27,7 @@ function mensajeDeError(status: number) {
   return ''
 }
 
-// Pantalla mínima: HU33 la reemplazará por los paneles con el enunciado junto al editor. Sin código base (HU34) ni
-// borrador (HU35). «Enviar solución» es HU36.
+// HU33-T1: el enunciado a la izquierda y el editor a la derecha. Sin código base (HU34) ni borrador (HU35).
 function EditorProblema({ id }: { id: number }) {
   const [problema, setProblema] = useState<ProblemaDetalle | null>(null)
   // 403 y 404 tienen su mensaje y no se reintentan; cualquier otro fallo permite «Reintentar».
@@ -98,21 +97,21 @@ function EditorProblema({ id }: { id: number }) {
 
   return (
     <main className="editor-problema">
-      <Hero clase={`hero-compacto hero-curso leng-${claveLenguaje(problema.lenguaje)}`}>
-        <p className="hero-volver">
-          <a href={`/problemas/${id}`}>
-            <Icono nombre="atras" />
-            Volver al problema
-          </a>
-        </p>
+      {/* Una fila delgada en vez del Hero: con el Hero, en 1366×768 quedaban menos de 480 px para los paneles. */}
+      <div className="editor-fila">
+        <a href={`/problemas/${id}`}>
+          <Icono nombre="atras" />
+          Volver al problema
+        </a>
         <h1>{problema.titulo}</h1>
-        <p className="hero-meta">
-          <span className="hero-etiqueta etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
-        </p>
-      </Hero>
-      {/* Igual que /editor-prueba: EjecutorCodigo ya incluye el editor y traduce el lenguaje con idMonaco. */}
-      <EjecutorCodigo valor={codigo} onCambio={setCodigo} lenguaje={problema.lenguaje} />
-      <EnvioSolucion problemaId={id} codigo={codigo} />
+        <span className="etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
+      </div>
+      <DosPaneles
+        izquierdo={<PanelEnunciado problema={problema} />}
+        derecho={
+          <PanelEditor problemaId={id} lenguaje={problema.lenguaje} codigo={codigo} onCambioCodigo={setCodigo} />
+        }
+      />
     </main>
   )
 }

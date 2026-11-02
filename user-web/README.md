@@ -74,4 +74,6 @@ El listado de `/cursos/ID/problemas` se ordena en el navegador (dificultad de f�
 
 El listado se filtra por dificultad y por estado (resuelto, intentado o sin abrir) con botones; el filtro lo aplica `user-api` y el último usado se recuerda en `localStorage` (`mc_filtro_problemas`), igual para todos los cursos.
 
-En un problema de escritura de código, «Ir al editor de código» lleva a <http://localhost:3001/problemas/ID/editor>: el editor con «Ejecutar» en el lenguaje del problema (pantalla mínima; HU33 agregará el enunciado al lado). Los demás tipos no abren el editor.
+En un problema de escritura de código, «Ir al editor de código» lleva a <http://localhost:3001/problemas/ID/editor>: el enunciado a la izquierda y el editor con «Ejecutar» y «Enviar solución» a la derecha. Los demás tipos no abren el editor.
+
+Los dos paneles (`src/components/DosPaneles.tsx`) se separan con un divisor que se arrastra o se mueve con las flechas, Home y End, entre 25 % y 75 % (`src/division.ts`); bajo 768 px se apilan. El panel izquierdo es `PanelEnunciado.tsx`, el derecho `PanelEditor.tsx`, y el enunciado sanitizado se dibuja en `Enunciado.tsx`.

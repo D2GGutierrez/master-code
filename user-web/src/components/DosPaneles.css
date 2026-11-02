@@ -1,0 +1,56 @@
+/* Angosto (menos de 768 px): el enunciado arriba con su propio scroll y el editor debajo, sin divisor. */
+.dos-paneles {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* min-width: 0 evita que el contenido ancho ensanche el panel; el padding deja ver el foco de lo que está en el borde. */
+.dos-paneles-panel {
+  min-width: 0;
+  padding: 0.25rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dos-paneles-panel:first-child {
+  max-height: 40dvh;
+}
+
+.dos-paneles-divisor {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  /* El centro del divisor (12 px) cae justo en --izq. El alto descuenta la cabecera, la fila del título y el padding. */
+  .dos-paneles {
+    gap: 0;
+    grid-template-columns: calc(var(--izq) - 6px) 12px minmax(0, 1fr);
+    height: clamp(480px, calc(100dvh - 10rem), 1000px);
+  }
+
+  .dos-paneles.arrastrando {
+    user-select: none;
+  }
+
+  .dos-paneles-panel:first-child {
+    max-height: none;
+  }
+
+  .dos-paneles-divisor {
+    display: block;
+    position: relative;
+    cursor: col-resize;
+    touch-action: none;
+  }
+
+  .dos-paneles-divisor::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 0.5px);
+    width: 1px;
+    background: var(--borde);
+  }
+}

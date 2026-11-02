@@ -2,3 +2,24 @@
   /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
   overflow-wrap: anywhere;
 }
+
+/* Volver, título y lenguaje en una sola fila, para dejar el alto a los paneles. */
+.editor-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.editor-fila h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.editor-fila a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}

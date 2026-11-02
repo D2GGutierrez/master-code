@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
+import Enunciado from '../components/Enunciado.tsx'
 import Icono from '../components/Icono.tsx'
 import { Hero } from '../components/Pantalla.tsx'
-import { limpiarEnunciado } from '../enunciado.ts'
 import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
 import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import './DetalleProblema.css'
@@ -78,7 +78,6 @@ function DetalleProblema({ id }: { id: number }) {
     )
   }
 
-  const enunciado = limpiarEnunciado(problema.enunciado)
   const conEjemplos = problema.plataforma !== 'movil' && problema.casos_prueba.length > 0
   return (
     <main className="detalle-problema">
@@ -112,12 +111,7 @@ function DetalleProblema({ id }: { id: number }) {
           <div className={conEjemplos ? 'problema-lectura con-ejemplos' : 'problema-lectura'}>
             <section className="lectura">
               <h2>Enunciado</h2>
-              {'html' in enunciado ? (
-                // Único HTML insertado en user-web: ya pasó por DOMPurify en limpiarEnunciado.
-                <div className="enunciado" dangerouslySetInnerHTML={{ __html: enunciado.html }} />
-              ) : (
-                <p className="enunciado enunciado-texto">{enunciado.texto}</p>
-              )}
+              <Enunciado texto={problema.enunciado} />
             </section>
             {conEjemplos && (
               <section className="lectura">
