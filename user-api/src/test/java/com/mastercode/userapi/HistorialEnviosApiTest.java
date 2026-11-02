@@ -33,7 +33,7 @@ class HistorialEnviosApiTest extends PruebaDeApi {
 
     private static ProblemaDto problema(long id, long curso) {
         return new ProblemaDto(id, "Suma de dos", "Lee dos enteros e imprime su suma.", "python", "facil", "web",
-                "escritura_codigo", List.of(new ProblemaDto.Caso("2 3", "5")), curso);
+                "escritura_codigo", "", List.of(new ProblemaDto.Caso("2 3", "5")), curso);
     }
 
     private record Alumno(String email, long id) {

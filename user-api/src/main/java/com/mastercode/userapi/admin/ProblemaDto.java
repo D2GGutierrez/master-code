@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 // Un problema tal como lo entrega la API interna de admin-api para un estudiante: sin casos ocultos,
 // sin respuesta esperada y sin saber cuál alternativa es correcta. Trae el curso porque user-api debe
-// comprobar que el estudiante está inscrito en él antes de entregarlo.
+// comprobar que el estudiante está inscrito en él antes de entregarlo. codigo_base es el código inicial (HU34);
+// llega vacío si el docente no escribió ninguno.
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ProblemaDto(
         long id,
@@ -17,6 +18,7 @@ public record ProblemaDto(
         String dificultad,
         String plataforma,
         @JsonProperty("tipo_ejercicio") String tipoEjercicio,
+        @JsonProperty("codigo_base") String codigoBase,
         @JsonProperty("casos_prueba") List<Caso> casosPrueba,
         @JsonProperty("curso_id") long cursoId) {
 

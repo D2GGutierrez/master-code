@@ -208,6 +208,7 @@ class ProblemaPorIdTests(InternoBase):
                 "dificultad": "facil",
                 "plataforma": "web",
                 "tipo_ejercicio": ESCRITURA,
+                "codigo_base": "",
                 "casos_prueba": [{"entrada": "2 3", "salida_esperada": "5"}],
                 "curso_id": self.curso.pk,
             },

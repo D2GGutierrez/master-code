@@ -33,7 +33,7 @@ class ProblemasApiTest extends PruebaDeApi {
             "prediccion_salida", OffsetDateTime.parse("2026-10-28T16:00:00Z"));
 
     private static final ProblemaDto DETALLE_P7 = new ProblemaDto(7, "Suma de dos", "Lee dos enteros e imprime su suma.",
-            "python", "facil", "web", "escritura_codigo",
+            "python", "facil", "web", "escritura_codigo", "def suma(a, b):\n    pass\n",
             List.of(new ProblemaDto.Caso("2 3", "5")), 10);
 
     // ---------- listado: GET /api/cursos/{cursoId}/problemas ----------
@@ -205,9 +205,9 @@ class ProblemasApiTest extends PruebaDeApi {
         inscribir(crearEstudiante(email), 10);
         when(admin.problema(7)).thenReturn(DETALLE_P7);
 
-        // Nueve campos exactos: lo que no se nombra aquí no sale hacia el estudiante.
+        // Diez campos exactos: lo que no se nombra aquí no sale hacia el estudiante.
         mvc.perform(get("/api/problemas/7").with(tokenDe(email, "estudiante")))
-                .andExpect(jsonPath("$.*", hasSize(9)))
+                .andExpect(jsonPath("$.*", hasSize(10)))
                 .andExpect(jsonPath("$.casos_prueba[0].*", hasSize(2)))
                 .andExpect(jsonPath("$.respuesta_esperada").doesNotExist())
                 .andExpect(jsonPath("$.opciones").doesNotExist())
@@ -219,11 +219,24 @@ class ProblemasApiTest extends PruebaDeApi {
         String email = correoUnico();
         inscribir(crearEstudiante(email), 10);
         when(admin.problema(8)).thenReturn(new ProblemaDto(8, "¿Qué imprime?", "Piensa la salida.", "python", "medio",
-                "movil", "prediccion_salida", null, 10));
+                "movil", "prediccion_salida", null, null, 10));
 
         mvc.perform(get("/api/problemas/8").with(tokenDe(email, "estudiante")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.casos_prueba", hasSize(0)));
+                .andExpect(jsonPath("$.casos_prueba", hasSize(0)))
+                // Sin código base en la respuesta de admin-api, el estudiante recibe cadena vacía, no null.
+                .andExpect(jsonPath("$.codigo_base").value(""));
+    }
+
+    // HU34-T1: el código base del problema llega al estudiante en el detalle.
+    @Test
+    void el_detalle_trae_el_codigo_base() throws Exception {
+        String email = correoUnico();
+        inscribir(crearEstudiante(email), 10);
+        when(admin.problema(7)).thenReturn(DETALLE_P7);
+
+        mvc.perform(get("/api/problemas/7").with(tokenDe(email, "estudiante")))
+                .andExpect(jsonPath("$.codigo_base").value("def suma(a, b):\n    pass\n"));
     }
 
     // HU31-T2 (CA-31.2): admin-api responde 404 a un problema sin aprobar, descartado o inexistente.

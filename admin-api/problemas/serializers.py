@@ -76,6 +76,7 @@ class ProblemaSerializer(serializers.ModelSerializer):
             "casos_prueba",
             "opciones",
             "respuesta_esperada",
+            "codigo_base",
             "generado_por_ia",
             "aprobado_por_docente",
             "fecha_aprobacion",
@@ -84,6 +85,8 @@ class ProblemaSerializer(serializers.ModelSerializer):
         # curso sale de la URL en la vista: si el cuerpo lo trae, se ignora. Lo demás lo deciden las
         # acciones (generar, aprobar, descartar) y nunca el cuerpo: así nadie se aprueba a sí mismo.
         read_only_fields = ["curso", "generado_por_ia", "aprobado_por_docente", "fecha_aprobacion", "archivado"]
+        # El código base se guarda tal cual: DRF recortaría la sangría y el salto de línea final del código.
+        extra_kwargs = {"codigo_base": {"trim_whitespace": False}}
 
     def validate(self, attrs):
         # Solo llega aquí si los dos campos ya son valores válidos de su lista.
@@ -121,13 +124,14 @@ class ProblemaSerializer(serializers.ModelSerializer):
         return problema
 
     # HU19-T1, PUT: reemplazo completo. Los casos y las alternativas enviados sustituyen a los anteriores
-    # (lo que no viene se borra) y una respuesta esperada que no viene queda vacía, para que un cambio de
-    # tipo no deje datos del tipo anterior. Los campos de solo lectura nunca llegan aquí.
+    # (lo que no viene se borra) y una respuesta esperada o un código base que no vienen quedan vacíos, para que un
+    # cambio de tipo no deje datos del tipo anterior. Los campos de solo lectura nunca llegan aquí.
     @transaction.atomic
     def update(self, instance, validated_data):
         casos = validated_data.pop("casos_prueba", [])
         opciones = validated_data.pop("opciones", [])
         validated_data.setdefault("respuesta_esperada", "")
+        validated_data.setdefault("codigo_base", "")
         for campo, valor in validated_data.items():
             setattr(instance, campo, valor)
         instance.save()
@@ -174,6 +178,7 @@ class ProblemaEstudianteSerializer(serializers.ModelSerializer):
             "dificultad",
             "plataforma",
             "tipo_ejercicio",
+            "codigo_base",
             "casos_prueba",
         ]
 

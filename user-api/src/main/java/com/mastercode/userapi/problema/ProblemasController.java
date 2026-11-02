@@ -50,7 +50,7 @@ public class ProblemasController {
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     record ProblemaDetalle(long id, long cursoId, String titulo, String enunciado, String lenguaje, String dificultad,
-            String plataforma, String tipoEjercicio, List<CasoDeEjemplo> casosPrueba) {
+            String plataforma, String tipoEjercicio, String codigoBase, List<CasoDeEjemplo> casosPrueba) {
     }
 
     private final AdminCliente admin;
@@ -142,7 +142,7 @@ public class ProblemasController {
         List<ProblemaDto.Caso> casos = problema.casosPrueba() == null ? List.of() : problema.casosPrueba();
         return ResponseEntity.ok(new ProblemaDetalle(problema.id(), problema.cursoId(), problema.titulo(),
                 problema.enunciado(), problema.lenguaje(), problema.dificultad(), problema.plataforma(),
-                problema.tipoEjercicio(),
+                problema.tipoEjercicio(), problema.codigoBase() == null ? "" : problema.codigoBase(),
                 casos.stream().map(c -> new CasoDeEjemplo(c.entrada(), c.salidaEsperada())).toList()));
     }
 
