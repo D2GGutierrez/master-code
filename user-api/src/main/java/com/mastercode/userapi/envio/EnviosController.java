@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -22,6 +23,7 @@ import com.mastercode.userapi.Detalle;
 import com.mastercode.userapi.admin.AdminCliente;
 import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaCalificableDto;
+import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
@@ -71,6 +73,28 @@ public class EnviosController {
         this.inscripciones = inscripciones;
         this.sandbox = sandbox;
         this.envios = envios;
+    }
+
+    // HU41-T1: el historial de envíos del estudiante en un problema, del más reciente al más antiguo. El estudiante sale
+    // del token, nunca de la ruta: no hay forma de pedir los envíos de otro (CA-41.5). Se devuelve la lista completa;
+    // la paginación la hace la pantalla (HU41-T3). El código del envío no viaja aquí (es el detalle, HU42-T2).
+    // El acceso es el de abrir un problema (HU31-T2): uno no visible o de un curso donde no está inscrito da el mismo 404.
+    @GetMapping("/api/problemas/{problemaId}/envios")
+    public ResponseEntity<?> historial(@PathVariable long problemaId,
+            @RequestAttribute("estudiante") Estudiante estudiante) {
+        ProblemaDto problema;
+        try {
+            problema = admin.problema(problemaId);
+        } catch (ProblemaNoVisibleException e) {
+            return noEncontrado();
+        } catch (AdminNoDisponibleException e) {
+            return error(HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo cargar el problema en este momento. Intenta de nuevo.");
+        }
+        if (!inscripciones.estaInscrito(estudiante.getId(), problema.cursoId())) {
+            return noEncontrado();
+        }
+        return ResponseEntity.ok(envios.delEstudiante(estudiante.getId(), problemaId));
     }
 
     // POST: cada llamada ejecuta código y deja un intento guardado. El estudiante sale del token, nunca del cuerpo.

@@ -196,3 +196,32 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 ### Ya decidido en `registro-cambios.md`
 
 >Curso «publicado» = tiene al menos un problema aprobado (HU25-T1). El código de invitación vence a los 30 días y se genera también para los cursos existentes (HU26-T1). Límite de ejecuciones de prueba: 10 por minuto, configurable (HU06-T4).
+
+
+## **ADR-8: Detalles del Sprint 3 (decidido el 3 de noviembre de 2026)**
+
+### D8. Qué manda al abrir el editor (HU34, HU35 y HU42)
+
+> **Decidido.** Orden de preferencia: **borrador guardado** (HU35), luego **código base** (HU34, solo la primera vez, cuando aún no hay borrador) y, si no hay ninguno, **editor vacío**. «Volver al código base original» (HU34-T4) y «copiar al editor» (HU42-T4) reemplazan el contenido del editor con confirmación, y el siguiente guardado automático lo toma como borrador. El código de un envío anterior (HU42-T3) se abre en otro editor de solo lectura y nunca toca el borrador.
+>
+> **Alternativas descartadas:** que el código base mande siempre (el estudiante perdería lo escrito al reabrir, lo contrario de HU35) y que el estudiante elija al abrir (agrega una pantalla y una tarea que no existen).
+
+### D9. Dónde se calcula el avance y cómo se guarda en caché (HU43)
+
+> **Decidido.** El servidor calcula el avance (HU43-T1) y la tarjeta de progreso lo lee (HU43-T2). El listado de un curso sigue contando en el navegador porque ya tiene los datos. La caché es **en memoria del proceso** (Spring Cache con Caffeine), con clave estudiante y curso, invalidada en cada envío nuevo y con vencimiento de pocos minutos, porque el docente puede aprobar o archivar problemas. **Sin Redis:** el único Redis es el de Judge0 y no se comparte (ADR-1).
+>
+> **Alternativas descartadas:** no usar caché (deja HU43-T3 sin cumplir) y un Redis propio de la aplicación (contenedor y configuración nuevos, excesivo para el MVP).
+
+### D10. Cómo llega el docente a los envíos de sus estudiantes (HU44)
+
+> **Decidido.** `admin-web` solo habla con `admin-api`. Para HU44, `admin-api` verifica que el curso es del docente y consulta a `user-api` por una ruta `/internal/` protegida con `X-Internal-Key` (el mecanismo de D3, en sentido contrario). `user-api` no acepta tokens de docentes, y HU44-T4 prueba una sola frontera.
+>
+> **Costo no contado:** la ruta de `admin-api`, su cliente, la ruta interna de `user-api` y la URL de `user-api` en `docker-compose.yml` y `.env.example` (la clave `INTERNAL_API_KEY` ya llega a los dos servicios). Va dentro de HU44-T1 (unas 2 h más).
+>
+> **Alternativas descartadas:** que `admin-web` llame directo a `user-api` (mezcla las dos fronteras de seguridad) y duplicar los envíos en `admin-api` (dos copias que sincronizar).
+
+### D11. Cómo se cierra un intento de evaluación por tiempo (HU64)
+
+> **Decidido.** **Cierre perezoso:** al entrar o enviar, `user-api` compara la hora actual con la hora de inicio del estudiante más el límite de minutos (y con el fin de la ventana); si venció, el intento figura como cerrado. No hay tarea programada. Hay que guardar la hora de inicio del intento (migración y columna nuevas, unas 1 h más dentro de HU64-T3) y una ruta `/internal/evaluaciones/{id}/` de `admin-api` con la ventana y el límite (1 h más dentro de HU64-T2).
+>
+> **Alternativas descartadas:** una tarea programada que cierre los intentos vencidos (scheduler, concurrencia entre instancias y pruebas con tiempo simulado) y el híbrido de cierre perezoso más barrido de limpieza (solo tendría sentido con reportes que lean la columna directamente).

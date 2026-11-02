@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "cuentas",
     "cursos",
     "problemas",
+    "evaluaciones",
 ]
 
 MIDDLEWARE = [

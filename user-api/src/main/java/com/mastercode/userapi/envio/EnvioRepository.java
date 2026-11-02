@@ -2,16 +2,27 @@ package com.mastercode.userapi.envio;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 // SQL directo con JdbcClient, igual que InscripcionRepository. Un envío oficial solo se inserta.
 @Repository
 public class EnvioRepository {
 
     public record Fila(long id, int numeroIntento, OffsetDateTime fechaEnvio) {
+    }
+
+    // Una fila del historial (HU41): lo que la pantalla muestra de cada intento. Se devuelve tal cual como JSON.
+    // numeroIntento, resultado y puntaje pueden ser null en un envío que no se calificó.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public record Resumen(long id, Integer numeroIntento, OffsetDateTime fechaEnvio, String resultado,
+            BigDecimal puntaje) {
     }
 
     // Con dos envíos simultáneos del mismo estudiante al mismo problema, la base rechaza el segundo número repetido
@@ -52,5 +63,19 @@ public class EnvioRepository {
             }
         }
         throw ultimo;
+    }
+
+    // HU41-T1: los envíos del estudiante en un problema, del más reciente al más antiguo; el id desempata dos envíos
+    // con la misma fecha. Filtra por estudiante Y problema con el índice ix_app_envio_estudiante_problema.
+    public List<Resumen> delEstudiante(long estudianteId, long problemaId) {
+        return jdbc.sql("""
+                SELECT id, numero_intento, fecha_envio, resultado, puntaje
+                FROM app_schema.app_envio
+                WHERE estudiante_id = ? AND problema_id = ?
+                ORDER BY fecha_envio DESC, id DESC
+                """)
+                .params(estudianteId, problemaId)
+                .query(Resumen.class)
+                .list();
     }
 }
