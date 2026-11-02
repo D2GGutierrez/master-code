@@ -4,6 +4,7 @@ import DosPaneles from '../components/DosPaneles.tsx'
 import Icono from '../components/Icono.tsx'
 import PanelEditor from '../components/PanelEditor.tsx'
 import PanelEnunciado from '../components/PanelEnunciado.tsx'
+import { guardarDivision, leerDivisionGuardada } from '../division.ts'
 import { etiquetaLenguaje } from '../lenguajes.ts'
 import './EditorProblema.css'
 
@@ -36,6 +37,8 @@ function EditorProblema({ id }: { id: number }) {
   // Cambiarlo vuelve a ejecutar el efecto de carga.
   const [recargas, setRecargas] = useState(0)
   const [codigo, setCodigo] = useState('')
+  // Se lee una vez al montar, así el divisor aparece ya en su lugar (HU33-T4).
+  const [divisionGuardada] = useState(() => leerDivisionGuardada())
 
   function reintentar() {
     setError(false)
@@ -107,6 +110,8 @@ function EditorProblema({ id }: { id: number }) {
         <span className="etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
       </div>
       <DosPaneles
+        divisionInicial={divisionGuardada}
+        alCambiarDivision={guardarDivision}
         izquierdo={<PanelEnunciado problema={problema} />}
         derecho={
           <PanelEditor problemaId={id} lenguaje={problema.lenguaje} codigo={codigo} onCambioCodigo={setCodigo} />

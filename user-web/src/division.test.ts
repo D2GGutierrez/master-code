@@ -1,5 +1,41 @@
 import { describe, expect, it } from 'vitest'
-import { divisionDesdePuntero, limitarDivision, moverDivision } from './division.ts'
+import {
+  CLAVE_DIVISION,
+  divisionDesdePuntero,
+  guardarDivision,
+  leerDivisionGuardada,
+  limitarDivision,
+  moverDivision,
+} from './division.ts'
+
+// Almacenamiento falso: un Map con la misma forma que localStorage (getItem devuelve null si no hay valor).
+function almacenFalso(inicial?: string) {
+  const datos = new Map<string, string>()
+  if (inicial !== undefined) {
+    datos.set(CLAVE_DIVISION, inicial)
+  }
+  return {
+    datos,
+    getItem: (clave: string) => datos.get(clave) ?? null,
+    setItem: (clave: string, valor: string) => {
+      datos.set(clave, valor)
+    },
+  }
+}
+
+const fallaAlLeer = {
+  getItem: (): string | null => {
+    throw new Error('almacenamiento bloqueado')
+  },
+  setItem: () => {},
+}
+
+const fallaAlGuardar = {
+  getItem: () => null,
+  setItem: () => {
+    throw new Error('cuota excedida')
+  },
+}
 
 describe('limitarDivision', () => {
   it('(a) lleva lo que se sale a los límites', () => {
@@ -51,5 +87,59 @@ describe('moverDivision', () => {
   it('(j) otra tecla no cambia nada', () => {
     expect(moverDivision(45, 'a')).toBe(45)
     expect(moverDivision(45, 'Enter')).toBe(45)
+  })
+})
+
+describe('leerDivisionGuardada', () => {
+  it('(a) sin valor guardado da el de por defecto', () => {
+    expect(leerDivisionGuardada(almacenFalso())).toBe(45)
+  })
+
+  it('(b) lee un número guardado', () => {
+    expect(leerDivisionGuardada(almacenFalso('60'))).toBe(60)
+  })
+
+  it('(c) un texto que no es número da el de por defecto', () => {
+    expect(leerDivisionGuardada(almacenFalso('abc'))).toBe(45)
+  })
+
+  it('(d) un texto vacío da el de por defecto', () => {
+    expect(leerDivisionGuardada(almacenFalso(''))).toBe(45)
+  })
+
+  it('(e) un número fuera de rango queda en el límite', () => {
+    expect(leerDivisionGuardada(almacenFalso('5'))).toBe(25)
+    expect(leerDivisionGuardada(almacenFalso('200'))).toBe(75)
+  })
+
+  it('(f) NaN e Infinity dan el de por defecto', () => {
+    expect(leerDivisionGuardada(almacenFalso('NaN'))).toBe(45)
+    expect(leerDivisionGuardada(almacenFalso('Infinity'))).toBe(45)
+  })
+
+  it('(g) si leer lanza error da el de por defecto y no lanza', () => {
+    expect(() => leerDivisionGuardada(fallaAlLeer)).not.toThrow()
+    expect(leerDivisionGuardada(fallaAlLeer)).toBe(45)
+  })
+})
+
+describe('guardarDivision', () => {
+  it('(h) guarda el porcentaje como texto y se vuelve a leer igual', () => {
+    const almacen = almacenFalso()
+    guardarDivision(60, almacen)
+    expect(almacen.datos.get(CLAVE_DIVISION)).toBe('60')
+    expect(leerDivisionGuardada(almacen)).toBe(60)
+  })
+
+  it('(i) guarda lo que se sale ya limitado', () => {
+    const almacen = almacenFalso()
+    guardarDivision(5, almacen)
+    expect(almacen.datos.get(CLAVE_DIVISION)).toBe('25')
+    guardarDivision(99, almacen)
+    expect(almacen.datos.get(CLAVE_DIVISION)).toBe('75')
+  })
+
+  it('(j) si guardar lanza error no lanza', () => {
+    expect(() => guardarDivision(60, fallaAlGuardar)).not.toThrow()
   })
 })

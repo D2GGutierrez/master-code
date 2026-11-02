@@ -13,7 +13,7 @@ type Props = {
   izquierdo: ReactNode
   derecho: ReactNode
   divisionInicial?: number
-  // HU33-T4 lo usará para recordar la posición.
+  // Se llama al soltar el divisor y con cada tecla que lo movió (HU33-T4 lo usa para recordar la posición).
   alCambiarDivision?: (division: number) => void
 }
 
@@ -47,7 +47,15 @@ function DosPaneles({ izquierdo, derecho, divisionInicial = DIVISION_POR_DEFECTO
       return
     }
     const caja = contenedor.current.getBoundingClientRect()
-    cambiar(divisionDesdePuntero(evento.clientX, caja.left, caja.width))
+    setDivision(divisionDesdePuntero(evento.clientX, caja.left, caja.width))
+  }
+
+  // Avisa una sola vez al terminar el arrastre, no en cada píxel.
+  function alSoltar() {
+    if (arrastrando) {
+      setArrastrando(false)
+      alCambiarDivision?.(division)
+    }
   }
 
   function alTeclear(evento: KeyboardEvent<HTMLDivElement>) {
@@ -77,8 +85,8 @@ function DosPaneles({ izquierdo, derecho, divisionInicial = DIVISION_POR_DEFECTO
         tabIndex={0}
         onPointerDown={alPresionar}
         onPointerMove={alMover}
-        onPointerUp={() => setArrastrando(false)}
-        onPointerCancel={() => setArrastrando(false)}
+        onPointerUp={alSoltar}
+        onPointerCancel={alSoltar}
         onKeyDown={alTeclear}
       />
       <div className="dos-paneles-panel">{derecho}</div>
