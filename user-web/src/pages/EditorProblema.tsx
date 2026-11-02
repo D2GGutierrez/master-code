@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
+import { codigoInicial } from '../codigoInicial.ts'
 import DosPaneles from '../components/DosPaneles.tsx'
 import Icono from '../components/Icono.tsx'
 import PanelEditor from '../components/PanelEditor.tsx'
@@ -28,7 +29,8 @@ function mensajeDeError(status: number) {
   return ''
 }
 
-// HU33-T1: el enunciado a la izquierda y el editor a la derecha. Sin código base (HU34) ni borrador (HU35).
+// HU33-T1: el enunciado a la izquierda y el editor a la derecha. HU34-T3: el editor arranca con el código base.
+// Sin borrador (HU35).
 function EditorProblema({ id }: { id: number }) {
   const [problema, setProblema] = useState<ProblemaDetalle | null>(null)
   // 403 y 404 tienen su mensaje y no se reintentan; cualquier otro fallo permite «Reintentar».
@@ -37,6 +39,8 @@ function EditorProblema({ id }: { id: number }) {
   // Cambiarlo vuelve a ejecutar el efecto de carga.
   const [recargas, setRecargas] = useState(0)
   const [codigo, setCodigo] = useState('')
+  // Id del problema cuyo código inicial ya se puso: así una recarga o «Reintentar» no pisa lo que escribió el estudiante.
+  const codigoListoPara = useRef<number | null>(null)
   // Se lee una vez al montar, así el divisor aparece ya en su lugar (HU33-T4).
   const [divisionGuardada] = useState(() => leerDivisionGuardada())
 
@@ -54,6 +58,10 @@ function EditorProblema({ id }: { id: number }) {
       (respuesta) => {
         if (respuesta.ok) {
           setProblema(respuesta.problema)
+          if (codigoListoPara.current !== id) {
+            codigoListoPara.current = id
+            setCodigo(codigoInicial(respuesta.problema.codigo_base))
+          }
         } else if (mensajeDeError(respuesta.status)) {
           setSinAcceso(mensajeDeError(respuesta.status))
         } else {

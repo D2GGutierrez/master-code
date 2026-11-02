@@ -54,6 +54,8 @@ export type ProblemaDetalle = {
   dificultad: string
   plataforma: string
   tipo_ejercicio: string
+  // HU34: código inicial que deja el docente. Hoy user-api manda '' si no hay; null por si cambia.
+  codigo_base: string | null
   casos_prueba: CasoDeEjemplo[]
 }
 
