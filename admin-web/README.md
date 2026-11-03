@@ -73,6 +73,8 @@ Para probar la expiración: inicia sesión, cambia a mano los valores de `access
 
 Según el tipo de ejercicio se muestra solo su sección de respuesta (casos de prueba, alternativas, salida esperada o texto que completa el espacio); por ahora cada una muestra «Esta sección estará disponible próximamente.». En `Formulario`, un campo con `mostrarSi(valores)` solo se ve y se envía cuando devuelve `true`.
 
+En un problema de escritura de código, «Código base (opcional)» es el código que verá el estudiante al abrir el editor (por ejemplo la firma de la función): se escribe en un campo monoespaciado y se envía exacto, con su sangría; si solo tiene espacios se guarda vacío (`src/codigoBase.js`). Con otro tipo de ejercicio no aparece ni se envía.
+
 Si `admin-api` rechaza una combinación imposible de plataforma y tipo de ejercicio, su mensaje aparece en rojo bajo «Plataforma» (`role="alert"`, con `aria-invalid` y `aria-describedby` en el campo). En todos los formularios, el error de un campo se oculta en cuanto se modifica ese campo.
 
 Con «Escritura de código», «Casos de prueba» (`components/CasosPrueba.jsx`) permite agregar y quitar casos (entrada y salida esperada); se envían en el mismo POST como `casos_prueba`, sin recortar los textos, y se descartan solo los casos totalmente en blanco. Los errores de `admin-api` por caso aparecen bajo el campo del caso.

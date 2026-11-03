@@ -21,3 +21,21 @@
 main:has(> .formulario .editor-barra) {
   max-width: 44rem;
 }
+
+/* HU34-T2: un campo de código (el código base del problema). Sin ajuste de línea: lo ancho se desplaza dentro del
+   campo, nunca la página. */
+.campo-codigo {
+  width: 100%;
+  min-width: 0;
+  overflow: auto;
+  font-family: var(--fuente-codigo);
+  white-space: pre;
+  tab-size: 4;
+  resize: vertical;
+}
+
+.campo-ayuda {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}

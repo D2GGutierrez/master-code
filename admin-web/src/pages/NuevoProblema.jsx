@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listarCursos } from '../api/cursos.js'
 import { crearProblema } from '../api/problemas.js'
+import { normalizarCodigoBase } from '../codigoBase.js'
 import Aviso from '../components/Aviso.jsx'
 import CasosPrueba from '../components/CasosPrueba.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
@@ -34,6 +35,34 @@ export const TIPOS_EJERCICIO = [
 // y, como nunca recibe un valor, no se envía nada.
 function SeccionPendiente() {
   return <Aviso mensaje="Esta sección estará disponible próximamente." />
+}
+
+// HU34-T2: el código base se escribe como código (monoespaciado, sin ajuste de línea ni correcciones del navegador)
+// y es opcional, por eso no usa el input de Formulario, que siempre es obligatorio.
+function CampoCodigoBase({ id, valor, error, onCambio }) {
+  const idAyuda = `${id}-ayuda`
+  return (
+    <>
+      <textarea
+        id={id}
+        name={id}
+        className="campo-codigo"
+        rows={10}
+        wrap="off"
+        spellCheck={false}
+        autoComplete="off"
+        autoCapitalize="off"
+        value={valor}
+        onChange={(evento) => onCambio(evento.target.value)}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? `${idAyuda} ${id}-error` : idAyuda}
+      />
+      <p id={idAyuda} className="campo-ayuda">
+        Código que verá el estudiante al abrir el problema, por ejemplo la firma de la función. Déjalo vacío si el
+        editor debe empezar en blanco.
+      </p>
+    </>
+  )
 }
 
 // admin-api responde los errores como { campo: ['mensaje', ...] }; en casos_prueba puede ser
@@ -108,6 +137,13 @@ function NuevoProblema() {
       componente: CasosPrueba,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'escritura_codigo',
     },
+    // Oculto para otros tipos: Formulario solo envía los campos visibles, así que el código escrito no viaja.
+    {
+      nombre: 'codigo_base',
+      etiqueta: 'Código base (opcional)',
+      componente: CampoCodigoBase,
+      mostrarSi: (valores) => valores.tipo_ejercicio === 'escritura_codigo',
+    },
     {
       nombre: 'alternativas',
       etiqueta: 'Alternativas',
@@ -135,6 +171,10 @@ function NuevoProblema() {
     const enviados = (datos.casos_prueba || []).filter((caso) => caso.entrada !== '' || caso.salida_esperada !== '')
     if (datos.casos_prueba) {
       datos.casos_prueba = enviados.map(({ entrada, salida_esperada }) => ({ entrada, salida_esperada }))
+    }
+    // Sin tocar el campo no se envía y admin-api lo guarda vacío.
+    if ('codigo_base' in datos) {
+      datos.codigo_base = normalizarCodigoBase(datos.codigo_base)
     }
     setEnviando(true)
     setErrores({})
