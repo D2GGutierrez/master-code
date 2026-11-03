@@ -1,0 +1,19 @@
+.ver-envio {
+  /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
+  overflow-wrap: anywhere;
+}
+
+/* Fecha, resultado, puntaje y «Solo lectura» en una línea que baja de renglón si no cabe. */
+.ver-envio-datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+/* El borde fino enmarca el editor, como en el editor del problema. */
+.ver-envio-editor {
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}

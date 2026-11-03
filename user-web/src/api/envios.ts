@@ -66,3 +66,34 @@ export async function listarEnvios(problemaId: number, signal?: AbortSignal): Pr
   }
   return { ok: true, envios: await respuesta.json() }
 }
+
+// Mismos campos que EnvioRepository.Detalle de user-api (GET /api/envios/{id}, HU42-T2). codigo llega '' si el envío
+// no lo guardó; numero_intento, resultado y puntaje pueden ser null, como en el historial.
+export type EnvioDetalle = {
+  problema_id: number
+  numero_intento: number | null
+  fecha_envio: string
+  resultado: ResultadoEnvio | null
+  puntaje: number | null
+  codigo: string
+}
+
+export type RespuestaDetalleEnvio = { ok: true; envio: EnvioDetalle } | { ok: false; status: number }
+
+// user-api devuelve 404 si el envío no existe o es de otro estudiante. La ruta de user-api no lleva el problema: un
+// envío de otro problema que el de la pantalla también se trata como no encontrado.
+export async function obtenerEnvio(
+  problemaId: number,
+  envioId: number,
+  signal?: AbortSignal,
+): Promise<RespuestaDetalleEnvio> {
+  const respuesta = await pedirConSesion(`/api/envios/${envioId}`, { signal })
+  if (!respuesta.ok) {
+    return { ok: false, status: respuesta.status }
+  }
+  const envio: EnvioDetalle = await respuesta.json()
+  if (envio.problema_id !== problemaId) {
+    return { ok: false, status: 404 }
+  }
+  return { ok: true, envio }
+}

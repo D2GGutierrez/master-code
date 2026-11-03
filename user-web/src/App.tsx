@@ -13,6 +13,7 @@ import NuevaContrasena from './pages/NuevaContrasena.tsx'
 import OlvideContrasena from './pages/OlvideContrasena.tsx'
 import ProblemasCurso from './pages/ProblemasCurso.tsx'
 import RegistroEstudiante from './pages/RegistroEstudiante.tsx'
+import VerEnvio from './pages/VerEnvio.tsx'
 
 // Se ejecuta una vez al cargar: si quedó una sesión guardada (p. ej. al recargar), se reanuda su renovación.
 programarRenovacion()
@@ -51,6 +52,10 @@ function pantalla() {
   const editorProblema = window.location.pathname.match(/^\/problemas\/(\d+)\/editor$/)
   if (editorProblema) {
     return <EditorProblema id={Number(editorProblema[1])} />
+  }
+  const verEnvio = window.location.pathname.match(/^\/problemas\/(\d+)\/envios\/(\d+)$/)
+  if (verEnvio) {
+    return <VerEnvio id={Number(verEnvio[1])} envioId={Number(verEnvio[2])} />
   }
   const historialEnvios = window.location.pathname.match(/^\/problemas\/(\d+)\/envios$/)
   if (historialEnvios) {

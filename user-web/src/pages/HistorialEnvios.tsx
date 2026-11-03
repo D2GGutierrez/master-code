@@ -134,17 +134,26 @@ function HistorialEnvios({ id }: { id: number }) {
                 <th scope="col">Fecha</th>
                 <th scope="col">Resultado</th>
                 <th scope="col">Puntaje</th>
+                <th scope="col">Código</th>
               </tr>
             </thead>
             <tbody>
-              {envios.map((envio, indice) => (
-                <tr key={envio.id}>
-                  <td>N.º {numeroDeFila(envio.numero_intento, indice, envios.length)}</td>
-                  <td>{formatearFecha(envio.fecha_envio)}</td>
-                  <td className={`resultado-${envio.resultado}`}>{etiquetaResultado(envio.resultado)}</td>
-                  <td>{formatearPuntaje(envio.puntaje)}</td>
-                </tr>
-              ))}
+              {envios.map((envio, indice) => {
+                const numero = numeroDeFila(envio.numero_intento, indice, envios.length)
+                return (
+                  <tr key={envio.id}>
+                    <td>N.º {numero}</td>
+                    <td>{formatearFecha(envio.fecha_envio)}</td>
+                    <td className={`resultado-${envio.resultado}`}>{etiquetaResultado(envio.resultado)}</td>
+                    <td>{formatearPuntaje(envio.puntaje)}</td>
+                    <td>
+                      <a href={`/problemas/${id}/envios/${envio.id}`} aria-label={`Ver código del intento ${numero}`}>
+                        Ver código
+                      </a>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
