@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
+import Ejemplos from '../components/Ejemplos.tsx'
 import Enunciado from '../components/Enunciado.tsx'
 import Icono from '../components/Icono.tsx'
 import { Hero } from '../components/Pantalla.tsx'
@@ -116,21 +117,7 @@ function DetalleProblema({ id }: { id: number }) {
               <h2>Enunciado</h2>
               <Enunciado texto={problema.enunciado} />
             </section>
-            {conEjemplos && (
-              <section className="lectura">
-                <h2>Ejemplos</h2>
-                {problema.casos_prueba.map((caso, indice) => (
-                  // Los casos no traen id; el orden lo fija el servidor y no cambia en esta pantalla.
-                  <div key={indice} className="ejemplo">
-                    <h3>Ejemplo {indice + 1}</h3>
-                    <p className="ejemplo-rotulo">Entrada</p>
-                    <pre>{caso.entrada}</pre>
-                    <p className="ejemplo-rotulo">Salida esperada</p>
-                    <pre>{caso.salida_esperada}</pre>
-                  </div>
-                ))}
-              </section>
-            )}
+            {conEjemplos && <Ejemplos casos={problema.casos_prueba} nivel={2} clase="lectura" />}
           </div>
         </>
       )}

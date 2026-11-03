@@ -74,7 +74,11 @@ describe('Enunciado', () => {
 
 describe('PanelEnunciado', () => {
   it('sin enunciado lo dice en vez de dejar el panel en blanco', () => {
-    render(<PanelEnunciado problema={{ titulo: 'Suma', dificultad: 'facil', tipo_ejercicio: 'escritura_codigo', enunciado: '  ' }} />)
+    render(
+      <PanelEnunciado
+        problema={{ titulo: 'Suma', dificultad: 'facil', tipo_ejercicio: 'escritura_codigo', enunciado: '  ', casos_prueba: [] }}
+      />,
+    )
     expect(screen.getByText('Este problema no tiene enunciado.')).toBeTruthy()
   })
 })

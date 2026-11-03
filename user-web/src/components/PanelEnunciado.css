@@ -3,8 +3,9 @@
   margin-top: 0;
 }
 
-/* «Enunciado» separa las etiquetas del texto sin competir con el título. */
-.panel-enunciado-rotulo {
+/* «Enunciado» y «Ejemplos» separan las partes del panel sin competir con el título. */
+.panel-enunciado-rotulo,
+.panel-enunciado .ejemplos > h3 {
   margin: 1.25rem 0 0.5rem;
   color: var(--texto-suave);
   font-size: 0.8125rem;

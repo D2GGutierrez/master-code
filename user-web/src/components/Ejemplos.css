@@ -1,0 +1,33 @@
+.ejemplo {
+  margin-bottom: 1.5rem;
+}
+
+.ejemplo:last-child {
+  margin-bottom: 0;
+}
+
+.ejemplo > :first-child {
+  margin-top: 0;
+}
+
+.ejemplo-rotulo {
+  margin: 0.75rem 0 0.25rem;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* El texto exacto, con su sangría, y se desplaza dentro de su bloque: nunca ensancha el panel ni la página. La base
+   (fuente, fondo, borde, radio y relleno) viene de diseno.css. */
+.ejemplo pre {
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--fuente-codigo);
+  white-space: pre;
+  overflow-wrap: normal;
+  tab-size: 4;
+}
+
+.ejemplo-vacio {
+  color: var(--texto-suave);
+}

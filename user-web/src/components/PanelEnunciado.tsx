@@ -1,14 +1,15 @@
 import type { ProblemaDetalle } from '../api/problemas.ts'
 import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
+import Ejemplos from './Ejemplos.tsx'
 import Enunciado from './Enunciado.tsx'
 import './PanelEnunciado.css'
 
 type Props = {
-  problema: Pick<ProblemaDetalle, 'titulo' | 'dificultad' | 'tipo_ejercicio' | 'enunciado'>
+  problema: Pick<ProblemaDetalle, 'titulo' | 'dificultad' | 'tipo_ejercicio' | 'enunciado' | 'casos_prueba'>
 }
 
-// Panel izquierdo del editor (HU33-T1, HU33-T2). La página ya tiene su h1 (la fila de arriba): el título del problema es
-// h2 y «Enunciado», h3. Los ejemplos son HU33-T3.
+// Panel izquierdo del editor (HU33-T1 a T3). La página ya tiene su h1 (la fila de arriba): el título del problema es
+// h2, y «Enunciado» y «Ejemplos», h3.
 function PanelEnunciado({ problema }: Props) {
   return (
     <section className="panel-enunciado" aria-label="Enunciado">
@@ -23,6 +24,7 @@ function PanelEnunciado({ problema }: Props) {
       ) : (
         <p className="panel-enunciado-vacio">Este problema no tiene enunciado.</p>
       )}
+      <Ejemplos casos={problema.casos_prueba} nivel={3} />
     </section>
   )
 }
