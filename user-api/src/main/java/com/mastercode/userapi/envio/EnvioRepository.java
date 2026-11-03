@@ -3,6 +3,7 @@ package com.mastercode.userapi.envio;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -23,6 +24,13 @@ public class EnvioRepository {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record Resumen(long id, Integer numeroIntento, OffsetDateTime fechaEnvio, String resultado,
             BigDecimal puntaje) {
+    }
+
+    // El detalle de un envío (HU42): lo del historial más el código exacto que se mandó. Un envío anterior a V5 o
+    // sembrado sin código lo devuelve vacío, no null, para que el editor siempre reciba un texto.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public record Detalle(long id, long problemaId, Integer numeroIntento, OffsetDateTime fechaEnvio, String resultado,
+            BigDecimal puntaje, String codigo) {
     }
 
     // Con dos envíos simultáneos del mismo estudiante al mismo problema, la base rechaza el segundo número repetido
@@ -63,6 +71,19 @@ public class EnvioRepository {
             }
         }
         throw ultimo;
+    }
+
+    // HU42-T2: un envío por su id, solo si es del estudiante. Filtra por el id Y por el estudiante en la misma consulta:
+    // el envío de otro es indistinguible de uno que no existe.
+    public Optional<Detalle> detalle(long estudianteId, long envioId) {
+        return jdbc.sql("""
+                SELECT id, problema_id, numero_intento, fecha_envio, resultado, puntaje, COALESCE(codigo, '') AS codigo
+                FROM app_schema.app_envio
+                WHERE id = ? AND estudiante_id = ?
+                """)
+                .params(envioId, estudianteId)
+                .query(Detalle.class)
+                .optional();
     }
 
     // HU41-T1: los envíos del estudiante en un problema, del más reciente al más antiguo; el id desempata dos envíos

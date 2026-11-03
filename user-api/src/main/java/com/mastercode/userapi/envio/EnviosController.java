@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -95,6 +96,18 @@ public class EnviosController {
             return noEncontrado();
         }
         return ResponseEntity.ok(envios.delEstudiante(estudiante.getId(), problemaId));
+    }
+
+    // HU42-T2: el detalle de un envío del propio estudiante, con el código exacto que mandó. El estudiante sale del token
+    // y la consulta filtra por él: el envío de otro da el mismo 404 que uno inexistente (no se revela que existe). No
+    // consulta a admin-api: es un dato del estudiante, así que sigue disponible aunque el problema ya no sea visible.
+    @GetMapping("/api/envios/{envioId}")
+    public ResponseEntity<?> detalle(@PathVariable long envioId, @RequestAttribute("estudiante") Estudiante estudiante) {
+        Optional<EnvioRepository.Detalle> envio = envios.detalle(estudiante.getId(), envioId);
+        if (envio.isEmpty()) {
+            return error(HttpStatus.NOT_FOUND, "Envío no encontrado.");
+        }
+        return ResponseEntity.ok(envio.get());
     }
 
     // POST: cada llamada ejecuta código y deja un intento guardado. El estudiante sale del token, nunca del cuerpo.

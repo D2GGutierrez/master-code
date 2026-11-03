@@ -39,6 +39,9 @@ class GuardianRutasTest extends PruebaDeApi {
             // el mismo 404 y no se consulta ningún envío. Devuelve solo fecha, resultado y puntaje de los envíos propios,
             // sin enunciado, casos ni código; lo comprueba HistorialEnviosApiTest (HU41-T1).
             "GET /api/problemas/{problemaId}/envios",
+            // NO APLICA: devuelve el envío (con su código) solo si es del estudiante del token; el de otro da 404 y no
+            // incluye enunciado ni casos. Lo comprueba DetalleEnvioApiTest (HU42-T2).
+            "GET /api/envios/{envioId}",
             // NO APLICA: la usa admin-api con X-Internal-Key; correos de inscritos, sin problemas.
             "GET /internal/cursos/{cursoId}/inscritos");
 
