@@ -100,6 +100,9 @@ function DetalleProblema({ id }: { id: number }) {
               Ir al editor de código
               <Icono nombre="flecha" />
             </a>
+            <a className="boton-hero-fantasma" href={`/problemas/${problema.id}/envios`}>
+              Mis envíos
+            </a>
           </div>
         )}
       </Hero>

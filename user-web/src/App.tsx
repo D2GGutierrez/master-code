@@ -5,6 +5,7 @@ import BuscarCursos from './pages/BuscarCursos.tsx'
 import DetalleProblema from './pages/DetalleProblema.tsx'
 import EditorProblema from './pages/EditorProblema.tsx'
 import EditorPrueba from './pages/EditorPrueba.tsx'
+import HistorialEnvios from './pages/HistorialEnvios.tsx'
 import Inicio from './pages/Inicio.tsx'
 import InicioSesion from './pages/InicioSesion.tsx'
 import Inscribirse from './pages/Inscribirse.tsx'
@@ -50,6 +51,10 @@ function pantalla() {
   const editorProblema = window.location.pathname.match(/^\/problemas\/(\d+)\/editor$/)
   if (editorProblema) {
     return <EditorProblema id={Number(editorProblema[1])} />
+  }
+  const historialEnvios = window.location.pathname.match(/^\/problemas\/(\d+)\/envios$/)
+  if (historialEnvios) {
+    return <HistorialEnvios id={Number(historialEnvios[1])} />
   }
   const detalleProblema = window.location.pathname.match(/^\/problemas\/(\d+)$/)
   if (detalleProblema) {

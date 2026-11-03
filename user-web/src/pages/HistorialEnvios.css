@@ -1,0 +1,20 @@
+.historial-envios {
+  /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
+  overflow-wrap: anywhere;
+}
+
+/* Bajo este ancho la tabla se desplaza dentro de su caja, nunca la página. */
+.tabla-historial table {
+  min-width: 28rem;
+}
+
+/* El texto dice el resultado; el color solo lo refuerza. */
+.resultado-correcto {
+  color: var(--exito-texto);
+  font-weight: 600;
+}
+
+.resultado-incorrecto {
+  color: var(--error);
+  font-weight: 600;
+}

@@ -30,3 +30,15 @@ export function etiquetaTipoEjercicio(valor: string): string {
 export function etiquetaEstado(valor: string): string {
   return etiqueta(valor)
 }
+
+// Resultado de un envío (user-api, Calificacion). Aparte del mapa general: aquí un valor desconocido no se muestra
+// tal cual, sino «—».
+const ETIQUETA_RESULTADO = new Map([
+  ['correcto', 'Correcto'],
+  ['parcial', 'Parcial'],
+  ['incorrecto', 'Incorrecto'],
+])
+
+export function etiquetaResultado(valor: string | null | undefined): string {
+  return ETIQUETA_RESULTADO.get(valor ?? '') ?? '—'
+}
