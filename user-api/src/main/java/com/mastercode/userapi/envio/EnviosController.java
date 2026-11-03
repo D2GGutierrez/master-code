@@ -180,7 +180,7 @@ public class EnviosController {
 
     // Un mensaje general para distinguir un error del código del estudiante de un caso que simplemente no coincide.
     // Solo un error de compilación muestra el texto del motor: no depende de la entrada, así que no puede revelar un
-    // caso oculto. Con errores de ejecución o tiempo el mensaje es fijo (esos textos podrían imprimir la entrada).
+    // caso oculto. Con errores de ejecución, tiempo o memoria el mensaje es fijo (esos textos podrían imprimir la entrada).
     private static String aviso(List<EjecucionResultado> resultados) {
         for (EjecucionResultado resultado : resultados) {
             if (resultado.estado() == Estado.ERROR_COMPILACION) {
@@ -191,6 +191,11 @@ public class EnviosController {
         for (EjecucionResultado resultado : resultados) {
             if (resultado.estado() == Estado.TIEMPO_AGOTADO) {
                 return "Tu programa tardó demasiado en uno o más casos y se detuvo.";
+            }
+        }
+        for (EjecucionResultado resultado : resultados) {
+            if (resultado.estado() == Estado.MEMORIA_EXCEDIDA) {
+                return "Tu programa usó más memoria de la permitida en uno o más casos y se detuvo.";
             }
         }
         for (EjecucionResultado resultado : resultados) {

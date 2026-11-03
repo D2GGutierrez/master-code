@@ -52,6 +52,8 @@ def test_la_entrada_viaja_como_stdin():
         ({"status": {"id": 5}}, Estado.TIEMPO_AGOTADO),
         ({"status": {"id": 6}, "compile_output": "error de sintaxis"}, Estado.ERROR_COMPILACION),
         ({"status": {"id": 11}, "stderr": "ZeroDivisionError"}, Estado.ERROR_EJECUCION),
+        ({"status": {"id": 11}, "stderr": "Traceback...\nMemoryError"}, Estado.MEMORIA_EXCEDIDA),
+        ({"status": {"id": 7}, "stderr": "java.lang.OutOfMemoryError: Java heap space"}, Estado.MEMORIA_EXCEDIDA),
         ({"status": {"id": 13}, "message": "Internal Error"}, Estado.ERROR_SERVICIO),
     ],
 )

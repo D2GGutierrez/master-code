@@ -93,7 +93,7 @@ Cambiar un valor es editarlo en el compose y recrear el servicio: `docker compos
 ## 7. Diferencias con Judge0 y problemas conocidos
 
 - Los límites son del servidor, no de cada petición.
-- Piston no distingue «memoria excedida»: el programa muere por una señal y aparece como error de ejecución.
+- Piston no tiene un código para «memoria excedida»: al pasar el límite el proceso muere con `SIGKILL` (estado `SG`). `piston.py` lo traduce a `memoria_excedida`, igual que cuando stderr trae `MemoryError`, `OutOfMemoryError` o `heap out of memory`. Es una deducción: si otra causa mata al proceso con `SIGKILL`, el estudiante verá el aviso de memoria.
 - Java se guarda como `Main.java` (la clase pública debe llamarse `Main`), igual que con Judge0.
 - Si en Java «hola mundo» falla por memoria (mensajes como «Could not reserve enough space» o `error_ejecucion` con un compilador que muere), la máquina virtual de Java necesita más que los 256 MB: sube `PISTON_COMPILE_MEMORY_LIMIT` y `PISTON_RUN_MEMORY_LIMIT` a 536870912 (512 MB) y recrea el servicio.
 - **Piston no bloquea la lectura de archivos.** Un programa puede leer los archivos del contenedor de Piston (por ejemplo `/etc/passwd`); la escritura en `/etc` y `/usr`, la red, la memoria y el tiempo sí quedan limitados. Por eso la prueba `leer_etc_passwd_no_muestra_el_archivo_del_sistema` de `SandboxSeguridadTest` (HU07-T5) se salta cuando `SANDBOX_PROVIDER=piston` está en el entorno de Maven, y el criterio «un programa que lee archivos del sistema queda bloqueado» solo se comprueba con Judge0 en Linux con cgroup v1. El contenedor de Piston no recibe el `.env` ni la base del proyecto, pero conviene revisar qué ve antes de usarlo fuera del desarrollo.

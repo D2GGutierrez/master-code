@@ -8,6 +8,7 @@ public enum Estado {
     @JsonProperty("error_ejecucion") ERROR_EJECUCION,
     @JsonProperty("error_compilacion") ERROR_COMPILACION,
     @JsonProperty("tiempo_agotado") TIEMPO_AGOTADO,
+    @JsonProperty("memoria_excedida") MEMORIA_EXCEDIDA,
     // Falló el motor, no el código del estudiante.
     @JsonProperty("error_servicio") ERROR_SERVICIO
 }

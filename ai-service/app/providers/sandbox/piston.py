@@ -7,6 +7,7 @@ from app.providers.sandbox.base import (
     LenguajeNoSoportado,
     ProveedorSandbox,
     Resultado,
+    se_quedo_sin_memoria,
 )
 from app.providers.sandbox.http import post_json
 
@@ -23,6 +24,8 @@ LENGUAJES = {
 # Códigos de estado de Piston en run.status y compile.status (solo aparecen si algo salió mal):
 # TO = tiempo agotado, RE = error al correr, SG = el proceso murió por una señal,
 # OL / EL = salida o errores demasiado largos, XX = falla interna del motor.
+# Piston no tiene un código para la memoria: al pasar el límite el sistema mata el proceso con SIGKILL y el estado es
+# SG (ver _quedo_sin_memoria).
 _ESTADO_POR_CODIGO = {
     "TO": Estado.TIEMPO_AGOTADO,
     "RE": Estado.ERROR_EJECUCION,
@@ -40,6 +43,12 @@ _JAVA_NO_COMPILO = "error: compilation failed"
 
 def _fallo_la_compilacion(resultado: Resultado) -> bool:
     return resultado.estado == Estado.ERROR_EJECUCION and resultado.error.rstrip().endswith(_JAVA_NO_COMPILO)
+
+
+def _quedo_sin_memoria(ejecucion: dict, error: str) -> bool:
+    # SG + SIGKILL: el tiempo (TO) y la salida larga (OL) ya tienen su propio estado, así que lo que queda es el límite
+    # de memoria. El texto de stderr cubre al lenguaje que avisa antes de que lo maten.
+    return (ejecucion.get("status") == "SG" and ejecucion.get("signal") == "SIGKILL") or se_quedo_sin_memoria(error)
 
 
 def _milisegundos(etapa: dict) -> int | None:
@@ -120,9 +129,13 @@ def _traducir(datos: dict) -> Resultado:
     else:
         estado = Estado.ERROR_EJECUCION
 
+    error = ejecucion.get("stderr") or ejecucion.get("message") or ""
+    if estado == Estado.ERROR_EJECUCION and _quedo_sin_memoria(ejecucion, error):
+        estado = Estado.MEMORIA_EXCEDIDA
+
     return Resultado(
         estado,
         salida=ejecucion.get("stdout") or "",
-        error=ejecucion.get("stderr") or ejecucion.get("message") or "",
+        error=error,
         tiempo_ms=_milisegundos(ejecucion),
     )

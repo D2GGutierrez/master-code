@@ -310,6 +310,22 @@ class EnviosApiTest extends PruebaDeApi {
                 .andExpect(jsonPath("$.casos[0].estado").value("tiempo_agotado"));
     }
 
+    // HU40-T1: la memoria excedida tiene su propio aviso fijo, sin el texto del motor.
+    @Test
+    void una_memoria_excedida_da_un_aviso_y_cuenta_el_caso_como_fallado() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO);
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.MEMORIA_EXCEDIDA, "", "MemoryError", null));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resultado").value("incorrecto"))
+                .andExpect(jsonPath("$.aviso").value("Tu programa usó más memoria de la permitida en uno o más casos y se detuvo."))
+                .andExpect(jsonPath("$.casos[0].paso").value(false))
+                .andExpect(jsonPath("$.casos[0].estado").value("memoria_excedida"));
+    }
+
     @Test
     void una_salida_enorme_se_recorta_en_la_respuesta_pero_el_caso_se_califica_completo() throws Exception {
         Alumno yo = alumnoInscrito();

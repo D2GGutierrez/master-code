@@ -80,6 +80,14 @@ def test_sin_tiempos_queda_en_none():
         ({"run": {"status": "TO", "signal": "SIGKILL", "code": None}}, Estado.TIEMPO_AGOTADO),
         ({"run": {"status": "RE", "code": 1, "stderr": "ZeroDivisionError"}}, Estado.ERROR_EJECUCION),
         ({"run": {"status": "SG", "signal": "SIGSEGV", "code": None}}, Estado.ERROR_EJECUCION),
+        # Memoria: el proceso muere por SIGKILL (sin que sea tiempo ni salida larga) o el lenguaje avisa en stderr.
+        ({"run": {"status": "SG", "signal": "SIGKILL", "code": None}}, Estado.MEMORIA_EXCEDIDA),
+        ({"run": {"status": "RE", "code": 1, "stderr": "MemoryError"}}, Estado.MEMORIA_EXCEDIDA),
+        (
+            {"run": {"status": "RE", "code": 1, "stderr": "Exception in thread main java.lang.OutOfMemoryError"}},
+            Estado.MEMORIA_EXCEDIDA,
+        ),
+        ({"run": {"status": "SG", "signal": "SIGABRT", "stderr": "JavaScript heap out of memory"}}, Estado.MEMORIA_EXCEDIDA),
         ({"run": {"status": "OL", "code": None, "signal": "SIGKILL"}}, Estado.ERROR_EJECUCION),
         ({"run": {"status": "XX", "message": "fallo interno"}}, Estado.ERROR_SERVICIO),
         # Sin campo status: se decide por el código de salida.

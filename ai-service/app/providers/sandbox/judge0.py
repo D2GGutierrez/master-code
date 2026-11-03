@@ -6,14 +6,15 @@ from app.providers.sandbox.base import (
     LenguajeNoSoportado,
     ProveedorSandbox,
     Resultado,
+    se_quedo_sin_memoria,
 )
 from app.providers.sandbox.http import post_json
 
 # Ids de lenguaje de Judge0 1.13.1.
 LENGUAJES = {"python": 71, "java": 62, "javascript": 63}
 
-# Ids de estado de Judge0: 3 = aceptado, 5 = tiempo agotado, 6 = error de compilación, 7 a 12 = error al correr.
-# Cualquier otro (por ejemplo 13, error interno) se trata como falla del servicio.
+# Ids de estado de Judge0: 3 = aceptado, 5 = tiempo agotado, 6 = error de compilación, 7 a 12 = error al correr
+# (si el error dice que se acabó la memoria, es memoria excedida). Cualquier otro (por ejemplo 13, error interno) se trata como falla del servicio.
 _ESTADO_POR_ID = {3: Estado.OK, 5: Estado.TIEMPO_AGOTADO, 6: Estado.ERROR_COMPILACION}
 _ERRORES_DE_EJECUCION = range(7, 13)
 
@@ -49,9 +50,13 @@ class Judge0(ProveedorSandbox):
         else:
             estado = _ESTADO_POR_ID.get(id_estado, Estado.ERROR_SERVICIO)
 
+        error = datos.get("stderr") or datos.get("compile_output") or datos.get("message") or ""
+        if estado == Estado.ERROR_EJECUCION and se_quedo_sin_memoria(error):
+            estado = Estado.MEMORIA_EXCEDIDA
+
         return Resultado(
             estado,
             salida=datos.get("stdout") or "",
-            error=datos.get("stderr") or datos.get("compile_output") or datos.get("message") or "",
+            error=error,
             tiempo_ms=_a_milisegundos(datos.get("time")),
         )

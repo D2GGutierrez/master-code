@@ -22,6 +22,7 @@ const ESTADO_DEL_CASO = {
   error_compilacion: 'Tu código no compiló.',
   error_ejecucion: 'Tu programa falló al ejecutarse.',
   tiempo_agotado: 'Tu programa tardó demasiado y se detuvo.',
+  memoria_excedida: 'Tu programa usó más memoria de la permitida y se detuvo.',
 } as const
 
 // 503 trae su propio texto («Tu envío no se contó…»); 404 también cubre «no estás inscrito», para no revelar qué existe.

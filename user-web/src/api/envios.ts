@@ -11,7 +11,7 @@ export type CasoCalificado = {
   salida_esperada?: string
   salida_obtenida?: string
   error?: string
-  estado?: 'ok' | 'error_ejecucion' | 'error_compilacion' | 'tiempo_agotado'
+  estado?: 'ok' | 'error_ejecucion' | 'error_compilacion' | 'tiempo_agotado' | 'memoria_excedida'
 }
 
 // Mismos campos que EnviosController de user-api (POST /api/problemas/{id}/envios, ADR-7 D7).

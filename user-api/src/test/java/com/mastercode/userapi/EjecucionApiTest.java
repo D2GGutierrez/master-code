@@ -89,6 +89,16 @@ class EjecucionApiTest extends PruebaDeApi {
     }
 
     @Test
+    void una_memoria_excedida_tambien_es_200() throws Exception {
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.MEMORIA_EXCEDIDA, "", "MemoryError", null));
+
+        ejecutar(correoUnico(), "{\"codigo\":\"x = [0] * 10**10\",\"lenguaje\":\"python\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("memoria_excedida"));
+    }
+
+    @Test
     void ejecutar_no_crea_ninguna_fila_en_app_envio() throws Exception {
         String email = correoUnico();
         long id = crearEstudiante(email);

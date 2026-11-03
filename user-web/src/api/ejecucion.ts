@@ -9,7 +9,7 @@ export type SolicitudEjecucion = {
 
 // error_servicio no llega aquí: user-api lo convierte en 503.
 export type ResultadoEjecucion = {
-  estado: 'ok' | 'error_ejecucion' | 'error_compilacion' | 'tiempo_agotado'
+  estado: 'ok' | 'error_ejecucion' | 'error_compilacion' | 'tiempo_agotado' | 'memoria_excedida'
   salida: string
   error: string
   tiempo_ms: number | null

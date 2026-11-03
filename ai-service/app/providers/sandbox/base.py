@@ -8,7 +8,17 @@ class Estado(str, Enum):
     ERROR_EJECUCION = "error_ejecucion"  # el programa del estudiante falló al correr
     ERROR_COMPILACION = "error_compilacion"
     TIEMPO_AGOTADO = "tiempo_agotado"
+    MEMORIA_EXCEDIDA = "memoria_excedida"  # el programa pasó el límite de memoria (HU40)
     ERROR_SERVICIO = "error_servicio"  # falló el motor, no el código del estudiante
+
+
+# Lo que cada lenguaje escribe en stderr al quedarse sin memoria: Python, Java y Node. Ningún motor lo separa de
+# un error de ejecución cualquiera, así que se reconoce por el texto.
+_SENALES_DE_MEMORIA = ("MemoryError", "OutOfMemoryError", "heap out of memory")
+
+
+def se_quedo_sin_memoria(error: str) -> bool:
+    return any(senal in error for senal in _SENALES_DE_MEMORIA)
 
 
 @dataclass(frozen=True)

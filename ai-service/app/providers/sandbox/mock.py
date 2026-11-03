@@ -16,6 +16,7 @@ MARCADORES = {
     "MOCK_ERROR_SERVICIO": (Estado.ERROR_SERVICIO, "El motor de ejecución simulado no respondió."),
     "MOCK_ERROR_COMPILACION": (Estado.ERROR_COMPILACION, "error de compilación simulado"),
     "MOCK_TIEMPO_AGOTADO": (Estado.TIEMPO_AGOTADO, "Tiempo límite excedido (simulado)."),
+    "MOCK_MEMORIA_EXCEDIDA": (Estado.MEMORIA_EXCEDIDA, "Memoria límite excedida (simulado)."),
     "MOCK_ERROR_EJECUCION": (Estado.ERROR_EJECUCION, "error de ejecución simulado"),
 }
 
