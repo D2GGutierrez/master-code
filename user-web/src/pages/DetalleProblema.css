@@ -30,24 +30,7 @@
   margin: 0 0 1rem;
 }
 
-/* Contenido del enunciado ya sanitizado. */
-.enunciado {
-  max-width: 100%;
-}
-
-.enunciado-texto {
-  white-space: pre-wrap;
-}
-
-.enunciado blockquote {
-  margin: 0 0 1em;
-  padding-left: 1rem;
-  border-left: 3px solid var(--acento);
-  color: var(--texto-suave);
-}
-
-/* El código del enunciado y de los ejemplos se desplaza dentro de su bloque, nunca la página. */
-.enunciado pre,
+/* El código de los ejemplos se desplaza dentro de su bloque, nunca la página. El del enunciado está en Enunciado.css. */
 .ejemplo pre {
   max-width: 100%;
 }

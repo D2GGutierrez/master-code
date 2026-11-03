@@ -1,6 +1,6 @@
 import { limpiarEnunciado } from '../enunciado.ts'
+import './Enunciado.css'
 
-// Los estilos (.enunciado, .enunciado-texto) siguen en DetalleProblema.css.
 function Enunciado({ texto }: { texto: string }) {
   const enunciado = limpiarEnunciado(texto)
   return 'html' in enunciado ? (

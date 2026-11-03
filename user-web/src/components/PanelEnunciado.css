@@ -1,0 +1,18 @@
+/* El título del problema es el único encabezado grande del panel. */
+.panel-enunciado > h2 {
+  margin-top: 0;
+}
+
+/* «Enunciado» separa las etiquetas del texto sin competir con el título. */
+.panel-enunciado-rotulo {
+  margin: 1.25rem 0 0.5rem;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.panel-enunciado-vacio {
+  color: var(--texto-suave);
+}

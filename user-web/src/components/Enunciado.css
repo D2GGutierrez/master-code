@@ -1,0 +1,123 @@
+/* HU33-T2: el contenido del enunciado (HTML ya sanitizado o texto plano), igual en el detalle y en el panel del
+   editor. Todo cuelga de .enunciado para no tocar el resto de la página. */
+.enunciado {
+  min-width: 0;
+  max-width: 75ch;
+  color: var(--texto);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* Un solo margen entre bloques: el primero no empuja hacia abajo y el último no deja hueco. */
+.enunciado > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.enunciado > * + * {
+  margin-top: 0.875rem;
+}
+
+/* Más pequeños que el título del problema, para no competir con él. Solo cambia el aspecto, no el nivel. */
+.enunciado h1,
+.enunciado h2,
+.enunciado h3,
+.enunciado h4 {
+  color: var(--texto);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: normal;
+}
+
+.enunciado h1 {
+  font-size: 1.25rem;
+}
+
+.enunciado h2 {
+  font-size: 1.15rem;
+}
+
+.enunciado h3 {
+  font-size: 1.05rem;
+}
+
+.enunciado h4 {
+  font-size: 1rem;
+}
+
+.enunciado > :is(h1, h2, h3, h4):not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+.enunciado ul,
+.enunciado ol {
+  padding-inline-start: 1.5rem;
+}
+
+.enunciado ul {
+  list-style: disc;
+}
+
+.enunciado ol {
+  list-style: decimal;
+}
+
+.enunciado li + li {
+  margin-top: 0.25rem;
+}
+
+/* Tiptap guarda cada elemento de lista como <li><p>…</p></li>: el párrafo no debe separar las viñetas. */
+.enunciado li > p {
+  margin: 0;
+}
+
+.enunciado li > ul,
+.enunciado li > ol {
+  margin: 0.25rem 0 0;
+}
+
+/* El bloque de código conserva la sangría y se desplaza por dentro: nunca ensancha el panel ni la página. La base
+   (fuente, fondo, borde) viene de diseno.css; aquí solo lo que el enunciado necesita además. */
+.enunciado pre {
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--fuente-codigo);
+  white-space: pre;
+  overflow-wrap: normal;
+  tab-size: 4;
+}
+
+/* Código en línea: se parte si es muy largo. Dentro de un bloque no repite fondo ni relleno. */
+.enunciado code {
+  font-family: var(--fuente-codigo);
+  overflow-wrap: anywhere;
+}
+
+.enunciado pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  overflow-wrap: normal;
+}
+
+.enunciado blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid var(--borde-fuerte);
+  color: var(--texto-suave);
+}
+
+.enunciado hr {
+  border: 0;
+  border-top: 1px solid var(--borde);
+}
+
+.enunciado a {
+  color: var(--acento);
+  text-decoration-color: currentColor;
+  overflow-wrap: anywhere;
+}
+
+/* Texto plano (p. ej. lo que genera la IA): se conservan sus saltos de línea. */
+.enunciado-texto {
+  white-space: pre-wrap;
+}
