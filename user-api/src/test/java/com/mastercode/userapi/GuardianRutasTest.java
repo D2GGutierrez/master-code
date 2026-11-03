@@ -35,6 +35,10 @@ class GuardianRutasTest extends PruebaDeApi {
             // sin aprobar da el mismo 404 y no se ejecuta nada. Califica con los casos ocultos pero a quien envía solo
             // le devuelve si cada uno pasó o falló (HU39); lo comprueba EnviosApiTest.
             "POST /api/problemas/{problemaId}/envios",
+            // OK: los problemas salen de /internal/cursos/{id}/problemas/ de admin-api (visibles_para_estudiante()), igual
+            // que el listado, y exige estar inscrito. Devuelve solo cuatro cuentas, sin contenido; lo comprueba
+            // AvanceDelCursoApiTest (HU43-T1).
+            "GET /api/cursos/{cursoId}/avance",
             // OK: el problema sale de /internal/problemas/{id}/ de admin-api (visibles_para_estudiante()); sin aprobar da
             // el mismo 404 y no se consulta ningún envío. Devuelve solo fecha, resultado y puntaje de los envíos propios,
             // sin enunciado, casos ni código; lo comprueba HistorialEnviosApiTest (HU41-T1).
@@ -42,6 +46,9 @@ class GuardianRutasTest extends PruebaDeApi {
             // NO APLICA: devuelve el envío (con su código) solo si es del estudiante del token; el de otro da 404 y no
             // incluye enunciado ni casos. Lo comprueba DetalleEnvioApiTest (HU42-T2).
             "GET /api/envios/{envioId}",
+            // NO APLICA: la usa admin-api con X-Internal-Key; solo cuenta envíos por problema (intentos y correctos), sin
+            // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
+            "GET /internal/envios/resumen",
             // NO APLICA: la usa admin-api con X-Internal-Key; correos de inscritos, sin problemas.
             "GET /internal/cursos/{cursoId}/inscritos");
 

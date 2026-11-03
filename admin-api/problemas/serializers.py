@@ -195,13 +195,14 @@ class ProblemaInternoSerializer(ProblemaEstudianteSerializer):
         fields = [*ProblemaEstudianteSerializer.Meta.fields, "curso_id"]
 
 
-# Para calificar un envío (HU36-T2): TODOS los casos, ocultos incluidos, con su entrada y su salida. Solo la sirve
+# Para calificar un envío (HU36-T2): TODOS los casos, ocultos incluidos, con su id, su entrada y su salida. Solo la sirve
 # la ruta interna con clave (problemas/interno.py); user-api califica con ellos y al estudiante solo le devuelve si
 # cada caso pasó o falló, nunca el contenido de uno oculto (HU39).
 class CasoPruebaCalificacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CasoPrueba
-        fields = ["entrada", "salida_esperada", "es_publico"]
+        # id: user-api guarda un resultado por cada caso evaluado (HU37-T1) y necesita saber de cuál.
+        fields = ["id", "entrada", "salida_esperada", "es_publico"]
 
 
 class ProblemaCalificacionSerializer(serializers.ModelSerializer):

@@ -148,6 +148,7 @@ public class EnviosController {
 
         List<CasoCalificado> evaluados = new ArrayList<>();
         List<EjecucionResultado> resultados = new ArrayList<>();
+        List<EnvioRepository.ResultadoCaso> porCaso = new ArrayList<>();
         int superados = 0;
         for (ProblemaCalificableDto.Caso caso : casos) {
             EjecucionResultado resultado;
@@ -168,6 +169,10 @@ public class EnviosController {
                 superados++;
             }
             resultados.add(resultado);
+            // También la salida de un caso oculto: se guarda para revisarla, pero a quien envía nunca se le devuelve.
+            // Sin caracteres NUL: PostgreSQL no los admite en un texto y un programa puede imprimirlos.
+            porCaso.add(new EnvioRepository.ResultadoCaso(caso.id(), paso,
+                    recortar(resultado.salida()).replace("\0", "")));
             evaluados.add(caso.esPublico() ? casoPublico(caso, resultado, paso) : new CasoCalificado(false, paso, null,
                     null, null, null, null));
         }
@@ -177,7 +182,8 @@ public class EnviosController {
         BigDecimal puntaje = Calificacion.puntaje(superados, total);
         // El claim cliente lo pone admin-api al iniciar sesión (user-web o mobile); el estudiante no lo escribe.
         String plataforma = "mobile".equals(jwt.getClaimAsString("cliente")) ? "movil" : "web";
-        EnvioRepository.Fila fila = envios.registrar(estudiante.getId(), problemaId, plataforma, codigo, resultado, puntaje);
+        EnvioRepository.Fila fila = envios.registrar(estudiante.getId(), problemaId, plataforma, codigo, resultado, puntaje,
+                porCaso);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnvioCalificado(fila.id(), fila.numeroIntento(),
                 resultado, puntaje, superados, total, aviso(resultados), evaluados));

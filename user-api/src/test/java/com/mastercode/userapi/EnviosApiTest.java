@@ -50,11 +50,11 @@ class EnviosApiTest extends PruebaDeApi {
     private static final String ENTRADA_OCULTA = "ENTRADA-OCULTA-4821";
     private static final String SALIDA_OCULTA = "SALIDA-OCULTA-9137";
 
-    private static final ProblemaCalificableDto.Caso PUBLICO = new ProblemaCalificableDto.Caso("2 3", "5", true);
-    private static final ProblemaCalificableDto.Caso OCULTO = new ProblemaCalificableDto.Caso(ENTRADA_OCULTA,
+    private static final ProblemaCalificableDto.Caso PUBLICO = new ProblemaCalificableDto.Caso(1, "2 3", "5", true);
+    private static final ProblemaCalificableDto.Caso OCULTO = new ProblemaCalificableDto.Caso(2, ENTRADA_OCULTA,
             SALIDA_OCULTA, false);
-    private static final ProblemaCalificableDto.Caso OTRO_OCULTO = new ProblemaCalificableDto.Caso("10 20", "30", false);
-    private static final ProblemaCalificableDto.Caso TERCER_OCULTO = new ProblemaCalificableDto.Caso("1 1", "2", false);
+    private static final ProblemaCalificableDto.Caso OTRO_OCULTO = new ProblemaCalificableDto.Caso(3, "10 20", "30", false);
+    private static final ProblemaCalificableDto.Caso TERCER_OCULTO = new ProblemaCalificableDto.Caso(4, "1 1", "2", false);
 
     @Autowired
     private ObjectMapper json;
@@ -524,10 +524,120 @@ class EnviosApiTest extends PruebaDeApi {
     @Test
     void un_caso_sin_entrada_se_ejecuta_con_la_entrada_vacia() throws Exception {
         Alumno yo = alumnoInscrito();
-        prepararProblema(new ProblemaCalificableDto.Caso(null, "hola", true));
+        prepararProblema(new ProblemaCalificableDto.Caso(5, null, "hola", true));
         sandboxImprime(Map.of("", "hola"));
 
         enviar(yo).andExpect(jsonPath("$.resultado").value("correcto"));
+    }
+
+    // ---------- resultado por caso (HU37-T1) ----------
+
+    // Las filas de resultado de los envíos de un estudiante, en el orden de los envíos y de los casos.
+    private List<Map<String, Object>> resultadosDe(long estudianteId) {
+        return jdbc.sql("""
+                SELECT e.id AS envio_id, r.caso_prueba_id, r.paso, r.salida_obtenida
+                FROM app_schema.app_resultado_caso_prueba r
+                JOIN app_schema.app_envio e ON e.id = r.envio_id
+                WHERE e.estudiante_id = ?
+                ORDER BY e.numero_intento, r.id
+                """)
+                .param(estudianteId)
+                .query()
+                .listOfRows();
+    }
+
+    private static List<Object> columna(List<Map<String, Object>> filas, String nombre) {
+        return filas.stream().map(fila -> fila.get(nombre)).toList();
+    }
+
+    @Test
+    void un_envio_guarda_una_fila_por_cada_caso_con_si_paso_y_lo_que_imprimio() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OCULTO, OTRO_OCULTO);
+        sandboxImprime(Map.of("2 3", "5", ENTRADA_OCULTA, "SALIDA-DISTINTA-6620", "10 20", "30"));
+
+        String cuerpo = texto(enviar(yo).andExpect(status().isCreated()));
+
+        long envio = json.readTree(cuerpo).get("id").asLong();
+        List<Map<String, Object>> filas = resultadosDe(yo.id());
+        assertThat(filas).hasSize(3);
+        assertThat(columna(filas, "envio_id")).containsOnly(envio);
+        assertThat(columna(filas, "caso_prueba_id")).containsExactly(1L, 2L, 3L);
+        assertThat(columna(filas, "paso")).containsExactly(true, false, true);
+        // También se guarda la salida del caso oculto, pero a quien envía no le llega.
+        assertThat(columna(filas, "salida_obtenida")).containsExactly("5", "SALIDA-DISTINTA-6620", "30");
+        assertThat(cuerpo).doesNotContain("SALIDA-DISTINTA-6620");
+    }
+
+    @Test
+    void con_todos_los_casos_correctos_todas_las_filas_pasan_y_con_ninguno_todas_fallan() throws Exception {
+        Alumno bien = alumnoInscrito();
+        Alumno mal = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+
+        sandboxImprime(Map.of("2 3", "5", "10 20", "30"));
+        enviar(bien).andExpect(status().isCreated());
+        sandboxImprime(Map.of("2 3", "0", "10 20", "0"));
+        enviar(mal).andExpect(status().isCreated());
+
+        assertThat(columna(resultadosDe(bien.id()), "paso")).containsExactly(true, true);
+        assertThat(columna(resultadosDe(mal.id()), "paso")).containsExactly(false, false);
+    }
+
+    @Test
+    void un_caso_con_error_de_ejecucion_se_guarda_como_no_paso() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO);
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.ERROR_EJECUCION, "", "ZeroDivisionError", null));
+
+        enviar(yo).andExpect(status().isCreated());
+
+        List<Map<String, Object>> filas = resultadosDe(yo.id());
+        assertThat(columna(filas, "paso")).containsExactly(false);
+        assertThat(columna(filas, "salida_obtenida")).containsExactly("");
+    }
+
+    @Test
+    void cada_envio_tiene_sus_propias_filas() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        sandboxImprime(Map.of("2 3", "5", "10 20", "30"));
+
+        enviar(yo).andExpect(status().isCreated());
+        enviar(yo).andExpect(status().isCreated());
+
+        List<Map<String, Object>> filas = resultadosDe(yo.id());
+        assertThat(filas).hasSize(4);
+        assertThat(columna(filas, "envio_id").stream().distinct().count()).isEqualTo(2);
+    }
+
+    @Test
+    void la_salida_guardada_se_recorta_y_no_lleva_caracteres_nulos() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        // PostgreSQL no admite el carácter NUL en un texto: sin quitarlo, un programa que lo imprima rompería el envío.
+        sandboxImprime(Map.of("2 3", "a\u0000b", "10 20", "x".repeat(5_000)));
+
+        enviar(yo).andExpect(status().isCreated());
+
+        List<Object> salidas = columna(resultadosDe(yo.id()), "salida_obtenida");
+        assertThat(salidas.get(0)).isEqualTo("ab");
+        assertThat((String) salidas.get(1)).hasSize(2_001).endsWith("…");
+    }
+
+    @Test
+    void si_el_motor_falla_a_mitad_de_los_casos_no_queda_ninguna_fila() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.OK, "5", "", 5L))
+                .thenThrow(new SandboxNoDisponibleException("sin conexión", null));
+
+        enviar(yo).andExpect(status().isServiceUnavailable());
+
+        assertThat(enviosDe(yo.id())).isZero();
+        assertThat(resultadosDe(yo.id())).isEmpty();
     }
 
     // ---------- plataforma (HU16, CA-16.2) ----------

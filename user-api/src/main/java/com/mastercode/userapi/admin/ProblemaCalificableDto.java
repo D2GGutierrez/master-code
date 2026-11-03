@@ -18,6 +18,7 @@ public record ProblemaCalificableDto(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Caso(
+            long id,
             String entrada,
             @JsonProperty("salida_esperada") String salidaEsperada,
             @JsonProperty("es_publico") boolean esPublico) {

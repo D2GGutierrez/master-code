@@ -10,9 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cuentas.permissions import EsDocente, EsPropietario
-from cursos.inscritos import UserApiNoDisponible, inscritos_de
+from cursos.inscritos import UserApiNoDisponible, inscritos_de, resumen_envios_de
 from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
+from problemas.models import Problema
 
 MENSAJE_CON_PROBLEMAS = "No se puede eliminar el curso porque ya tiene problemas creados."
 # Mis cursos no cuenta los descartados: sin este texto, un curso que muestra «0 problemas» diría que tiene problemas.
@@ -126,5 +127,45 @@ class InscritosView(APIView):
                     "fecha_inscripcion": inscrito["fecha"],
                 }
                 for inscrito in inscritos
+            ]
+        )
+
+
+class ResumenEnviosView(APIView):
+    permission_classes = [IsAuthenticated, EsDocente]
+
+    # HU44-T1 (D10): los envíos de un curso agrupados por problema. Los envíos viven en user-api, que solo acepta
+    # tokens de estudiantes: el docente llega aquí, se comprueba que el curso es suyo y se pregunta a user-api por su
+    # API interna. Lo que ve el estudiante en el curso (aprobados y no descartados) es lo que cuenta; un problema sin
+    # envíos sale con 0 intentos y 0 correctos.
+    def get(self, request, pk):
+        # Igual que los inscritos: uno ajeno da 403 y uno inexistente 404 (CA-44.4).
+        curso = get_object_or_404(Curso, pk=pk)
+        if curso.docente_id != request.user.docente.pk:
+            return Response(
+                {"detail": "Solo puedes ver los envíos de tus propios cursos."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        problemas = list(Problema.objects.visibles_para_estudiante().filter(curso=curso).order_by("pk"))
+        if not problemas:
+            return Response([])
+        try:
+            filas = resumen_envios_de([problema.pk for problema in problemas])
+        except UserApiNoDisponible:
+            return Response(
+                {"detail": "No se pudieron consultar los envíos. Intenta de nuevo en un momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        por_problema = {fila.get("problema_id"): fila for fila in filas}
+        return Response(
+            [
+                {
+                    "id": problema.pk,
+                    "titulo": problema.titulo,
+                    "dificultad": problema.dificultad,
+                    "intentos": por_problema.get(problema.pk, {}).get("intentos", 0),
+                    "correctos": por_problema.get(problema.pk, {}).get("correctos", 0),
+                }
+                for problema in problemas
             ]
         )

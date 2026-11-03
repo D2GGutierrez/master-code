@@ -33,6 +33,15 @@ public class EnvioRepository {
             BigDecimal puntaje, String codigo) {
     }
 
+    // HU44: los envíos de todos los estudiantes en un problema, contados. Solo cifras: ni quién envió ni qué código.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public record ResumenDeProblema(long problemaId, long intentos, long correctos) {
+    }
+
+    // Lo que pasó con un caso al evaluar un envío (HU37). salidaObtenida ya viene recortada.
+    public record ResultadoCaso(long casoPruebaId, boolean paso, String salidaObtenida) {
+    }
+
     // Con dos envíos simultáneos del mismo estudiante al mismo problema, la base rechaza el segundo número repetido
     // (índice único de V5) y se vuelve a intentar con el siguiente. Tres vueltas sobran: el botón se bloquea mientras evalúa.
     private static final int VUELTAS = 3;
@@ -45,18 +54,33 @@ public class EnvioRepository {
 
     // El número de intento se calcula en la misma sentencia que inserta: cuenta los envíos anteriores del estudiante
     // en ese problema y suma uno. Un envío siempre es del estudiante del token, nunca de un id que llegue por el cuerpo.
+    // Los resultados por caso (HU37-T1) se insertan en esa misma sentencia: o quedan el envío y todas sus filas, o
+    // ninguno, y si el número de intento choca se repite todo junto.
     public Fila registrar(long estudianteId, long problemaId, String plataforma, String codigo, String resultado,
-            BigDecimal puntaje) {
+            BigDecimal puntaje, List<ResultadoCaso> casos) {
+        Long[] ids = casos.stream().map(ResultadoCaso::casoPruebaId).toArray(Long[]::new);
+        Boolean[] pasos = casos.stream().map(ResultadoCaso::paso).toArray(Boolean[]::new);
+        String[] salidas = casos.stream().map(ResultadoCaso::salidaObtenida).toArray(String[]::new);
         DuplicateKeyException ultimo = null;
         for (int vuelta = 0; vuelta < VUELTAS; vuelta++) {
             try {
                 return jdbc.sql("""
-                        INSERT INTO app_schema.app_envio
-                            (estudiante_id, problema_id, plataforma, codigo, resultado, puntaje, numero_intento)
-                        VALUES (:estudiante, :problema, :plataforma, :codigo, :resultado, :puntaje,
-                            (SELECT COUNT(*) + 1 FROM app_schema.app_envio
-                             WHERE estudiante_id = :estudiante AND problema_id = :problema))
-                        RETURNING id, numero_intento, fecha_envio
+                        WITH nuevo AS (
+                            INSERT INTO app_schema.app_envio
+                                (estudiante_id, problema_id, plataforma, codigo, resultado, puntaje, numero_intento)
+                            VALUES (:estudiante, :problema, :plataforma, :codigo, :resultado, :puntaje,
+                                (SELECT COUNT(*) + 1 FROM app_schema.app_envio
+                                 WHERE estudiante_id = :estudiante AND problema_id = :problema))
+                            RETURNING id, numero_intento, fecha_envio
+                        ), por_caso AS (
+                            INSERT INTO app_schema.app_resultado_caso_prueba
+                                (envio_id, caso_prueba_id, paso, salida_obtenida)
+                            SELECT nuevo.id, c.caso_prueba_id, c.paso, c.salida_obtenida
+                            FROM nuevo,
+                                unnest(CAST(:ids AS bigint[]), CAST(:pasos AS boolean[]), CAST(:salidas AS text[]))
+                                    AS c(caso_prueba_id, paso, salida_obtenida)
+                        )
+                        SELECT id, numero_intento, fecha_envio FROM nuevo
                         """)
                         .param("estudiante", estudianteId)
                         .param("problema", problemaId)
@@ -64,6 +88,9 @@ public class EnvioRepository {
                         .param("codigo", codigo)
                         .param("resultado", resultado)
                         .param("puntaje", puntaje)
+                        .param("ids", ids)
+                        .param("pasos", pasos)
+                        .param("salidas", salidas)
                         .query(Fila.class)
                         .single();
             } catch (DuplicateKeyException e) {
@@ -84,6 +111,24 @@ public class EnvioRepository {
                 .params(envioId, estudianteId)
                 .query(Detalle.class)
                 .optional();
+    }
+
+    // HU44-T1: por cada problema de la lista, cuántos envíos tiene y cuántos fueron correctos. Una sola consulta agrupada
+    // para todos los problemas del curso, nunca una por problema. Cuenta los envíos de todos los estudiantes; un
+    // problema sin envíos no aparece (quien pregunta lo completa con ceros). Un envío sin calificar es un intento.
+    public List<ResumenDeProblema> resumenPorProblema(List<Long> problemaIds) {
+        return jdbc.sql("""
+                SELECT problema_id,
+                       COUNT(*) AS intentos,
+                       COUNT(*) FILTER (WHERE resultado = 'correcto') AS correctos
+                FROM app_schema.app_envio
+                WHERE problema_id = ANY (CAST(:ids AS bigint[]))
+                GROUP BY problema_id
+                ORDER BY problema_id
+                """)
+                .param("ids", problemaIds.toArray(Long[]::new))
+                .query(ResumenDeProblema.class)
+                .list();
     }
 
     // HU41-T1: los envíos del estudiante en un problema, del más reciente al más antiguo; el id desempata dos envíos

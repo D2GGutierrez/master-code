@@ -53,8 +53,8 @@ class AdminClienteTest {
     // La respuesta de la ruta de calificación: un caso público y uno oculto, y un campo de más.
     private static final String CALIFICACION_JSON = "{\"id\":7,\"curso_id\":10,\"lenguaje\":\"python\","
             + "\"tipo_ejercicio\":\"escritura_codigo\",\"casos_prueba\":["
-            + "{\"entrada\":\"2 3\",\"salida_esperada\":\"5\",\"es_publico\":true},"
-            + "{\"entrada\":\"10 20\",\"salida_esperada\":\"30\",\"es_publico\":false}],\"otro\":1}";
+            + "{\"id\":31,\"entrada\":\"2 3\",\"salida_esperada\":\"5\",\"es_publico\":true},"
+            + "{\"id\":32,\"entrada\":\"10 20\",\"salida_esperada\":\"30\",\"es_publico\":false}],\"otro\":1}";
 
     private MockRestServiceServer servidor;
     private AdminCliente cliente;
@@ -323,8 +323,8 @@ class AdminClienteTest {
         assertThat(problema.tipoEjercicio()).isEqualTo("escritura_codigo");
         // Llegan los dos, con su marca de público: el oculto solo sirve para calificar.
         assertThat(problema.casosPrueba()).containsExactly(
-                new ProblemaCalificableDto.Caso("2 3", "5", true),
-                new ProblemaCalificableDto.Caso("10 20", "30", false));
+                new ProblemaCalificableDto.Caso(31, "2 3", "5", true),
+                new ProblemaCalificableDto.Caso(32, "10 20", "30", false));
         servidor.verify();
     }
 

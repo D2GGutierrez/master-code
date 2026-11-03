@@ -39,9 +39,9 @@ class ClaveDeCalificacionTests(InternoBase):
 class CalificacionDeUnProblemaTests(InternoBase):
     def test_trae_todos_los_casos_en_orden_con_su_marca_de_publico(self):
         problema = self.crear_problema()
-        CasoPrueba.objects.create(problema=problema, entrada="2 3", salida_esperada="5", es_publico=True)
-        CasoPrueba.objects.create(problema=problema, entrada="10 20", salida_esperada="30")
-        CasoPrueba.objects.create(problema=problema, entrada="", salida_esperada="0")
+        publico = CasoPrueba.objects.create(problema=problema, entrada="2 3", salida_esperada="5", es_publico=True)
+        oculto = CasoPrueba.objects.create(problema=problema, entrada="10 20", salida_esperada="30")
+        vacio = CasoPrueba.objects.create(problema=problema, entrada="", salida_esperada="0")
 
         respuesta = self.pedir(url(problema.pk))
 
@@ -50,9 +50,9 @@ class CalificacionDeUnProblemaTests(InternoBase):
         self.assertEqual(
             cuerpo["casos_prueba"],
             [
-                {"entrada": "2 3", "salida_esperada": "5", "es_publico": True},
-                {"entrada": "10 20", "salida_esperada": "30", "es_publico": False},
-                {"entrada": "", "salida_esperada": "0", "es_publico": False},
+                {"id": publico.pk, "entrada": "2 3", "salida_esperada": "5", "es_publico": True},
+                {"id": oculto.pk, "entrada": "10 20", "salida_esperada": "30", "es_publico": False},
+                {"id": vacio.pk, "entrada": "", "salida_esperada": "0", "es_publico": False},
             ],
         )
 
