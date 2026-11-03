@@ -93,6 +93,8 @@ Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sob
 
 «Ver inscritos» lleva a <http://localhost:3000/cursos/ID/inscritos>: la tabla de estudiantes inscritos (nombre, correo y fecha de inscripción), 20 por página; `admin-api` la obtiene de `user-api`, así que con `user-api` caído se muestra un error con «Reintentar».
 
+«Ver aciertos» lleva a <http://localhost:3000/cursos/ID/aciertos>: por cada problema del curso, sus envíos, los correctos y el porcentaje de acierto (`GET /api/cursos/{id}/resumen-envios/` de `admin-api`, que lo pide a `user-api`); un problema sin envíos dice «Sin envíos».
+
 En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo la página visible) como `inscritos-<curso>-<fecha>.csv`, en UTF-8 con BOM, separado por comas y con las celdas que empiezan por `=`, `+`, `-` o `@` neutralizadas con `'`.
 
 «Generar con IA» lleva a <http://localhost:3000/cursos/ID/generar>: tema, nivel, lenguaje (el del curso por defecto) y cantidad (1 a 10); `admin-api` pide los problemas a `ai-service` y los guarda pendientes de revisión. Mientras tanto se ve un indicador de progreso y el botón queda bloqueado; el navegador corta a los 120 s.

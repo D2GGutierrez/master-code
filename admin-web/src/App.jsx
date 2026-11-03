@@ -1,4 +1,5 @@
 import Cabecera from './components/Cabecera.jsx'
+import AciertoProblemas from './pages/AciertoProblemas.jsx'
 import BandejaRevision from './pages/BandejaRevision.jsx'
 import EditarCurso from './pages/EditarCurso.jsx'
 import EstudiantesInscritos from './pages/EstudiantesInscritos.jsx'
@@ -34,6 +35,10 @@ function pantalla(ruta) {
   const inscritos = ruta.match(/^\/cursos\/(\d+)\/inscritos$/)
   if (inscritos) {
     return <EstudiantesInscritos id={Number(inscritos[1])} />
+  }
+  const aciertos = ruta.match(/^\/cursos\/(\d+)\/aciertos$/)
+  if (aciertos) {
+    return <AciertoProblemas id={Number(aciertos[1])} />
   }
   const generacion = ruta.match(/^\/cursos\/(\d+)\/generar$/)
   if (generacion) {

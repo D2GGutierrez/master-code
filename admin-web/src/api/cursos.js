@@ -45,3 +45,11 @@ export async function listarInscritos(cursoId) {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// HU44-T1: [{ id, titulo, dificultad, intentos, correctos }] por cada problema visible del curso, también los que no
+// tienen envíos (0 y 0). admin-api comprueba que el curso es del docente y pide las cifras a user-api.
+export async function obtenerAciertos(cursoId, signal) {
+  const respuesta = await peticion(`/api/cursos/${cursoId}/resumen-envios/`, { signal })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}

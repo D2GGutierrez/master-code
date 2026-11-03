@@ -1,0 +1,20 @@
+/* En pantallas angostas la tabla se desplaza dentro de su caja, nunca la página. */
+.tabla-aciertos table {
+  min-width: 32rem;
+}
+
+/* Un título largo y sin espacios se parte en vez de ensanchar la columna. */
+.acierto-problema {
+  overflow-wrap: anywhere;
+}
+
+.acierto-dificultad {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+
+.tabla-aciertos .progreso {
+  min-width: 5rem;
+  margin-top: 0.375rem;
+}
