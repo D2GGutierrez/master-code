@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { estadoDelCurso, type EstadoCurso, type Resumen } from '../progreso.ts'
+import { resumenAvance, type AvanceNumeros, type EstadoCurso } from '../progreso.ts'
 import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import Icono from './Icono.tsx'
 import { Portada } from './Portada.tsx'
@@ -14,7 +14,8 @@ const ESTADOS: Record<EstadoCurso, { texto: string; clase: string; accion: strin
   completo: { texto: 'Completado', clase: 'estado-curso estado-curso-completo', accion: 'Repasar' },
 }
 
-// Tarjeta de un curso: la portada, el lenguaje, el nombre, la institución y, si se conoce, el progreso.
+// Tarjeta de un curso: la portada, el lenguaje, el nombre, la institución y, si se conoce, el progreso (el avance que
+// calcula user-api, HU43).
 //  - progreso undefined: no se muestra nada (p. ej. al buscar cursos, donde no hay avance).
 //  - progreso 'cargando': marcador con brillo mientras llega.
 //  - progreso null: no se pudo cargar; la tarjeta funciona igual, sin barra.
@@ -31,11 +32,11 @@ export function TarjetaCurso({
   indice: number
   enlace?: string
   detalle?: string
-  progreso?: Resumen | 'cargando' | null
+  progreso?: Partial<AvanceNumeros> | 'cargando' | null
   pie?: ReactNode
 }) {
-  const resumen = typeof progreso === 'object' && progreso !== null ? progreso : null
-  const estado = resumen ? ESTADOS[estadoDelCurso(resumen)] : null
+  const resumen = typeof progreso === 'object' && progreso !== null ? resumenAvance(progreso) : null
+  const estado = resumen ? ESTADOS[resumen.estado] : null
   const contenido = (
     <>
       <Portada lenguaje={curso.lenguaje} variante={curso.curso_id} />
@@ -48,13 +49,11 @@ export function TarjetaCurso({
         <p>{detalle ? `${curso.institucion} · ${detalle}` : curso.institucion}</p>
         {resumen && resumen.total > 0 && (
           <BarraProgreso
-            valor={resumen.fraccion}
+            valor={resumen.porcentaje / 100}
             etiqueta={`Progreso en ${curso.nombre}: ${resumen.resueltos} de ${resumen.total} problemas resueltos`}
           >
-            <span>
-              <strong>{resumen.resueltos}</strong> de {resumen.total} resueltos
-            </span>
-            <strong>{Math.round(resumen.fraccion * 100)} %</strong>
+            <span>{resumen.texto}</span>
+            <strong>{resumen.porcentaje} %</strong>
           </BarraProgreso>
         )}
         {progreso === 'cargando' && (

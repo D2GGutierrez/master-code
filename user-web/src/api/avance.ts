@@ -24,3 +24,22 @@ export async function obtenerAvance(): Promise<Avance> {
   }
   return respuesta.json()
 }
+
+// HU43-T1 (D9): el avance del estudiante en un curso, calculado por user-api (GET /api/cursos/{id}/avance). Solo cuenta
+// los problemas que el estudiante ve (aprobados y no descartados); total = resueltos + intentados + pendientes.
+export type AvanceCurso = {
+  curso_id: number
+  total: number
+  resueltos: number
+  intentados: number
+  pendientes: number
+}
+
+// plataforma=web, como el listado: la web no cuenta los problemas solo móviles.
+export async function obtenerAvanceCurso(cursoId: number, signal?: AbortSignal): Promise<AvanceCurso> {
+  const respuesta = await pedirConSesion(`/api/cursos/${cursoId}/avance?plataforma=web`, { signal })
+  if (!respuesta.ok) {
+    throw new Error(`user-api respondió ${respuesta.status}`)
+  }
+  return respuesta.json()
+}

@@ -8,10 +8,17 @@ const api = vi.hoisted(() => ({
   misCursos: vi.fn(),
   listarProblemas: vi.fn(),
   obtenerAvance: vi.fn(),
+  obtenerAvanceCurso: vi.fn(),
 }))
 vi.mock('../api/cursos.ts', () => ({ misCursos: api.misCursos }))
 vi.mock('../api/problemas.ts', () => ({ listarProblemas: api.listarProblemas }))
-vi.mock('../api/avance.ts', () => ({ obtenerAvance: api.obtenerAvance }))
+vi.mock('../api/avance.ts', () => ({ obtenerAvance: api.obtenerAvance, obtenerAvanceCurso: api.obtenerAvanceCurso }))
+
+// Avance de cada curso según user-api (HU43-T1): es lo que dibujan las tarjetas.
+const AVANCE = new Map([
+  [10, { curso_id: 10, total: 4, resueltos: 1, intentados: 1, pendientes: 2 }],
+  [11, { curso_id: 11, total: 2, resueltos: 2, intentados: 0, pendientes: 0 }],
+])
 
 const PYTHON = { curso_id: 10, nombre: 'Algoritmos I', lenguaje: 'python', institucion: 'tecsup.edu.pe', fecha_inscripcion: '2026-10-02T15:00:00Z' }
 const JAVA = { curso_id: 11, nombre: 'Estructuras en Java', lenguaje: 'java', institucion: 'tecsup.edu.pe', fecha_inscripcion: '2026-10-09T15:00:00Z' }
@@ -42,6 +49,7 @@ beforeEach(() => {
     desde_movil: 0,
     problemas: [{ problema_id: 2, envios: 1, desde_web: 1, desde_movil: 0, ultimo_envio: '2026-10-29T10:00:00Z' }],
   })
+  api.obtenerAvanceCurso.mockImplementation(async (cursoId: number) => AVANCE.get(cursoId))
 })
 
 afterEach(() => {
@@ -99,15 +107,67 @@ describe('Inicio', () => {
     expect(screen.queryByRole('group', { name: 'Filtrar por lenguaje' })).toBeNull()
   })
 
-  it('si no cargan los problemas de un curso, la tarjeta se ve igual, sin barra de progreso', async () => {
+  it('(a) cada tarjeta muestra el avance del servidor: su texto y su barra', async () => {
+    api.misCursos.mockResolvedValue([PYTHON, JAVA])
+    render(<Inicio />)
+
+    const python = await screen.findByRole('link', { name: /Algoritmos I/ })
+    expect(await within(python).findByText('1 resuelto · 1 intentado · 2 pendientes')).toBeTruthy()
+    expect(within(python).getByRole('progressbar').getAttribute('aria-valuenow')).toBe('25')
+    const java = screen.getByRole('link', { name: /Estructuras en Java/ })
+    expect(within(java).getByText('2 resueltos · 0 intentados · 0 pendientes')).toBeTruthy()
+    expect(within(java).getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100')
+    expect(within(java).getByText('Repasar')).toBeTruthy()
+  })
+
+  it('(b) mientras llega el avance, la tarjeta muestra el esqueleto y ningún número', async () => {
     api.misCursos.mockResolvedValue([PYTHON])
-    api.listarProblemas.mockRejectedValue(new Error('sin conexión'))
-    api.obtenerAvance.mockRejectedValue(new Error('sin conexión'))
+    api.obtenerAvanceCurso.mockReturnValue(new Promise(() => {}))
     render(<Inicio />)
 
     const enlace = await screen.findByRole('link', { name: /Algoritmos I/ })
+    expect(enlace.querySelector('.esqueleto')).not.toBeNull()
     expect(within(enlace).queryByRole('progressbar')).toBeNull()
-    expect(screen.queryByRole('progressbar')).toBeNull()
+    expect(within(enlace).queryByText(/resuelto/)).toBeNull()
+  })
+
+  it('(c) si falla el avance, las tarjetas van sin progreso, con un aviso y «Reintentar»', async () => {
+    api.misCursos.mockResolvedValue([PYTHON])
+    api.obtenerAvanceCurso.mockRejectedValueOnce(new Error('sin conexión'))
+    render(<Inicio />)
+
+    expect((await screen.findByRole('alert')).textContent).toContain('No se pudo cargar tu progreso. Inténtalo de nuevo.')
+    const enlace = screen.getByRole('link', { name: /Algoritmos I/ })
+    expect(within(enlace).queryByRole('progressbar')).toBeNull()
+    expect(enlace.querySelector('.esqueleto')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await within(enlace).findByText('1 resuelto · 1 intentado · 2 pendientes')).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('(d) un curso sin problemas dice «Sin problemas aún» y ofrece «Abrir curso»', async () => {
+    api.misCursos.mockResolvedValue([JAVA])
+    api.obtenerAvanceCurso.mockResolvedValue({ curso_id: 11, total: 0, resueltos: 0, intentados: 0, pendientes: 0 })
+    render(<Inicio />)
+
+    const enlace = await screen.findByRole('link', { name: /Estructuras en Java/ })
+    expect(await within(enlace).findByText('Sin problemas aún')).toBeTruthy()
+    expect(within(enlace).getByText('Abrir curso')).toBeTruthy()
+    expect(within(enlace).queryByRole('progressbar')).toBeNull()
+  })
+
+  it('(e) las tarjetas no dependen de las listas de problemas: piden el avance de cada curso', async () => {
+    api.misCursos.mockResolvedValue([PYTHON, JAVA])
+    // Aunque las listas fallen (solo las usa el panel «Continúa»), las tarjetas muestran el avance del servidor.
+    api.listarProblemas.mockRejectedValue(new Error('sin conexión'))
+    render(<Inicio />)
+
+    const python = await screen.findByRole('link', { name: /Algoritmos I/ })
+    expect(await within(python).findByText('1 resuelto · 1 intentado · 2 pendientes')).toBeTruthy()
+    expect(api.obtenerAvanceCurso).toHaveBeenCalledTimes(2)
+    expect(api.obtenerAvanceCurso.mock.calls.map(([cursoId]) => cursoId).sort()).toEqual([10, 11])
   })
 
   it('avisa cuando no se pueden cargar los cursos y deja reintentar', async () => {

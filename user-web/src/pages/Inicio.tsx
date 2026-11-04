@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+import { obtenerAvanceCurso, type AvanceCurso } from '../api/avance.ts'
 import { misCursos, type MiCurso } from '../api/cursos.ts'
 import { correoDeSesion } from '../api/sesion.ts'
 import { EsqueletoCursos } from '../components/Esqueleto.tsx'
@@ -13,6 +14,8 @@ import { nombreDesdeCorreo } from '../persona.ts'
 import { elegirContinuar, resumir, resumirTodos } from '../progreso.ts'
 import { useProgreso, type DatosProgreso } from '../useProgreso.ts'
 import './Inicio.css'
+
+const SIN_AVANCE = { total: 0, resueltos: 0, intentados: 0, pendientes: 0 }
 
 function plural(cantidad: number, singular: string, varios: string) {
   return cantidad === 1 ? singular : varios
@@ -115,6 +118,11 @@ function Inicio() {
   // '' = todos los lenguajes.
   const [filtro, setFiltro] = useState<ClaveLenguaje | ''>('')
   const progreso = useProgreso(cursos)
+  // HU43-T2 (D9): el avance de cada tarjeta lo calcula el servidor; null mientras llega. Sin respaldo en el navegador:
+  // si falla, las tarjetas van sin progreso. (El panel «Continúa» y las cifras del hero siguen con useProgreso.)
+  const [avances, setAvances] = useState<Map<number, AvanceCurso> | 'error' | null>(null)
+  // Cambiarlo vuelve a pedir el avance.
+  const [recargasAvance, setRecargasAvance] = useState(0)
   const nombre = nombreDesdeCorreo(correoDeSesion())
 
   function cargar() {
@@ -133,6 +141,32 @@ function Inicio() {
     }
     cargar()
   }, [])
+
+  useEffect(() => {
+    if (!cursos || cursos.length === 0) {
+      return
+    }
+    // Al reintentar o salir de la pantalla, las respuestas viejas se descartan.
+    const controlador = new AbortController()
+    Promise.all(cursos.map((curso) => obtenerAvanceCurso(curso.curso_id, controlador.signal))).then(
+      (lista) => {
+        if (!controlador.signal.aborted) {
+          setAvances(new Map(lista.map((avance) => [avance.curso_id, avance])))
+        }
+      },
+      () => {
+        if (!controlador.signal.aborted) {
+          setAvances('error')
+        }
+      },
+    )
+    return () => controlador.abort()
+  }, [cursos, recargasAvance])
+
+  function reintentarAvance() {
+    setAvances(null)
+    setRecargasAvance(recargasAvance + 1)
+  }
 
   const hayCursos = cursos !== null && cursos.length > 0
   const total = resumirTodos(progreso.problemas)
@@ -206,21 +240,31 @@ function Inicio() {
             <p>Todavía no estás inscrito en ningún curso.</p>
           </EstadoVacio>
         ) : (
-          <ul className="rejilla-cursos">
-            {mostrados.map((curso, indice) => {
-              const lista = progreso.problemas.get(curso.curso_id)
-              return (
+          <>
+            {avances === 'error' && (
+              <p role="alert">
+                No se pudo cargar tu progreso. Inténtalo de nuevo.{' '}
+                <button type="button" onClick={reintentarAvance}>
+                  Reintentar
+                </button>
+              </p>
+            )}
+            <ul className="rejilla-cursos">
+              {mostrados.map((curso, indice) => (
                 <TarjetaCurso
                   key={curso.curso_id}
                   curso={curso}
                   indice={indice}
                   enlace={`/cursos/${curso.curso_id}/problemas`}
                   detalle={`Inscrito el ${new Date(curso.fecha_inscripcion).toLocaleDateString('es-PE')}`}
-                  progreso={lista ? resumir(lista) : lista === null || progreso.listo ? null : 'cargando'}
+                  // Un curso que el servidor no devolvió cuenta como vacío, pero solo si la respuesta llegó bien.
+                  progreso={
+                    avances === 'error' ? null : avances === null ? 'cargando' : (avances.get(curso.curso_id) ?? SIN_AVANCE)
+                  }
                 />
-              )
-            })}
-          </ul>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </main>

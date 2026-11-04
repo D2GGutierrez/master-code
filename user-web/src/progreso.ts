@@ -46,6 +46,50 @@ export function estadoDelCurso(resumen: Resumen): EstadoCurso {
   return resumen.resueltos > 0 || resumen.intentados > 0 ? 'en-curso' : 'nuevo'
 }
 
+// HU43-T2 (D9): la tarjeta de un curso con el avance que calcula user-api. Lo que no es un número válido cuenta como 0.
+export type AvanceNumeros = { total: number; resueltos: number; intentados: number; pendientes: number }
+
+export type ResumenAvance = {
+  estado: EstadoCurso
+  // Entero de 0 a 100: solo es 100 cuando están todos resueltos.
+  porcentaje: number
+  texto: string
+  // Ya saneados, para la etiqueta accesible de la barra.
+  total: number
+  resueltos: number
+}
+
+function cifra(valor: number | undefined) {
+  return typeof valor === 'number' && Number.isFinite(valor) && valor > 0 ? valor : 0
+}
+
+function contar(cantidad: number, singular: string, varios: string) {
+  return `${cantidad} ${cantidad === 1 ? singular : varios}`
+}
+
+export function resumenAvance(avance: Partial<AvanceNumeros>): ResumenAvance {
+  const total = cifra(avance.total)
+  const resueltos = Math.min(cifra(avance.resueltos), total)
+  const intentados = cifra(avance.intentados)
+  const pendientes = cifra(avance.pendientes)
+  if (total === 0) {
+    return { estado: 'sin-problemas', porcentaje: 0, texto: 'Sin problemas aún', total, resueltos }
+  }
+  const completo = resueltos === total
+  return {
+    estado: completo ? 'completo' : resueltos === 0 && intentados === 0 ? 'nuevo' : 'en-curso',
+    // Hacia abajo: 199 de 200 es 99 %, nunca 100 antes de terminar.
+    porcentaje: completo ? 100 : Math.min(99, Math.floor((resueltos / total) * 100)),
+    texto: [
+      contar(resueltos, 'resuelto', 'resueltos'),
+      contar(intentados, 'intentado', 'intentados'),
+      contar(pendientes, 'pendiente', 'pendientes'),
+    ].join(' · '),
+    total,
+    resueltos,
+  }
+}
+
 // Lista de problemas de cada curso; null si esa lista no se pudo cargar.
 export type ProblemasPorCurso = Map<number, ProblemaDeLista[] | null>
 

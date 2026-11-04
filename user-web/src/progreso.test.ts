@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { Avance } from './api/avance.ts'
 import type { MiCurso } from './api/cursos.ts'
 import type { ProblemaDeLista } from './api/problemas.ts'
-import { elegirContinuar, estadoDelCurso, resumir, resumirTodos, siguienteProblema, type ProblemasPorCurso } from './progreso.ts'
+import {
+  elegirContinuar,
+  estadoDelCurso,
+  resumenAvance,
+  resumir,
+  resumirTodos,
+  siguienteProblema,
+  type ProblemasPorCurso,
+} from './progreso.ts'
 
 function problema(id: number, estado: ProblemaDeLista['estado'], extra: Partial<ProblemaDeLista> = {}): ProblemaDeLista {
   return {
@@ -140,5 +148,71 @@ describe('elegirContinuar', () => {
     const resultado = elegirContinuar(cursos, sinListas, null)
     expect(resultado?.curso.curso_id).toBe(10)
     expect(resultado?.problema).toBeNull()
+  })
+})
+
+describe('resumenAvance', () => {
+  it('(a) un curso sin problemas', () => {
+    expect(resumenAvance({ total: 0, resueltos: 0, intentados: 0, pendientes: 0 })).toMatchObject({
+      estado: 'sin-problemas',
+      porcentaje: 0,
+      texto: 'Sin problemas aún',
+    })
+  })
+
+  it('(b) sin empezar', () => {
+    expect(resumenAvance({ total: 4, resueltos: 0, intentados: 0, pendientes: 4 })).toMatchObject({
+      estado: 'nuevo',
+      porcentaje: 0,
+      texto: '0 resueltos · 0 intentados · 4 pendientes',
+    })
+  })
+
+  it('(c) en curso, con singular y plural', () => {
+    expect(resumenAvance({ total: 6, resueltos: 3, intentados: 1, pendientes: 2 })).toMatchObject({
+      estado: 'en-curso',
+      porcentaje: 50,
+      texto: '3 resueltos · 1 intentado · 2 pendientes',
+    })
+  })
+
+  it('(d) completado', () => {
+    expect(resumenAvance({ total: 3, resueltos: 3, intentados: 0, pendientes: 0 })).toMatchObject({
+      estado: 'completo',
+      porcentaje: 100,
+    })
+  })
+
+  it('(e) redondea hacia abajo: 2 de 3 es 66 %', () => {
+    expect(resumenAvance({ total: 3, resueltos: 2, intentados: 0, pendientes: 1 }).porcentaje).toBe(66)
+  })
+
+  it('(f) nunca llega a 100 antes de completar', () => {
+    expect(resumenAvance({ total: 200, resueltos: 199, intentados: 0, pendientes: 1 }).porcentaje).toBe(99)
+  })
+
+  it('(g) los resueltos no pasan del total', () => {
+    expect(resumenAvance({ total: 4, resueltos: 9, intentados: 0, pendientes: 0 })).toMatchObject({
+      estado: 'completo',
+      porcentaje: 100,
+      resueltos: 4,
+    })
+  })
+
+  it('(h) NaN, negativos y ausentes cuentan como 0 sin lanzar error', () => {
+    expect(resumenAvance({ total: 5, resueltos: Number.NaN, intentados: -2, pendientes: undefined })).toMatchObject({
+      estado: 'nuevo',
+      porcentaje: 0,
+      texto: '0 resueltos · 0 intentados · 0 pendientes',
+    })
+    expect(resumenAvance({})).toMatchObject({ estado: 'sin-problemas', porcentaje: 0 })
+  })
+
+  it('(i) solo intentados: en curso con 0 %', () => {
+    expect(resumenAvance({ total: 5, resueltos: 0, intentados: 2, pendientes: 3 })).toMatchObject({
+      estado: 'en-curso',
+      porcentaje: 0,
+      texto: '0 resueltos · 2 intentados · 3 pendientes',
+    })
   })
 })

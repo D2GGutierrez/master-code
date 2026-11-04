@@ -62,6 +62,8 @@ Para probarlo: levanta `admin-api` en el puerto 8000, regístrate en <http://loc
 
 ## Mis cursos
 
+La barra y el estado de cada tarjeta de `/inicio` salen del avance que calcula `user-api` (`GET /api/cursos/{id}/avance`, uno por curso): «N resueltos · N intentados · N pendientes»; si falla, las tarjetas van sin progreso y con «Reintentar» (sin recalcular en el navegador).
+
 Al iniciar sesión se llega a <http://localhost:3001/inicio>: una tarjeta por curso inscrito (nombre, lenguaje y fecha de inscripción) con `GET /api/mis-cursos` de `user-api`; sin sesión lleva a `/login`.
 
 Cada tarjeta de `/inicio` lleva a <http://localhost:3001/cursos/ID/problemas>: los problemas publicados del curso para la web (`GET /api/cursos/{id}/problemas?plataforma=web` de `user-api`), con su dificultad y tipo de ejercicio; aún no se abren (HU32).
