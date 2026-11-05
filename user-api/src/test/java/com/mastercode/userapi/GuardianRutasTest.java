@@ -46,6 +46,12 @@ class GuardianRutasTest extends PruebaDeApi {
             // NO APLICA: devuelve el envío (con su código) solo si es del estudiante del token; el de otro da 404 y no
             // incluye enunciado ni casos. Lo comprueba DetalleEnvioApiTest (HU42-T2).
             "GET /api/envios/{envioId}",
+            // NO APLICA: devuelve solo el código que el propio estudiante guardó (del token); no incluye enunciado ni
+            // casos y sin borrador responde null. Lo comprueba BorradorApiTest (HU35-T2).
+            "GET /api/problemas/{problemaId}/borrador",
+            // OK: el problema sale de /internal/problemas/{id}/ de admin-api (visibles_para_estudiante()); sin aprobar o
+            // sin estar inscrito da el mismo 404 y no se guarda nada. Lo comprueba BorradorApiTest (HU35-T2).
+            "PUT /api/problemas/{problemaId}/borrador",
             // NO APLICA: la usa admin-api con X-Internal-Key; solo cuenta envíos por problema (intentos y correctos), sin
             // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
             "GET /internal/envios/resumen",
