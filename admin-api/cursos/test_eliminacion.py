@@ -182,14 +182,14 @@ class EliminarCursoTests(TestCase):
         self.assertIn("problemas", response.data["detail"].lower())
         self.inscritos_de.assert_not_called()
 
-    def test_un_curso_ajeno_da_403_sin_consultar_a_user_api(self):
+    def test_un_curso_ajeno_da_404_sin_consultar_a_user_api(self):
         dueno = self.crear_docente("docente-a")
         curso = self.crear_curso(dueno)
         self.autenticar(self.crear_docente("docente-b"))
 
         response = self.borrar(curso)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
         self.assertTrue(Curso.objects.filter(pk=curso.pk).exists())
         self.inscritos_de.assert_not_called()
 

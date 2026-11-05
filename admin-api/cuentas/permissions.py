@@ -11,13 +11,6 @@ class EsDocente(BasePermission):
         return hasattr(request.user, "docente")
 
 
-class EsPropietario(BasePermission):
-    # DRF la llama al buscar el objeto (get_object), después de EsDocente:
-    # por eso request.user.docente ya existe. Se comparan ids para no consultar el docente del curso.
-    def has_object_permission(self, request, view, obj):
-        return obj.docente_id == request.user.docente.pk
-
-
 class ClaveInterna(BasePermission):
     # D3: solo user-api conoce la clave. Se usa en vistas sin JWT (authentication_classes = []).
     def has_permission(self, request, view):

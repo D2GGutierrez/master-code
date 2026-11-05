@@ -60,7 +60,7 @@ class ListaDeInscritosTests(CursosTestCase):
 
         self.assertEqual(respuesta.json(), [])
 
-    def test_los_inscritos_de_un_curso_ajeno_dan_403_y_no_se_consulta_a_user_api(self):
+    def test_los_inscritos_de_un_curso_ajeno_dan_404_y_no_se_consulta_a_user_api(self):
         dueno = self.crear_docente("docente-a")
         curso = self.crear_curso(dueno)
         self.autenticar(self.crear_docente("docente-b"))
@@ -68,7 +68,7 @@ class ListaDeInscritosTests(CursosTestCase):
         with patch(CURSO_INSCRITOS) as pregunta:
             respuesta = self.client.get(f"/api/cursos/{curso.pk}/inscritos/")
 
-        self.assertEqual(respuesta.status_code, 403)
+        self.assertEqual(respuesta.status_code, 404)
         pregunta.assert_not_called()
 
     def test_un_curso_inexistente_da_404(self):

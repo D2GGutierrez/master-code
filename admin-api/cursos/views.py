@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from cuentas.permissions import EsDocente, EsPropietario
+from cuentas.permissions import EsDocente
 from cursos.inscritos import UserApiNoDisponible, inscritos_de, resumen_envios_de
 from cursos.models import Curso
 from cursos.serializers import CursoListaSerializer, CursoSerializer
@@ -61,18 +61,20 @@ class CursosView(ListCreateAPIView):
 
 
 class EditarCursoView(DestroyModelMixin, UpdateAPIView):
-    # Todos los cursos: así uno ajeno da 403 (EsPropietario) y uno inexistente 404.
-    queryset = Curso.objects.all()
     # Mismas validaciones que al crear; docente no está en sus campos, así que no se puede cambiar.
     serializer_class = CursoSerializer
-    permission_classes = [IsAuthenticated, EsDocente, EsPropietario]
+    permission_classes = [IsAuthenticated, EsDocente]
+
+    # Solo los cursos del docente: uno ajeno da el mismo 404 que uno inexistente (HU44-T4).
+    def get_queryset(self):
+        return Curso.objects.filter(docente=self.request.user.docente)
 
     def delete(self, request, *args, **kwargs):
         # El mixin da destroy, pero UpdateAPIView no expone el método DELETE.
         return self.destroy(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        # get_object aplica EsPropietario: un curso ajeno da 403 antes de preguntar nada a user-api.
+        # get_object busca solo entre los cursos del docente: uno ajeno da 404 antes de preguntar nada a user-api.
         curso = self.get_object()
         # Primero lo que se sabe aquí mismo: con problemas ya no hace falta consultar a user-api.
         if curso.problema_set.exists():
@@ -101,14 +103,9 @@ class InscritosView(APIView):
     permission_classes = [IsAuthenticated, EsDocente]
 
     def get(self, request, pk):
-        # Se busca entre todos los cursos y luego se comprueba el dueño: uno ajeno da 403 y uno
-        # inexistente 404, igual que al editar o eliminar (CA-28.4).
-        curso = get_object_or_404(Curso, pk=pk)
-        if curso.docente_id != request.user.docente.pk:
-            return Response(
-                {"detail": "Solo puedes ver los inscritos de tus propios cursos."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # Se busca por id y dueño a la vez: uno ajeno da el mismo 404 que uno inexistente, igual que al editar o
+        # eliminar (CA-28.4, HU44-T4).
+        curso = get_object_or_404(Curso, pk=pk, docente=request.user.docente)
         try:
             inscritos = inscritos_de(curso.pk)
         except UserApiNoDisponible:
@@ -139,13 +136,8 @@ class ResumenEnviosView(APIView):
     # API interna. Lo que ve el estudiante en el curso (aprobados y no descartados) es lo que cuenta; un problema sin
     # envíos sale con 0 intentos y 0 correctos.
     def get(self, request, pk):
-        # Igual que los inscritos: uno ajeno da 403 y uno inexistente 404 (CA-44.4).
-        curso = get_object_or_404(Curso, pk=pk)
-        if curso.docente_id != request.user.docente.pk:
-            return Response(
-                {"detail": "Solo puedes ver los envíos de tus propios cursos."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # Igual que los inscritos: uno ajeno da el mismo 404 que uno inexistente (CA-44.4, HU44-T4).
+        curso = get_object_or_404(Curso, pk=pk, docente=request.user.docente)
         problemas = list(Problema.objects.visibles_para_estudiante().filter(curso=curso).order_by("pk"))
         if not problemas:
             return Response([])

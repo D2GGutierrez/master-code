@@ -102,14 +102,14 @@ class ResumenDeEnviosDelCursoTests(InternoBase):
 
 class AccesoAlResumenDeEnviosTests(InternoBase):
     # CA-44.4: el docente solo ve datos de sus propios cursos.
-    def test_un_curso_ajeno_da_403_y_no_se_consulta_a_user_api(self):
+    def test_un_curso_ajeno_da_404_y_no_se_consulta_a_user_api(self):
         self.crear_problema()
         self.autenticar(self.crear_docente("docente-b"))
 
         with patch(RESUMEN) as pregunta:
             respuesta = self.client.get(url(self.curso))
 
-        self.assertEqual(respuesta.status_code, 403)
+        self.assertEqual(respuesta.status_code, 404)
         pregunta.assert_not_called()
 
     def test_un_curso_inexistente_da_404(self):

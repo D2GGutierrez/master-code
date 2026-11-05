@@ -54,7 +54,7 @@ class EditarCursoAjenoTests(TestCase):
         self.assertEqual(curso.lenguaje, LENGUAJES[0])
         self.assertEqual(curso.docente, docente_a)
 
-    def test_docente_ajeno_recibe_403_y_el_curso_no_cambia(self):
+    def test_docente_ajeno_recibe_404_y_el_curso_no_cambia(self):
         for metodo in ["put", "patch"]:
             with self.subTest(metodo=metodo):
                 docente_a, docente_b, curso = self.preparar_curso_de_a()
@@ -64,7 +64,7 @@ class EditarCursoAjenoTests(TestCase):
                     f"/api/cursos/{curso.pk}/", self.cuerpo_valido(), format="json"
                 )
 
-                self.assertEqual(response.status_code, 403)
+                self.assertEqual(response.status_code, 404)
                 self.assertCursoSinCambios(curso, docente_a)
                 # Se borran para que la siguiente vuelta cree sus propios datos.
                 Curso.objects.all().delete()
@@ -77,11 +77,11 @@ class EditarCursoAjenoTests(TestCase):
 
         response = self.client.patch(f"/api/cursos/{curso.pk}/", datos, format="json")
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
         self.assertCursoSinCambios(curso, docente_a)
 
     def test_el_propietario_si_puede_modificar_su_curso(self):
-        # Control: el mismo cuerpo funciona con el dueño, así que el 403 es por no serlo.
+        # Control: el mismo cuerpo funciona con el dueño, así que el 404 es por no serlo.
         for metodo in ["put", "patch"]:
             with self.subTest(metodo=metodo):
                 docente_a, _, curso = self.preparar_curso_de_a()

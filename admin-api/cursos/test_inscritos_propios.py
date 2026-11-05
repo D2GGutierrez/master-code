@@ -77,7 +77,7 @@ class InscritosSoloDeCursosPropiosTests(CursosTestCase):
 
                 respuesta, pregunta = self.pedir(curso_ajeno.pk)
 
-                self.assertEqual(respuesta.status_code, 403)
+                self.assertEqual(respuesta.status_code, 404)
                 for correo in correos_ajenos:
                     self.assertNotIn(correo, respuesta.content.decode())
                 pregunta.assert_not_called()
@@ -111,7 +111,7 @@ class InscritosSoloDeCursosPropiosTests(CursosTestCase):
                 self.assertEqual(respuesta.status_code, esperado)
                 pregunta.assert_not_called()
 
-    def test_con_user_api_caido_el_dueno_recibe_503_y_el_ajeno_sigue_recibiendo_403(
+    def test_con_user_api_caido_el_dueno_recibe_503_y_el_ajeno_sigue_recibiendo_404(
         self,
     ):
         caido = {"side_effect": UserApiNoDisponible("sin conexión")}
@@ -122,5 +122,5 @@ class InscritosSoloDeCursosPropiosTests(CursosTestCase):
 
         self.assertEqual(propio.status_code, 503)
         self.assertTrue(propio.json()["detail"].strip())
-        self.assertEqual(ajeno.status_code, 403)
+        self.assertEqual(ajeno.status_code, 404)
         pregunta.assert_not_called()

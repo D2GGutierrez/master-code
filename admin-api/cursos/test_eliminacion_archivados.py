@@ -113,7 +113,7 @@ class EliminarCursoConProblemasArchivadosTests(CursosTestCase):
 
         response = self.borrar(curso)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
         self.assertTrue(Curso.objects.filter(pk=curso.pk).exists())
         problema.refresh_from_db()
         self.assertTrue(problema.archivado)
