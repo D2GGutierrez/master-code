@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from cursos.models import Curso
 from problemas.models import Problema
@@ -15,6 +16,22 @@ class Evaluacion(models.Model):
 
     class Meta:
         db_table = "admin_evaluacion"
+
+    class Estado(models.TextChoices):
+        PROGRAMADA = "programada"
+        ACTIVA = "activa"
+        CERRADA = "cerrada"
+
+    # HU64 T1: el estado no se guarda, se calcula comparando la ventana con la hora actual; así nunca queda desfasado y
+    # no hace falta ningún proceso que lo actualice. La ventana incluye el inicio y excluye el fin: a la hora exacta de
+    # fin ya está cerrada. ahora solo se pasa en las pruebas.
+    def estado(self, ahora=None):
+        ahora = ahora or timezone.now()
+        if ahora < self.fecha_inicio:
+            return self.Estado.PROGRAMADA
+        if ahora < self.fecha_fin:
+            return self.Estado.ACTIVA
+        return self.Estado.CERRADA
 
 
 # Qué problemas contiene cada evaluación (HU62 T1): una fila por problema de la evaluación. Que el problema sea del

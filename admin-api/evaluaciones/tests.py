@@ -116,3 +116,47 @@ class EvaluacionProblemaModeloTests(TestCase):
                 "SELECT table_schema FROM information_schema.tables WHERE table_name = 'admin_evaluacion_problema'"
             )
             self.assertEqual(cursor.fetchall(), [("admin_schema",)])
+
+
+# CA-064.1 a CA-064.3: el estado sale de comparar la ventana con la hora actual.
+class EvaluacionEstadoTests(TestCase):
+    INICIO = timezone.now().replace(microsecond=0)
+    FIN = INICIO + timedelta(hours=2)
+
+    def evaluacion(self):
+        # Sin guardar: el estado solo depende de las fechas.
+        return Evaluacion(fecha_inicio=self.INICIO, fecha_fin=self.FIN, limite_minutos=60)
+
+    def test_antes_del_inicio_esta_programada(self):
+        ahora = self.INICIO - timedelta(seconds=1)
+
+        self.assertEqual(self.evaluacion().estado(ahora), "programada")
+
+    def test_durante_la_ventana_esta_activa(self):
+        ahora = self.INICIO + timedelta(hours=1)
+
+        self.assertEqual(self.evaluacion().estado(ahora), "activa")
+
+    def test_despues_del_fin_esta_cerrada(self):
+        ahora = self.FIN + timedelta(seconds=1)
+
+        self.assertEqual(self.evaluacion().estado(ahora), "cerrada")
+
+    def test_la_hora_exacta_de_inicio_ya_esta_activa_y_la_de_fin_ya_esta_cerrada(self):
+        self.assertEqual(self.evaluacion().estado(self.INICIO), "activa")
+        self.assertEqual(self.evaluacion().estado(self.FIN), "cerrada")
+
+    def test_sin_indicar_la_hora_usa_la_actual(self):
+        pasada = Evaluacion(
+            fecha_inicio=timezone.now() - timedelta(days=2), fecha_fin=timezone.now() - timedelta(days=1), limite_minutos=60
+        )
+        en_curso = Evaluacion(
+            fecha_inicio=timezone.now() - timedelta(hours=1), fecha_fin=timezone.now() + timedelta(hours=1), limite_minutos=60
+        )
+        futura = Evaluacion(
+            fecha_inicio=timezone.now() + timedelta(days=1), fecha_fin=timezone.now() + timedelta(days=2), limite_minutos=60
+        )
+
+        self.assertEqual(
+            [pasada.estado(), en_curso.estado(), futura.estado()], ["cerrada", "activa", "programada"]
+        )

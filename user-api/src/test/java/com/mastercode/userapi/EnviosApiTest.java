@@ -295,6 +295,33 @@ class EnviosApiTest extends PruebaDeApi {
                 .andExpect(jsonPath("$.casos[0].error").value("SyntaxError en la línea 2"));
     }
 
+    // HU40-T2 (CA-40.3): cuando el motor informa la línea, el aviso la dice además de copiar su texto.
+    @Test
+    void un_error_de_compilacion_con_linea_la_muestra_en_el_aviso() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        String motor = "Main.java:3: error: ';' expected\n        int x = 1\n                 ^\n1 error";
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.ERROR_COMPILACION, "", motor, null));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.aviso").value("Tu código no compiló. Revisa la línea 3. " + motor));
+    }
+
+    // Un error de ejecución mantiene su aviso fijo aunque el texto del programa diga «line 9»: ese texto lo escribe el
+    // programa y podría llevar la entrada de un caso oculto.
+    @Test
+    void una_linea_que_aparece_en_un_error_de_ejecucion_no_se_copia_al_aviso() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.ERROR_EJECUCION, "",
+                "File \"main.py\", line 9\nValueError", 5L));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.aviso").value("Tu programa falló al ejecutarse en uno o más casos."));
+    }
+
     @Test
     void un_tiempo_agotado_da_un_aviso_y_cuenta_el_caso_como_fallado() throws Exception {
         Alumno yo = alumnoInscrito();

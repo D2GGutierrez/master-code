@@ -15,5 +15,6 @@ urlpatterns = [
     path("api/auth/", include("cuentas.urls")),
     path("api/cursos/", include("cursos.urls")),
     path("api/cursos/<int:curso_id>/problemas/", include("problemas.urls")),
+    path("api/cursos/<int:curso_id>/evaluaciones/", include("evaluaciones.urls")),
     path("api/problemas/", include("problemas.urls_revision")),
 ]

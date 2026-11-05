@@ -198,13 +198,16 @@ public class EnviosController {
     }
 
     // Un mensaje general para distinguir un error del código del estudiante de un caso que simplemente no coincide.
-    // Solo un error de compilación muestra el texto del motor: no depende de la entrada, así que no puede revelar un
-    // caso oculto. Con errores de ejecución, tiempo o memoria el mensaje es fijo (esos textos podrían imprimir la entrada).
+    // Solo un error de compilación muestra el texto del motor (y su línea, HU40-T2): no depende de la entrada, así que no
+    // puede revelar un caso oculto. Con errores de ejecución, tiempo o memoria el mensaje es fijo (esos textos podrían imprimir la entrada).
     private static String aviso(List<EjecucionResultado> resultados) {
         for (EjecucionResultado resultado : resultados) {
             if (resultado.estado() == Estado.ERROR_COMPILACION) {
                 String detalle = resultado.error() == null || resultado.error().isBlank() ? "" : " " + recortar(resultado.error());
-                return "Tu código no compiló." + detalle;
+                // HU40-T2: si el motor informa la línea del error, se dice aparte para que no haya que buscarla en el texto.
+                String linea = LineaDelError.de(resultado.error()).stream()
+                        .mapToObj(numero -> " Revisa la línea " + numero + ".").findFirst().orElse("");
+                return "Tu código no compiló." + linea + detalle;
             }
         }
         for (EjecucionResultado resultado : resultados) {
