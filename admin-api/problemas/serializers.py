@@ -40,11 +40,25 @@ class GenerarSerializer(serializers.Serializer):
     plataforma = serializers.ChoiceField(choices=Problema.Plataforma.values, default=Problema.Plataforma.AMBAS)
 
 
+# Mismo tope que ai-service (EjecucionIn.entrada en app/routers/ejecucion.py): un caso con una entrada mayor nunca se
+# podría ejecutar, y el envío que lo califica fallaría siempre.
+MAX_ENTRADA = 10_000
+
+
 class CasoPruebaSerializer(serializers.ModelSerializer):
     class Meta:
         model = CasoPrueba
         # problema no va: lo asigna ProblemaSerializer.create con el problema recién creado.
         fields = ["id", "entrada", "salida_esperada", "es_publico"]
+        extra_kwargs = {
+            "entrada": {
+                "max_length": MAX_ENTRADA,
+                "error_messages": {
+                    "max_length": f"La entrada de un caso de prueba admite hasta {MAX_ENTRADA} caracteres, "
+                    "el límite del motor que ejecuta el código."
+                },
+            }
+        }
 
 
 class OpcionRespuestaSerializer(serializers.ModelSerializer):
