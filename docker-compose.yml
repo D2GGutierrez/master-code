@@ -110,7 +110,8 @@ services:
       JUDGE0_URL: http://judge0-server:2358
       PISTON_URL: http://piston:2000
     ports:
-      - "8002:8002"
+      # Solo en este PC (HU39-T3): ai-service no tiene autenticación; los servicios lo llaman por http://ai-service:8002.
+      - "127.0.0.1:8002:8002"
 
   # Sandbox (HU07): Judge0 ejecuta el código de los estudiantes. Solo ai-service lo llamará (ADR-7 / D1).
   # Tiene su propia base y su propio Redis: no se mezcla con admin_schema ni app_schema (ADR-1).
@@ -180,6 +181,9 @@ services:
     ports:
       # Solo en este PC (127.0.0.1) para probarlo a mano; entre servicios se usa http://judge0-server:2358.
       - "127.0.0.1:2358:2358"
+    # HU39-T3: el log de Judge0 escribe el stdin de cada submission, que incluye las entradas de los casos ocultos.
+    logging:
+      driver: none
     depends_on:
       judge0-db:
         condition: service_healthy
@@ -192,6 +196,9 @@ services:
     environment: *judge0-env
     # Solo el worker lo necesita: aísla cada programa con mecanismos del kernel (isolate / cgroups).
     privileged: true
+    # Igual que judge0-server: su log puede llevar el stdin de los casos ocultos (HU39-T3).
+    logging:
+      driver: none
     depends_on:
       judge0-db:
         condition: service_healthy
