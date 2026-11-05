@@ -35,7 +35,7 @@ class Evaluacion(models.Model):
 
 
 # Qué problemas contiene cada evaluación (HU62 T1): una fila por problema de la evaluación. Que el problema sea del
-# mismo curso que la evaluación no lo asegura la base, sino la vista que la crea (HU62 T2).
+# mismo curso que la evaluación no lo asegura la base, sino EvaluacionSerializer al crearla (HU62).
 class EvaluacionProblema(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE)
     # PROTECT: la base impide borrar un problema que está en una evaluación. Los problemas no se borran, se descartan.

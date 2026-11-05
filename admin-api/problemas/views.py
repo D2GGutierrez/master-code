@@ -1,7 +1,11 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import (
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +18,7 @@ from problemas.ia import IaNoDisponible, IaRespuestaInvalida, generar_problemas
 from problemas.models import Problema
 from problemas.serializers import (
     GenerarSerializer,
+    ProblemaDelBancoSerializer,
     ProblemaPendienteSerializer,
     ProblemaSerializer,
 )
@@ -22,9 +27,19 @@ MENSAJE_IA_CAIDA = "El servicio de IA no está disponible en este momento. No se
 MENSAJE_IA_INVALIDA = "La IA devolvió una respuesta que no se pudo usar. No se guardó nada: intenta generar de nuevo."
 
 
-class CrearProblemaView(CreateAPIView):
-    serializer_class = ProblemaSerializer
+class ProblemasDelCursoView(ListCreateAPIView):
     permission_classes = [IsAuthenticated, EsDocente]
+
+    def get_serializer_class(self):
+        # Al listar solo se muestra lo necesario para elegir; al crear se usa el serializer completo.
+        return ProblemaDelBancoSerializer if self.request.method == "GET" else ProblemaSerializer
+
+    # HU62-T2: el banco del curso, para elegir los problemas de una evaluación. Trae todos los no descartados, con
+    # aprobado_por_docente para que la pantalla distinga los que aún no se pueden usar (una evaluación solo admite
+    # aprobados). Un curso ajeno da el mismo 404 que uno inexistente.
+    def get_queryset(self):
+        curso = get_object_or_404(Curso, pk=self.kwargs["curso_id"], docente=self.request.user.docente)
+        return Problema.objects.filter(curso=curso, archivado=False).order_by("id")
 
     def perform_create(self, serializer):
         # Se busca el curso junto con su docente: un curso ajeno da el mismo 404 que uno

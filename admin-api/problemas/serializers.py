@@ -171,6 +171,13 @@ class ProblemaPendienteSerializer(ProblemaSerializer):
 # Vista del estudiante (CA-012.4). La usa la API interna que consume user-api (problemas/interno.py):
 # cualquier ruta que entregue un problema a un estudiante debe usar estos serializers y no
 # ProblemaSerializer, que expone los casos ocultos, la respuesta esperada y cuál alternativa es correcta.
+# El banco del curso para el docente (HU62-T2): lo justo para elegir problemas, sin enunciado ni casos.
+class ProblemaDelBancoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problema
+        fields = ["id", "titulo", "dificultad", "tipo_ejercicio", "plataforma", "aprobado_por_docente"]
+
+
 class CasoPruebaEstudianteSerializer(serializers.ModelSerializer):
     # Sin es_publico ni id: al estudiante solo le llegan casos públicos y no necesita saber más.
     class Meta:
