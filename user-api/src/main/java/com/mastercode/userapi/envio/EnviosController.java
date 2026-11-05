@@ -28,6 +28,7 @@ import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
+import com.mastercode.userapi.problema.AvanceDelCursoServicio;
 import com.mastercode.userapi.sandbox.EjecucionResultado;
 import com.mastercode.userapi.sandbox.EjecucionSolicitud;
 import com.mastercode.userapi.sandbox.Estado;
@@ -67,13 +68,15 @@ public class EnviosController {
     private final InscripcionRepository inscripciones;
     private final SandboxCliente sandbox;
     private final EnvioRepository envios;
+    private final AvanceDelCursoServicio avance;
 
     public EnviosController(AdminCliente admin, InscripcionRepository inscripciones, SandboxCliente sandbox,
-            EnvioRepository envios) {
+            EnvioRepository envios, AvanceDelCursoServicio avance) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.sandbox = sandbox;
         this.envios = envios;
+        this.avance = avance;
     }
 
     // HU41-T1: el historial de envíos del estudiante en un problema, del más reciente al más antiguo. El estudiante sale
@@ -182,11 +185,16 @@ public class EnviosController {
         BigDecimal puntaje = Calificacion.puntaje(superados, total);
         // El claim cliente lo pone admin-api al iniciar sesión (user-web o mobile); el estudiante no lo escribe.
         String plataforma = "mobile".equals(jwt.getClaimAsString("cliente")) ? "movil" : "web";
+        String aviso = aviso(resultados);
+        // HU40-T4: el mismo aviso que ve el estudiante queda con el envío, para releerlo en el historial. Sin NUL, que
+        // PostgreSQL no admite en un texto: un compilador puede repetir la línea del código donde falló.
         EnvioRepository.Fila fila = envios.registrar(estudiante.getId(), problemaId, plataforma, codigo, resultado, puntaje,
-                porCaso);
+                aviso == null ? null : aviso.replace("\0", ""), porCaso);
+        // HU43-T3: con un envío nuevo el avance del curso puede haber cambiado; se descarta el que estaba en caché.
+        avance.invalidar(estudiante.getId(), problema.cursoId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnvioCalificado(fila.id(), fila.numeroIntento(),
-                resultado, puntaje, superados, total, aviso(resultados), evaluados));
+                resultado, puntaje, superados, total, aviso, evaluados));
     }
 
     // Lo que ve el estudiante de un caso público: su entrada, lo esperado y lo que imprimió su programa.

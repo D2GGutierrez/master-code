@@ -30,6 +30,13 @@ ejecuciones:
   limite-por-minuto: ${EJECUCIONES_POR_MINUTO:10}
 
 spring:
+  # HU43-T3 (ADR-8 D9): caché en memoria del proceso, sin Redis. El vencimiento corto es por si el docente aprueba o
+  # archiva problemas, que no pasa por user-api y por eso no invalida la caché.
+  cache:
+    type: caffeine
+    cache-names: avance
+    caffeine:
+      spec: expireAfterWrite=5m,maximumSize=10000
   datasource:
     # currentSchema hace que las consultas sin schema vayan a app_schema (ADR-1).
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB}?currentSchema=app_schema

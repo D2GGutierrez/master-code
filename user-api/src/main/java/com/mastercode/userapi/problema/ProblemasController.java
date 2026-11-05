@@ -44,11 +44,6 @@ public class ProblemasController {
             String tipoEjercicio, OffsetDateTime fechaPublicacion, String estado) {
     }
 
-    // El avance de un estudiante en un curso (HU43): cuántos de sus problemas están resueltos, intentados y pendientes.
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    record AvanceDelCurso(long cursoId, int total, int resueltos, int intentados, int pendientes) {
-    }
-
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     record CasoDeEjemplo(String entrada, String salidaEsperada) {
     }
@@ -61,12 +56,14 @@ public class ProblemasController {
     private final AdminCliente admin;
     private final InscripcionRepository inscripciones;
     private final EstadoProblemasRepository estados;
+    private final AvanceDelCursoServicio avance;
 
     public ProblemasController(AdminCliente admin, InscripcionRepository inscripciones,
-            EstadoProblemasRepository estados) {
+            EstadoProblemasRepository estados, AvanceDelCursoServicio avance) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.estados = estados;
+        this.avance = avance;
     }
 
     // Filtros opcionales, que se pueden combinar (HU30-T1, CA-30.1 y CA-30.2):
@@ -129,6 +126,7 @@ public class ProblemasController {
     // resuelto (algún envío correcto), intentado (envíos pero ninguno correcto) o pendiente (sin envíos). Los envíos de
     // un problema que ya no se ve no cuentan. ?plataforma=web|movil cuenta solo los de esa plataforma y los de ambas,
     // igual que el listado: la web no puede resolver los problemas solo móviles. Mismo acceso que el listado.
+    // El cálculo va en caché (HU43-T3): la inscripción y la plataforma se comprueban siempre, antes de leerla.
     @GetMapping("/api/cursos/{cursoId}/avance")
     public ResponseEntity<?> avanceDelCurso(@PathVariable long cursoId,
             @RequestParam(required = false) String plataforma,
@@ -141,29 +139,14 @@ public class ProblemasController {
             return ResponseEntity.badRequest().body(new Detalle("plataforma debe ser web o movil."));
         }
 
-        List<ProblemaResumenDto> problemas;
         try {
-            problemas = admin.problemasDelCurso(cursoId, filtroPlataforma);
+            return ResponseEntity.ok(avance.calcular(estudiante.getId(), cursoId, filtroPlataforma));
         } catch (CursoNoExisteException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("El curso ya no existe."));
         } catch (AdminNoDisponibleException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(new Detalle("No se pudo calcular tu avance en este momento. Intenta de nuevo."));
         }
-
-        Map<Long, Boolean> resueltos = problemas.isEmpty() ? Map.of() : estados.resueltosPorProblema(estudiante.getId());
-        int resuelto = 0;
-        int intentado = 0;
-        for (ProblemaResumenDto problema : problemas) {
-            EstadoProblema estado = EstadoProblema.de(resueltos.get(problema.id()));
-            if (estado == EstadoProblema.RESUELTO) {
-                resuelto++;
-            } else if (estado == EstadoProblema.INTENTADO) {
-                intentado++;
-            }
-        }
-        int total = problemas.size();
-        return ResponseEntity.ok(new AvanceDelCurso(cursoId, total, resuelto, intentado, total - resuelto - intentado));
     }
 
     // HU31-T2: abrir un problema por id no es una vía para saltarse la aprobación ni la inscripción. Un problema sin

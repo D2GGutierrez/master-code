@@ -1,6 +1,7 @@
 package com.mastercode.userapi.envio;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,10 +21,11 @@ public class EnvioRepository {
     }
 
     // Una fila del historial (HU41): lo que la pantalla muestra de cada intento. Se devuelve tal cual como JSON.
-    // numeroIntento, resultado y puntaje pueden ser null en un envío que no se calificó.
+    // numeroIntento, resultado y puntaje pueden ser null en un envío que no se calificó. mensajeError (HU40-T4) es el
+    // aviso que se le mostró al estudiante cuando su código falló; null si no hubo ninguno.
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record Resumen(long id, Integer numeroIntento, OffsetDateTime fechaEnvio, String resultado,
-            BigDecimal puntaje) {
+            BigDecimal puntaje, String mensajeError) {
     }
 
     // El detalle de un envío (HU42): lo del historial más el código exacto que se mandó. Un envío anterior a V5 o
@@ -56,8 +58,9 @@ public class EnvioRepository {
     // en ese problema y suma uno. Un envío siempre es del estudiante del token, nunca de un id que llegue por el cuerpo.
     // Los resultados por caso (HU37-T1) se insertan en esa misma sentencia: o quedan el envío y todas sus filas, o
     // ninguno, y si el número de intento choca se repite todo junto.
+    // mensajeError es el aviso que se le muestra al estudiante (HU40-T4); null si el envío no tuvo ningún error.
     public Fila registrar(long estudianteId, long problemaId, String plataforma, String codigo, String resultado,
-            BigDecimal puntaje, List<ResultadoCaso> casos) {
+            BigDecimal puntaje, String mensajeError, List<ResultadoCaso> casos) {
         Long[] ids = casos.stream().map(ResultadoCaso::casoPruebaId).toArray(Long[]::new);
         Boolean[] pasos = casos.stream().map(ResultadoCaso::paso).toArray(Boolean[]::new);
         String[] salidas = casos.stream().map(ResultadoCaso::salidaObtenida).toArray(String[]::new);
@@ -67,8 +70,9 @@ public class EnvioRepository {
                 return jdbc.sql("""
                         WITH nuevo AS (
                             INSERT INTO app_schema.app_envio
-                                (estudiante_id, problema_id, plataforma, codigo, resultado, puntaje, numero_intento)
-                            VALUES (:estudiante, :problema, :plataforma, :codigo, :resultado, :puntaje,
+                                (estudiante_id, problema_id, plataforma, codigo, resultado, puntaje, mensaje_error,
+                                 numero_intento)
+                            VALUES (:estudiante, :problema, :plataforma, :codigo, :resultado, :puntaje, :mensajeError,
                                 (SELECT COUNT(*) + 1 FROM app_schema.app_envio
                                  WHERE estudiante_id = :estudiante AND problema_id = :problema))
                             RETURNING id, numero_intento, fecha_envio
@@ -88,6 +92,8 @@ public class EnvioRepository {
                         .param("codigo", codigo)
                         .param("resultado", resultado)
                         .param("puntaje", puntaje)
+                        // Tipo explícito: sin mensaje el valor es null y el driver no sabría de qué tipo es.
+                        .param("mensajeError", mensajeError, Types.VARCHAR)
                         .param("ids", ids)
                         .param("pasos", pasos)
                         .param("salidas", salidas)
@@ -135,7 +141,7 @@ public class EnvioRepository {
     // con la misma fecha. Filtra por estudiante Y problema con el índice ix_app_envio_estudiante_problema.
     public List<Resumen> delEstudiante(long estudianteId, long problemaId) {
         return jdbc.sql("""
-                SELECT id, numero_intento, fecha_envio, resultado, puntaje
+                SELECT id, numero_intento, fecha_envio, resultado, puntaje, mensaje_error
                 FROM app_schema.app_envio
                 WHERE estudiante_id = ? AND problema_id = ?
                 ORDER BY fecha_envio DESC, id DESC
