@@ -2,6 +2,7 @@ package com.mastercode.userapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -189,7 +190,8 @@ class AvanceCacheApiTest extends PruebaDeApi {
         when(admin.problemasDelCurso(CURSO, null)).thenThrow(new AdminNoDisponibleException("sin conexión", null));
         avance(yo).andExpect(status().isServiceUnavailable());
 
-        when(admin.problemasDelCurso(CURSO, null)).thenReturn(List.of(SUMA));
+        // doReturn y no when: when(...) llamaría al mock, que aún está programado para lanzar la excepción.
+        doReturn(List.of(SUMA)).when(admin).problemasDelCurso(CURSO, null);
 
         avance(yo).andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1));
     }
