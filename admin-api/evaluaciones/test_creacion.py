@@ -211,6 +211,19 @@ class ProblemasDeLaEvaluacionTests(EvaluacionBase):
                 self.assertIn("problemas", response.data)
         self.assertEqual(Evaluacion.objects.count(), 0)
 
+    # CA-062.3: el mensaje le dice al docente qué hacer, tanto con la lista vacía como sin el campo.
+    def test_el_mensaje_de_una_evaluacion_sin_problemas_pide_elegir_al_menos_uno(self):
+        sin_campo = {k: v for k, v in self.cuerpo.items() if k != "problemas"}
+        for cuerpo in [{**self.cuerpo, "problemas": []}, sin_campo]:
+            with self.subTest(cuerpo.get("problemas", "sin campo")):
+                response = self.client.post(self.url(), cuerpo, format="json")
+
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    [str(error) for error in response.data["problemas"]],
+                    ["Elige al menos un problema para la evaluación."],
+                )
+
     def test_un_problema_puede_estar_en_otra_evaluacion_del_mismo_curso(self):
         self.assertEqual(self.publicar(problemas=[self.suma.pk]).status_code, 201)
 

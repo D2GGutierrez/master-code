@@ -26,6 +26,8 @@ import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
+import com.mastercode.userapi.evaluacion.AccesoEvaluacionServicio;
+import com.mastercode.userapi.evaluacion.EvaluacionesController;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 import com.mastercode.userapi.problema.AvanceDelCursoServicio;
@@ -49,7 +51,9 @@ public class EnviosController {
     // Tope de la salida y del error que se devuelven por caso: un programa que imprime sin parar no hincha la respuesta.
     private static final int MAX_TEXTO = 2_000;
 
-    record Solicitud(String codigo) {
+    // evaluacion_id (HU64-T3) solo va cuando el estudiante envía dentro de una evaluación; sin él es un envío de práctica.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    record Solicitud(String codigo, Long evaluacionId) {
     }
 
     // Un caso oculto lleva solo publico y paso: los demás campos van vacíos y NON_NULL los quita del JSON.
@@ -69,14 +73,16 @@ public class EnviosController {
     private final SandboxCliente sandbox;
     private final EnvioRepository envios;
     private final AvanceDelCursoServicio avance;
+    private final AccesoEvaluacionServicio evaluaciones;
 
     public EnviosController(AdminCliente admin, InscripcionRepository inscripciones, SandboxCliente sandbox,
-            EnvioRepository envios, AvanceDelCursoServicio avance) {
+            EnvioRepository envios, AvanceDelCursoServicio avance, AccesoEvaluacionServicio evaluaciones) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.sandbox = sandbox;
         this.envios = envios;
         this.avance = avance;
+        this.evaluaciones = evaluaciones;
     }
 
     // HU41-T1: el historial de envíos del estudiante en un problema, del más reciente al más antiguo. El estudiante sale
@@ -123,6 +129,14 @@ public class EnviosController {
         }
         if (codigo.length() > MAX_CODIGO) {
             return error(HttpStatus.BAD_REQUEST, "El código es demasiado largo (máximo " + MAX_CODIGO + " caracteres).");
+        }
+
+        // HU64-T3: dentro de una evaluación, antes de ejecutar nada se comprueba la ventana y el tiempo del estudiante.
+        if (solicitud.evaluacionId() != null) {
+            ResponseEntity<?> bloqueo = bloqueoDeEvaluacion(estudiante.getId(), problemaId, solicitud.evaluacionId());
+            if (bloqueo != null) {
+                return bloqueo;
+            }
         }
 
         ProblemaCalificableDto problema;
@@ -195,6 +209,24 @@ public class EnviosController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnvioCalificado(fila.id(), fila.numeroIntento(),
                 resultado, puntaje, superados, total, aviso, evaluados));
+    }
+
+    // HU64-T3 (CA-64.4): null si puede enviar. No puede si la evaluación no existe o no es suya (404), si está fuera de su
+    // ventana o se le acabó el tiempo (403, sin ejecutar ni guardar nada), o si el problema no es de esa evaluación (404,
+    // igual que un problema inexistente). Enviar por primera vez en la ventana también empieza su reloj.
+    private ResponseEntity<?> bloqueoDeEvaluacion(long estudianteId, long problemaId, long evaluacionId) {
+        AccesoEvaluacionServicio.Acceso acceso;
+        try {
+            acceso = evaluaciones.entrar(estudianteId, evaluacionId);
+        } catch (AdminNoDisponibleException e) {
+            return error(HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo cargar la evaluación en este momento. Intenta de nuevo.");
+        }
+        if (acceso.resultado() != AccesoEvaluacionServicio.Resultado.ABIERTA) {
+            return EvaluacionesController.rechazo(acceso);
+        }
+        List<Long> problemas = acceso.evaluacion().problemas();
+        return problemas != null && problemas.contains(problemaId) ? null : noEncontrado();
     }
 
     // Lo que ve el estudiante de un caso público: su entrada, lo esperado y lo que imprimió su programa.

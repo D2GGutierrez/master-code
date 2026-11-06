@@ -24,8 +24,11 @@ class EvaluacionAccesoApiTest extends PruebaDeApi {
 
     private static final long CURSO = 10;
     private static final long EVALUACION = 5;
-    private static final OffsetDateTime INICIO = OffsetDateTime.parse("2026-11-12T14:00:00Z");
-    private static final OffsetDateTime FIN = OffsetDateTime.parse("2026-11-12T16:00:00Z");
+    // La ventana se arma con la hora real de la prueba: desde HU64-T3 entrar también compara la hora actual con el límite
+    // del estudiante, y una ventana fija dejaría de servir el día que pasara.
+    private static final OffsetDateTime AHORA = OffsetDateTime.now();
+    private static final OffsetDateTime INICIO = AHORA.minusHours(1);
+    private static final OffsetDateTime FIN = AHORA.plusHours(3);
 
     private record Alumno(String email, long id) {
     }

@@ -48,8 +48,8 @@ class GuardianRutasTest extends PruebaDeApi {
             "GET /api/envios/{envioId}",
             // OK: la evaluación sale de /internal/evaluaciones/{id}/ de admin-api, que solo entrega ids de problemas
             // visibles (visibles_para_estudiante()). Fuera de la ventana da 403 sin ningún problema, y sin estar
-            // inscrito en el curso da el mismo 404 que una evaluación inexistente. Lo comprueba EvaluacionAccesoApiTest
-            // (HU64-T2).
+            // inscrito en el curso da el mismo 404 que una evaluación inexistente; con el límite de tiempo vencido da 403
+            // sin problemas. Lo comprueban EvaluacionAccesoApiTest (HU64-T2) y EvaluacionIntentoApiTest (HU64-T3).
             "GET /api/evaluaciones/{evaluacionId}",
             // NO APLICA: devuelve solo el código que el propio estudiante guardó (del token); no incluye enunciado ni
             // casos y sin borrador responde null. Lo comprueba BorradorApiTest (HU35-T2).
