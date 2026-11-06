@@ -122,7 +122,15 @@ function EditorProblema({ id }: { id: number }) {
         alCambiarDivision={guardarDivision}
         izquierdo={<PanelEnunciado problema={problema} />}
         derecho={
-          <PanelEditor problemaId={id} lenguaje={problema.lenguaje} codigo={codigo} onCambioCodigo={setCodigo} />
+          <PanelEditor
+            problemaId={id}
+            lenguaje={problema.lenguaje}
+            codigo={codigo}
+            onCambioCodigo={setCodigo}
+            codigoBase={problema.codigo_base}
+            // HU34-T4: el código base exacto, con la misma regla que al abrir.
+            alRestaurarCodigoBase={() => setCodigo(codigoInicial(problema.codigo_base))}
+          />
         }
       />
     </main>
