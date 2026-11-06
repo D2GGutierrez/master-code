@@ -11,6 +11,7 @@ import NuevoCurso from './pages/NuevoCurso.jsx'
 import NuevoProblema from './pages/NuevoProblema.jsx'
 import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
+import SelectorPrueba from './pages/SelectorPrueba.jsx'
 
 // Sin enrutador todavía: la pantalla se elige por la ruta de la URL.
 function pantalla(ruta) {
@@ -43,6 +44,11 @@ function pantalla(ruta) {
   const generacion = ruta.match(/^\/cursos\/(\d+)\/generar$/)
   if (generacion) {
     return <GenerarProblemas id={Number(generacion[1])} />
+  }
+  // Provisional (HU62-T2): la reemplaza el formulario de la evaluación (HU61-T3).
+  const selectorPrueba = ruta.match(/^\/selector-prueba\/(\d+)$/)
+  if (selectorPrueba) {
+    return <SelectorPrueba cursoId={Number(selectorPrueba[1])} />
   }
   if (ruta === '/revision') {
     return <BandejaRevision />

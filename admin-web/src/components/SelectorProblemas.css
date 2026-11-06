@@ -1,0 +1,74 @@
+.selector-problemas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.selector-problemas legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+
+.selector-busqueda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.selector-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.selector-contador {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+}
+
+/* La lista se desplaza dentro de su caja; el relleno deja ver el foco de las casillas del borde. */
+.selector-lista {
+  max-height: 22rem;
+  margin: 0;
+  padding: 0.25rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.selector-lista li + li {
+  border-top: 1px solid var(--borde);
+}
+
+.selector-lista label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.selector-titulo {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.selector-detalle,
+.selector-nota {
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+
+.selector-nota {
+  margin: 0;
+}

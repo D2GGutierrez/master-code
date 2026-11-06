@@ -97,6 +97,8 @@ Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sob
 
 «Ver aciertos» lleva a <http://localhost:3000/cursos/ID/aciertos>: por cada problema del curso, sus envíos, los correctos y el porcentaje de acierto (`GET /api/cursos/{id}/resumen-envios/` de `admin-api`, que lo pide a `user-api`); un problema sin envíos dice «Sin envíos».
 
+`components/SelectorProblemas.jsx` elige varios problemas APROBADOS del banco de un curso para una evaluación (búsqueda por título, «Seleccionar los visibles», «Quitar selección» y contador); los ids salen en el orden del banco, listos para `problemas` de `POST /api/cursos/{id}/evaluaciones/`. Mientras no exista el formulario de la evaluación (HU61-T3) se prueba en la página provisional <http://localhost:3000/selector-prueba/ID>.
+
 En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo la página visible) como `inscritos-<curso>-<fecha>.csv`, en UTF-8 con BOM, separado por comas y con las celdas que empiezan por `=`, `+`, `-` o `@` neutralizadas con `'`.
 
 «Generar con IA» lleva a <http://localhost:3000/cursos/ID/generar>: tema, nivel, lenguaje (el del curso por defecto) y cantidad (1 a 10); `admin-api` pide los problemas a `ai-service` y los guarda pendientes de revisión. Mientras tanto se ve un indicador de progreso y el botón queda bloqueado; el navegador corta a los 120 s.

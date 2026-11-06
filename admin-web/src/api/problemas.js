@@ -45,3 +45,11 @@ export async function descartarProblema(id) {
   const cuerpo = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, status: respuesta.status, cuerpo }
 }
+
+// HU62-T2: el banco del curso para armar una evaluación. Lista completa, sin paginar, de los problemas no descartados:
+// [{ id, titulo, dificultad, tipo_ejercicio, plataforma, aprobado_por_docente }]. Un curso ajeno da 404.
+export async function listarProblemasCurso(cursoId, signal) {
+  const respuesta = await peticion(`/api/cursos/${cursoId}/problemas/`, { signal })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, status: respuesta.status, cuerpo }
+}
