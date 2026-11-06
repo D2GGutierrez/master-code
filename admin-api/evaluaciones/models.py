@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.utils import timezone
 
@@ -40,10 +42,15 @@ class EvaluacionProblema(models.Model):
     evaluacion = models.ForeignKey(Evaluacion, on_delete=models.CASCADE)
     # PROTECT: la base impide borrar un problema que está en una evaluación. Los problemas no se borran, se descartan.
     problema = models.ForeignKey(Problema, on_delete=models.PROTECT)
+    # Cuántos puntos vale este problema dentro de esta evaluación (HU63 T1): el mismo problema puede valer distinto en
+    # otra. 1 por defecto: sin elegir nada, todos valen lo mismo. Hasta 999,99 con dos decimales.
+    puntaje = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal(1))
 
     class Meta:
         db_table = "admin_evaluacion_problema"
         constraints = [
+            # Un problema no puede valer puntos negativos; 0 sí (un problema de práctica que no suma).
+            models.CheckConstraint(condition=models.Q(puntaje__gte=0), name="evaluacion_problema_puntaje_no_negativo"),
             # Un problema entra una sola vez en la misma evaluación; en otras evaluaciones puede repetirse.
             models.UniqueConstraint(fields=["evaluacion", "problema"], name="uq_evaluacion_problema"),
         ]

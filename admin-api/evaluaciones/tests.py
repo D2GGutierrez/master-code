@@ -1,5 +1,6 @@
 # CA-061.1 a CA-061.3: la evaluación guarda fecha de inicio, fecha de fin y límite de tiempo.
 from datetime import timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -116,6 +117,42 @@ class EvaluacionProblemaModeloTests(TestCase):
                 "SELECT table_schema FROM information_schema.tables WHERE table_name = 'admin_evaluacion_problema'"
             )
             self.assertEqual(cursor.fetchall(), [("admin_schema",)])
+
+    # CA-063.1: cada problema de la evaluación lleva sus puntos en la relación.
+    def test_sin_elegir_puntaje_cada_problema_vale_un_punto(self):
+        fila = EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.suma)
+
+        fila.refresh_from_db()
+
+        self.assertEqual(fila.puntaje, Decimal(1))
+
+    def test_guarda_el_puntaje_de_cada_problema_con_dos_decimales(self):
+        EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.suma, puntaje=Decimal("12.50"))
+        EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.ordena, puntaje=Decimal(7))
+
+        puntajes = {
+            fila.problema_id: fila.puntaje for fila in EvaluacionProblema.objects.filter(evaluacion=self.evaluacion)
+        }
+
+        self.assertEqual(puntajes, {self.suma.pk: Decimal("12.50"), self.ordena.pk: Decimal("7.00")})
+
+    def test_el_mismo_problema_puede_valer_distinto_en_otra_evaluacion(self):
+        otra = self.crear_evaluacion(timezone.now() + timedelta(days=7))
+        EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.suma, puntaje=Decimal(5))
+        EvaluacionProblema.objects.create(evaluacion=otra, problema=self.suma, puntaje=Decimal(20))
+
+        self.assertEqual(
+            EvaluacionProblema.objects.get(evaluacion=self.evaluacion, problema=self.suma).puntaje, Decimal("5.00")
+        )
+        self.assertEqual(EvaluacionProblema.objects.get(evaluacion=otra, problema=self.suma).puntaje, Decimal("20.00"))
+
+    def test_un_puntaje_cero_se_acepta_y_uno_negativo_no(self):
+        EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.suma, puntaje=Decimal(0))
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            EvaluacionProblema.objects.create(evaluacion=self.evaluacion, problema=self.ordena, puntaje=Decimal(-1))
+
+        self.assertEqual(EvaluacionProblema.objects.count(), 1)
 
 
 # CA-064.1 a CA-064.3: el estado sale de comparar la ventana con la hora actual.

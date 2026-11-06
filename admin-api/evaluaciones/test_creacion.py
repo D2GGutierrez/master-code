@@ -156,6 +156,13 @@ class ProblemasDeLaEvaluacionTests(EvaluacionBase):
         self.assertEqual({fila.problema_id for fila in guardados}, {self.suma.pk, self.ordena.pk})
         self.assertEqual(response.data["problemas"], [self.ordena.pk, self.suma.pk])
 
+    # HU63-T1: la API todavía no recibe puntajes; cada problema queda con el valor por defecto.
+    def test_cada_problema_queda_con_un_punto_por_defecto(self):
+        response = self.publicar()
+
+        puntajes = EvaluacionProblema.objects.filter(evaluacion_id=response.data["id"]).values_list("puntaje", flat=True)
+        self.assertEqual({float(p) for p in puntajes}, {1.0})
+
     def test_un_solo_problema_basta(self):
         response = self.publicar(problemas=[self.suma.pk])
 
