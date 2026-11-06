@@ -1,0 +1,21 @@
+/* En pantallas angostas los controles bajan de renglón en vez de ensanchar la página. */
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0;
+}
+
+/* Atenuado pero enfocable: aria-disabled no quita el foco como disabled. */
+.paginacion button[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginacion-rango {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.875rem;
+}

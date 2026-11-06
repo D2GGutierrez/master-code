@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { listarEnvios, type EnvioResumen } from '../api/envios.ts'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
 import Icono from '../components/Icono.tsx'
+import Paginacion from '../components/Paginacion.tsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.tsx'
 import { etiquetaResultado } from '../etiquetas.ts'
 import { formatearFecha, formatearPuntaje, numeroDeFila } from '../historial.ts'
 import { claveLenguaje } from '../lenguajes.ts'
+import { leerPagina, paginar } from '../paginacion.ts'
 import './HistorialEnvios.css'
 
 // Solo la escritura de código usa el editor (HU32-T3); la misma regla que en DetalleProblema.tsx.
 const TIPO_CON_EDITOR = 'escritura_codigo'
+// HU41-T3: igual que el listado de problemas del curso.
+const ENVIOS_POR_PAGINA = 10
 
 // Mensaje según el código de user-api. Hoy responde 404 también si no está inscrito, para no revelar qué existe.
 function mensajeDeError(status: number) {
@@ -23,7 +27,7 @@ function mensajeDeError(status: number) {
 }
 
 // HU41-T2: los envíos del estudiante en un problema, del más reciente al más antiguo, en el orden en que llegan.
-// Sin paginación (HU41-T3) ni el código de cada envío (HU42).
+// HU41-T3: paginados en el navegador, con la página en la URL para volver a ella con Atrás desde «Ver código».
 function HistorialEnvios({ id }: { id: number }) {
   const [problema, setProblema] = useState<ProblemaDetalle | null>(null)
   const [envios, setEnvios] = useState<EnvioResumen[] | null>(null)
@@ -32,10 +36,26 @@ function HistorialEnvios({ id }: { id: number }) {
   const [error, setError] = useState(false)
   // Cambiarlo vuelve a ejecutar el efecto de carga.
   const [recargas, setRecargas] = useState(0)
+  // Se lee una vez al montar; paginar() la limita al rango cuando llega la lista.
+  const [pagina, setPagina] = useState(() => leerPagina(window.location.search))
+  const tabla = useRef<HTMLDivElement>(null)
 
   function reintentar() {
     setError(false)
     setRecargas(recargas + 1)
+  }
+
+  // Cambia solo el parámetro «pagina» (la 1 va sin él), sin recargar ni sumar una entrada al historial del navegador.
+  function cambiarPagina(nueva: number) {
+    setPagina(nueva)
+    const url = new URL(window.location.href)
+    if (nueva === 1) {
+      url.searchParams.delete('pagina')
+    } else {
+      url.searchParams.set('pagina', String(nueva))
+    }
+    window.history.replaceState(window.history.state, '', url)
+    tabla.current?.scrollIntoView({ block: 'start' })
   }
 
   useEffect(() => {
@@ -104,6 +124,7 @@ function HistorialEnvios({ id }: { id: number }) {
     )
   }
 
+  const vista = paginar(envios, pagina, ENVIOS_POR_PAGINA)
   return (
     <main className="historial-envios">
       <Hero clase={`hero-compacto hero-curso leng-${claveLenguaje(problema.lenguaje)}`}>
@@ -125,7 +146,7 @@ function HistorialEnvios({ id }: { id: number }) {
         </EstadoVacio>
       ) : (
         // Enfocable: en pantallas angostas se desplaza con las flechas del teclado.
-        <div className="tabla tabla-historial" tabIndex={0} role="region" aria-label="Historial de envíos">
+        <div ref={tabla} className="tabla tabla-historial" tabIndex={0} role="region" aria-label="Historial de envíos">
           <table>
             <caption className="solo-lectores">Historial de envíos de {problema.titulo}</caption>
             <thead>
@@ -138,8 +159,13 @@ function HistorialEnvios({ id }: { id: number }) {
               </tr>
             </thead>
             <tbody>
-              {envios.map((envio, indice) => {
-                const numero = numeroDeFila(envio.numero_intento, indice, envios.length)
+              {vista.items.map((envio, indice) => {
+                // La posición en la lista completa, no en la página: la página 2 no vuelve a empezar la numeración.
+                const numero = numeroDeFila(
+                  envio.numero_intento,
+                  (vista.pagina - 1) * ENVIOS_POR_PAGINA + indice,
+                  envios.length,
+                )
                 return (
                   <tr key={envio.id}>
                     <td>N.º {numero}</td>
@@ -158,6 +184,16 @@ function HistorialEnvios({ id }: { id: number }) {
           </table>
         </div>
       )}
+      {/* Sin más de una página (o sin envíos) no dibuja nada. */}
+      <Paginacion
+        pagina={vista.pagina}
+        totalPaginas={vista.totalPaginas}
+        desde={vista.desde}
+        hasta={vista.hasta}
+        total={vista.total}
+        etiqueta="envíos"
+        alCambiar={cambiarPagina}
+      />
     </main>
   )
 }
