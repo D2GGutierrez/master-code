@@ -91,6 +91,39 @@ class CrearEvaluacionTests(EvaluacionBase):
                 self.assertIn(campo, response.data)
         self.assertEqual(Evaluacion.objects.count(), 0)
 
+    # CA-061.4: la fecha de fin debe ser posterior a la de inicio.
+    def test_un_fin_anterior_al_inicio_da_400_con_mensaje_en_fecha_fin_y_no_guarda(self):
+        inicio = timezone.now() + timedelta(days=1)
+
+        response = self.publicar(
+            fecha_inicio=inicio.isoformat(), fecha_fin=(inicio - timedelta(hours=1)).isoformat()
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            [str(error) for error in response.data["fecha_fin"]], ["La fecha de fin debe ser posterior a la de inicio."]
+        )
+        self.assertEqual(Evaluacion.objects.count(), 0)
+        self.assertEqual(EvaluacionProblema.objects.count(), 0)
+
+    def test_un_fin_igual_al_inicio_tambien_da_400(self):
+        inicio = timezone.now() + timedelta(days=1)
+
+        response = self.publicar(fecha_inicio=inicio.isoformat(), fecha_fin=inicio.isoformat())
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("fecha_fin", response.data)
+        self.assertEqual(Evaluacion.objects.count(), 0)
+
+    def test_un_fin_un_segundo_despues_del_inicio_se_acepta(self):
+        inicio = timezone.now() + timedelta(days=1)
+
+        response = self.publicar(
+            fecha_inicio=inicio.isoformat(), fecha_fin=(inicio + timedelta(seconds=1)).isoformat()
+        )
+
+        self.assertEqual(response.status_code, 201)
+
     def test_fecha_con_formato_invalido_da_400(self):
         response = self.publicar(fecha_inicio="mañana")
 

@@ -140,6 +140,27 @@ public class AdminCliente {
         return problema;
     }
 
+    // HU64-T2: una evaluación con su ventana, su límite y su estado. Lanza EvaluacionNoExisteException si admin-api
+    // responde 404. Quién puede entrar lo decide quien llama, con el estado y las inscripciones.
+    public EvaluacionDto evaluacion(long evaluacionId) {
+        EvaluacionDto evaluacion;
+        try {
+            evaluacion = http.get()
+                    .uri("/internal/evaluaciones/{id}/", evaluacionId)
+                    .retrieve()
+                    .onStatus(estado -> estado.value() == 404, (peticion, respuesta) -> {
+                        throw new EvaluacionNoExisteException();
+                    })
+                    .body(EvaluacionDto.class);
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar la evaluación", e);
+        }
+        if (evaluacion == null) {
+            throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+        }
+        return evaluacion;
+    }
+
     // HU36-T2: un problema con TODOS sus casos (ocultos incluidos), solo para calificar un envío. Lanza
     // ProblemaNoVisibleException si admin-api responde 404, igual que problema(): sin aprobar, descartado o inexistente.
     public ProblemaCalificableDto problemaParaCalificar(long problemaId) {

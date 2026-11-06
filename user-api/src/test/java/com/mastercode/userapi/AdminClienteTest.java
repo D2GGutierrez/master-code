@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,8 @@ import com.mastercode.userapi.admin.CodigoInvalidoException;
 import com.mastercode.userapi.admin.CodigoVencidoException;
 import com.mastercode.userapi.admin.CursoDto;
 import com.mastercode.userapi.admin.CursoNoExisteException;
+import com.mastercode.userapi.admin.EvaluacionDto;
+import com.mastercode.userapi.admin.EvaluacionNoExisteException;
 import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
@@ -236,6 +239,50 @@ class AdminClienteTest {
         servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/"))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
         assertThrows(AdminNoDisponibleException.class, () -> cliente.problema(7));
+    }
+
+    // HU64-T2: la evaluación con su ventana y su estado, y un campo de más que se ignora.
+    private static final String EVALUACION_JSON = "{\"id\":5,\"curso_id\":10,\"fecha_inicio\":\"2026-11-12T14:00:00Z\","
+            + "\"fecha_fin\":\"2026-11-12T16:00:00Z\",\"limite_minutos\":90,\"estado\":\"activa\","
+            + "\"problemas\":[7,8],\"otro\":1}";
+
+    @Test
+    void evaluacion_pide_la_ruta_interna_con_la_clave_y_lee_la_ventana_el_estado_y_los_problemas() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/evaluaciones/5/"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess(EVALUACION_JSON, MediaType.APPLICATION_JSON));
+
+        EvaluacionDto evaluacion = cliente.evaluacion(5);
+
+        assertThat(evaluacion.id()).isEqualTo(5);
+        assertThat(evaluacion.cursoId()).isEqualTo(10);
+        assertThat(evaluacion.fechaInicio()).isEqualTo(OffsetDateTime.parse("2026-11-12T14:00:00Z"));
+        assertThat(evaluacion.fechaFin()).isEqualTo(OffsetDateTime.parse("2026-11-12T16:00:00Z"));
+        assertThat(evaluacion.limiteMinutos()).isEqualTo(90);
+        assertThat(evaluacion.estado()).isEqualTo("activa");
+        assertThat(evaluacion.problemas()).containsExactly(7L, 8L);
+        servidor.verify();
+    }
+
+    @Test
+    void evaluacion_un_404_es_evaluacion_no_existe() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/evaluaciones/6/"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThrows(EvaluacionNoExisteException.class, () -> cliente.evaluacion(6));
+    }
+
+    @Test
+    void evaluacion_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/evaluaciones/5/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.evaluacion(5));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/evaluaciones/5/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.evaluacion(5));
     }
 
     @Test

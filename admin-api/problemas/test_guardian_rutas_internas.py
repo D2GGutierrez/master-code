@@ -19,6 +19,9 @@ AUDITADAS = {
     # Entrega los casos ocultos a propósito: solo con la clave interna y para que user-api califique (HU36-T2).
     # user-api no los reenvía; lo comprueban sus pruebas (HU39).
     "internal/problemas/<int:problema_id>/calificacion/",
+    # OK: solo ids de problemas, y solo los de visibles_para_estudiante() (evaluaciones/interno.py, HU64-T2). No entrega
+    # enunciado ni casos; user-api no devuelve ni siquiera esos ids fuera de la ventana de la evaluación.
+    "internal/evaluaciones/<int:evaluacion_id>/",
 }
 
 

@@ -30,6 +30,12 @@ class EvaluacionSerializer(serializers.ModelSerializer):
     def get_estado(self, evaluacion):
         return evaluacion.estado()
 
+    # HU61 T4 (CA-61.4): la ventana debe tener duración. Con el fin igual al inicio la evaluación nunca estaría activa.
+    def validate(self, datos):
+        if datos["fecha_fin"] <= datos["fecha_inicio"]:
+            raise serializers.ValidationError({"fecha_fin": "La fecha de fin debe ser posterior a la de inicio."})
+        return datos
+
     # Cada problema debe existir, ser del curso de la evaluación y estar aprobado y no descartado (los mismos que ve un
     # estudiante). Un solo mensaje para los tres motivos: no se revela si un id existe en un curso que no es del docente.
     def validate_problemas(self, ids):
