@@ -5,13 +5,21 @@ import { listarProblemasCurso } from '../api/problemas.js'
 import Icono from '../components/Icono.jsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
 import SelectorProblemas from '../components/SelectorProblemas.jsx'
-import { aInstante, validarEvaluacion } from '../evaluacion.js'
+import {
+  aInstante,
+  armarProblemas,
+  PUNTOS_POR_DEFECTO,
+  validarEvaluacion,
+  validarPuntos,
+} from '../evaluacion.js'
 import '../components/Formulario.css'
 import './NuevaEvaluacion.css'
 
 const ERROR_CARGA = 'No se pudo cargar el curso. Inténtalo de nuevo.'
 const ERROR_CREAR = 'No se pudo crear la evaluación. Inténtalo de nuevo.'
 const SIN_ACCESO = 'No tienes acceso a este curso o no existe.'
+// En el selector: el problema con puntos malos puede estar oculto por la búsqueda.
+const REVISAR_PUNTOS = 'Revisa los puntos de los problemas seleccionados.'
 // El orden en que se recorren los campos para llevar el foco al primero con error.
 const ORDEN_CAMPOS = ['inicio', 'fin', 'limite', 'problemas']
 // Nombre en admin-api → nombre en el formulario.
@@ -28,18 +36,33 @@ function texto(valor) {
   return 'Revisa este dato.'
 }
 
-function erroresDelServidor(status, cuerpo) {
+// HU63-T2: los errores de un problema llegan por su posición en la lista enviada ({ "1": { "puntaje": [...] } }); los
+// de la lista completa (vacía, repetidos, de otro curso), como una lista de mensajes. Devuelve [errores, de puntos].
+function erroresDelServidor(status, cuerpo, enviados) {
   // Llega un 401 solo si el interceptor ya intentó renovar el token y no pudo.
   if (status === 401) {
-    return { general: 'Tu sesión expiró. Inicia sesión de nuevo.' }
+    return [{ general: 'Tu sesión expiró. Inicia sesión de nuevo.' }, {}]
   }
   if (status === 403 || status === 404) {
-    return { general: SIN_ACCESO }
+    return [{ general: SIN_ACCESO }, {}]
   }
   const errores = {}
+  const erroresPuntos = {}
   for (const [nombreServidor, nombre] of Object.entries(CAMPOS_SERVIDOR)) {
     if (cuerpo[nombreServidor]) {
       errores[nombre] = texto(cuerpo[nombreServidor])
+    }
+  }
+  const porPosicion = cuerpo.problemas
+  if (porPosicion && typeof porPosicion === 'object' && !Array.isArray(porPosicion)) {
+    errores.problemas = REVISAR_PUNTOS
+    for (const [posicion, error] of Object.entries(porPosicion)) {
+      const id = enviados[Number(posicion)]?.problema
+      if (id !== undefined && error?.puntaje) {
+        erroresPuntos[id] = texto(error.puntaje)
+      } else {
+        errores.problemas = 'Revisa los problemas seleccionados.'
+      }
     }
   }
   const general = cuerpo.detail ?? cuerpo.non_field_errors
@@ -48,11 +71,12 @@ function erroresDelServidor(status, cuerpo) {
   } else if (Object.keys(errores).length === 0) {
     errores.general = ERROR_CREAR
   }
-  return errores
+  return [errores, erroresPuntos]
 }
 
 // HU61-T3 (CA-045.1 a CA-045.4, CA-046.3): el docente crea una evaluación de su curso con su ventana (inicio y fin), el
 // límite en minutos de cada estudiante y los problemas aprobados que contiene. Sin nombre: el modelo no lo tiene.
+// HU63-T2 (CA-047.1, CA-047.2): cada problema seleccionado con sus puntos, editables hasta crearla.
 function NuevaEvaluacion({ cursoId }) {
   // null mientras carga; luego el curso del docente y el banco completo del curso.
   const [curso, setCurso] = useState(null)
@@ -65,7 +89,10 @@ function NuevaEvaluacion({ cursoId }) {
   const [recargas, setRecargas] = useState(0)
   const [valores, setValores] = useState({ inicio: '', fin: '', limite: '' })
   const [seleccionados, setSeleccionados] = useState([])
+  // El texto de puntos por id. Desmarcar no lo borra: al volver a marcar, el problema recupera lo que tenía.
+  const [puntos, setPuntos] = useState({})
   const [errores, setErrores] = useState({})
+  const [erroresPuntos, setErroresPuntos] = useState({})
   const [enviando, setEnviando] = useState(false)
   const [creada, setCreada] = useState(false)
   // Un segundo clic en el mismo instante llega antes de que React deshabilite el botón: esto lo frena.
@@ -126,16 +153,38 @@ function NuevaEvaluacion({ cursoId }) {
     setErrores({ ...errores, [name]: undefined })
   }
 
+  // Un problema marcado por primera vez (también con «Seleccionar los visibles») empieza con el valor por defecto.
   function cambiarSeleccion(ids) {
+    const conValor = { ...puntos }
+    for (const id of ids) {
+      if (!(id in conValor)) {
+        conValor[id] = PUNTOS_POR_DEFECTO
+      }
+    }
     setSeleccionados(ids)
+    setPuntos(conValor)
     setErrores({ ...errores, problemas: undefined })
   }
 
-  function mostrarErrores(nuevos) {
+  function cambiarPuntos(id, valor) {
+    setPuntos({ ...puntos, [id]: valor })
+    setErroresPuntos({ ...erroresPuntos, [id]: undefined })
+  }
+
+  // El foco va al primer campo con error. Los puntos están dentro del selector: va al primero con error, en el orden
+  // del banco; si la búsqueda lo oculta, al selector, que pide revisar los puntos.
+  function mostrarErrores(nuevos, nuevosPuntos = {}) {
     setErrores(nuevos)
+    setErroresPuntos(nuevosPuntos)
     const primero = ORDEN_CAMPOS.find((nombre) => nuevos[nombre])
     const campos = { inicio: refInicio, fin: refFin, limite: refLimite, problemas: refProblemas }
-    campos[primero]?.current?.focus()
+    const conPuntosMalos = seleccionados.find((id) => nuevosPuntos[id])
+    const campoPuntos = conPuntosMalos !== undefined && document.getElementById(`puntos-${conPuntosMalos}`)
+    if (primero === 'problemas' && campoPuntos) {
+      campoPuntos.focus()
+    } else {
+      campos[primero]?.current?.focus()
+    }
   }
 
   async function crear(evento) {
@@ -144,24 +193,30 @@ function NuevaEvaluacion({ cursoId }) {
       return
     }
     const encontrados = validarEvaluacion({ ...valores, problemas: seleccionados })
+    const puntosMalos = validarPuntos(seleccionados, puntos)
+    if (Object.keys(puntosMalos).length > 0) {
+      encontrados.problemas = REVISAR_PUNTOS
+    }
     if (Object.keys(encontrados).length > 0) {
-      mostrarErrores(encontrados)
+      mostrarErrores(encontrados, puntosMalos)
       return
     }
     enCurso.current = true
     setEnviando(true)
     setErrores({})
+    setErroresPuntos({})
+    const problemas = armarProblemas(banco, seleccionados, puntos)
     try {
       const { ok, status, cuerpo } = await crearEvaluacion(cursoId, {
         fecha_inicio: aInstante(valores.inicio),
         fecha_fin: aInstante(valores.fin),
         limite_minutos: Number(valores.limite),
-        problemas: seleccionados,
+        problemas,
       })
       if (ok) {
         setCreada(true)
       } else {
-        mostrarErrores(erroresDelServidor(status, cuerpo))
+        mostrarErrores(...erroresDelServidor(status, cuerpo, problemas))
       }
     } catch {
       // fetch solo lanza error cuando no hay conexión con el servidor.
@@ -289,6 +344,9 @@ function NuevaEvaluacion({ cursoId }) {
             alCambiar={cambiarSeleccion}
             error={errores.problemas}
             omitidos={banco.length - aprobados.length}
+            puntos={puntos}
+            alCambiarPuntos={cambiarPuntos}
+            erroresPuntos={erroresPuntos}
           />
         </div>
         <button type="submit" disabled={enviando}>

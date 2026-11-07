@@ -18,8 +18,20 @@ function textoContador(cantidad) {
 
 // HU62-T2 (CA-046.1, CA-046.2): elegir varios problemas del banco de un curso para una evaluación. Controlado: no pide
 // datos. problemas son los ya aprobados del curso; omitidos, cuántos del curso quedaron fuera por no estar aprobados.
-// alCambiar recibe siempre los ids en el orden del banco y sin repetir. HU63-T2 agregará aquí los puntos.
-function SelectorProblemas({ problemas, seleccionados, alCambiar, error, omitidos = 0 }) {
+// alCambiar recibe siempre los ids en el orden del banco y sin repetir.
+// HU63-T2 (CA-047.1, CA-047.2): con puntos ({ id: texto }), cada problema marcado lleva su campo de puntos;
+// alCambiarPuntos(id, texto) recibe lo escrito y erroresPuntos ({ id: mensaje }) se muestra bajo cada campo. Sin
+// puntos, el selector es el de HU62-T2.
+function SelectorProblemas({
+  problemas,
+  seleccionados,
+  alCambiar,
+  error,
+  omitidos = 0,
+  puntos,
+  alCambiarPuntos,
+  erroresPuntos = {},
+}) {
   // Solo de la pantalla: buscar no cambia la selección.
   const [busqueda, setBusqueda] = useState('')
   const id = useId()
@@ -65,22 +77,50 @@ function SelectorProblemas({ problemas, seleccionados, alCambiar, error, omitido
             <p>Ningún problema coincide con la búsqueda.</p>
           ) : (
             <ul className="selector-lista">
-              {visibles.map((problema) => (
-                <li key={problema.id}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={seleccionados.includes(problema.id)}
-                      onChange={() => cambiar(alternarSeleccion(seleccionados, problema.id))}
-                    />
-                    <span className="selector-titulo">{problema.titulo}</span>
-                    <span className="selector-detalle">
-                      {etiqueta(DIFICULTADES, problema.dificultad)} · {etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}
-                      {problema.plataforma !== 'ambas' && ` · ${etiqueta(PLATAFORMAS, problema.plataforma)}`}
-                    </span>
-                  </label>
-                </li>
-              ))}
+              {visibles.map((problema) => {
+                const marcado = seleccionados.includes(problema.id)
+                const errorPuntos = erroresPuntos[problema.id]
+                // Sin useId: la pantalla lleva el foco al primer campo de puntos con error por este id.
+                const idPuntos = `puntos-${problema.id}`
+                return (
+                  <li key={problema.id} className={puntos ? 'selector-fila' : undefined}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={marcado}
+                        onChange={() => cambiar(alternarSeleccion(seleccionados, problema.id))}
+                      />
+                      <span className="selector-titulo">{problema.titulo}</span>
+                      <span className="selector-detalle">
+                        {etiqueta(DIFICULTADES, problema.dificultad)} ·{' '}
+                        {etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}
+                        {problema.plataforma !== 'ambas' && ` · ${etiqueta(PLATAFORMAS, problema.plataforma)}`}
+                      </span>
+                    </label>
+                    {puntos && marcado && (
+                      <div className="selector-puntos">
+                        {/* Texto y no number: «2,5» llega tal cual y un error se explica, sin vaciar el campo. */}
+                        <input
+                          id={idPuntos}
+                          type="text"
+                          inputMode="decimal"
+                          value={puntos[problema.id] ?? ''}
+                          onChange={(evento) => alCambiarPuntos(problema.id, evento.target.value)}
+                          aria-label={`Puntos de ${problema.titulo}`}
+                          aria-invalid={errorPuntos ? 'true' : undefined}
+                          aria-describedby={errorPuntos ? `${idPuntos}-error` : undefined}
+                        />
+                        <span aria-hidden="true">pts</span>
+                        {errorPuntos && (
+                          <p id={`${idPuntos}-error`} className="error">
+                            {errorPuntos}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </>

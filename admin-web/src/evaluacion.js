@@ -1,3 +1,5 @@
+import { ordenarComoBanco } from './seleccionProblemas.js'
+
 // Lo que da un <input type="datetime-local">: sin zona, así que el navegador lo lee en la hora del equipo.
 const FECHA_LOCAL = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?$/
 
@@ -38,4 +40,47 @@ export function validarEvaluacion({ inicio, fin, limite, problemas }) {
     errores.problemas = 'Selecciona al menos un problema.'
   }
   return errores
+}
+
+// HU63-T2 (CA-047.1, CA-047.2): los puntos de cada problema, con las reglas de EvaluacionProblema.puntaje en admin-api
+// (DecimalField de 5 dígitos y 2 decimales, mínimo 0). El servidor los exige; en el formulario se proponen al marcar.
+export const LIMITES_PUNTOS = { minimo: 0, maximo: 999.99, decimales: 2 }
+// El mismo valor por defecto del modelo.
+export const PUNTOS_POR_DEFECTO = '1'
+
+// El texto de un campo de puntos como número, o null si no sirve. Acepta punto o coma decimal; rechaza signos,
+// notación científica, dígitos que no son ASCII y más decimales de los permitidos.
+export function normalizarPuntos(texto, limites = LIMITES_PUNTOS) {
+  if (typeof texto !== 'string') {
+    return null
+  }
+  const limpio = texto.trim()
+  const partes = limpio.match(/^\d+(?:[.,](\d+))?$/)
+  if (!partes || (partes[1] ?? '').length > limites.decimales) {
+    return null
+  }
+  const numero = Number(limpio.replace(',', '.'))
+  if (!Number.isFinite(numero) || numero < limites.minimo || numero > limites.maximo) {
+    return null
+  }
+  return numero
+}
+
+// Errores por id, solo de los problemas seleccionados: lo escrito en uno desmarcado no se envía.
+export function validarPuntos(seleccionados, puntos, limites = LIMITES_PUNTOS) {
+  const errores = {}
+  for (const id of seleccionados ?? []) {
+    if (normalizarPuntos(puntos?.[id], limites) === null) {
+      errores[id] = 'Indica los puntos: un número de 0 a 999,99, con hasta 2 decimales.'
+    }
+  }
+  return errores
+}
+
+// La lista «problemas» del cuerpo: los seleccionados que siguen en el banco, en su orden, sin repetir, con su puntaje.
+export function armarProblemas(banco, seleccionados, puntos) {
+  return ordenarComoBanco(banco ?? [], seleccionados ?? []).map((id) => ({
+    problema: id,
+    puntaje: normalizarPuntos(puntos?.[id]),
+  }))
 }
