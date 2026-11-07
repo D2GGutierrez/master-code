@@ -1,0 +1,16 @@
+/* Inicio y fin lado a lado si caben; en pantallas angostas, uno debajo del otro. */
+.evaluacion-fechas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: 1.25rem;
+}
+
+.evaluacion-fechas .campo {
+  min-width: 0;
+}
+
+/* Solo recibe el foco por código, al faltar problemas (con Tab no se llega): se marca también tras un clic. */
+.selector-foco:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}

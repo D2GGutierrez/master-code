@@ -99,7 +99,7 @@ Antes de guardar, un cuadro de confirmación (`components/Confirmacion.jsx`, sob
 
 Los problemas se muestran del menor al mayor acierto (los más difíciles primero); «Ordenar por» cambia a mayor acierto primero o al orden original. Se ordena en el navegador con `ordenarPorAcierto` (`src/acierto.js`), por la razón exacta y con los problemas sin envíos al final; la elección no se guarda.
 
-`components/SelectorProblemas.jsx` elige varios problemas APROBADOS del banco de un curso para una evaluación (búsqueda por título, «Seleccionar los visibles», «Quitar selección» y contador); los ids salen en el orden del banco, listos para `problemas` de `POST /api/cursos/{id}/evaluaciones/`. Mientras no exista el formulario de la evaluación (HU61-T3) se prueba en la página provisional <http://localhost:3000/selector-prueba/ID>.
+`components/SelectorProblemas.jsx` elige varios problemas APROBADOS del banco de un curso para una evaluación (búsqueda por título, «Seleccionar los visibles», «Quitar selección» y contador); los ids salen en el orden del banco, listos para `problemas` de `POST /api/cursos/{id}/evaluaciones/`. Lo usa «Nueva evaluación» de cada curso en «Mis cursos» (<http://localhost:3000/cursos/ID/evaluaciones/nueva>): fecha y hora de inicio y de fin (en la hora del equipo, enviadas en ISO UTC), el límite en minutos de cada estudiante y los problemas; `src/evaluacion.js` valida lo mismo que admin-api antes de enviarlo.
 
 En la pantalla de inscritos, «Descargar CSV» baja la lista completa (no solo la página visible) como `inscritos-<curso>-<fecha>.csv`, en UTF-8 con BOM, separado por comas y con las celdas que empiezan por `=`, `+`, `-` o `@` neutralizadas con `'`.
 

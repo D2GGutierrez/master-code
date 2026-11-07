@@ -202,6 +202,7 @@ function MisCursos() {
                       <a href={`/cursos/${curso.id}/inscritos`}>Ver inscritos</a>{' '}
                       <a href={`/cursos/${curso.id}/aciertos`}>Ver aciertos</a>{' '}
                       <a href={`/cursos/${curso.id}/generar`}>Generar con IA</a>{' '}
+                      <a href={`/cursos/${curso.id}/evaluaciones/nueva`}>Nueva evaluación</a>{' '}
                       {confirmando === curso.id ? (
                         <>
                           ¿Eliminar “{curso.nombre}”?{' '}
