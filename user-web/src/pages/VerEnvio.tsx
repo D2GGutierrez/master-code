@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { obtenerEnvio, type EnvioDetalle } from '../api/envios.ts'
 import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
+import BotonCopiarAlEditor from '../components/BotonCopiarAlEditor.tsx'
 import EditorCodigo from '../components/EditorCodigo.tsx'
 import Icono from '../components/Icono.tsx'
 import { Hero } from '../components/Pantalla.tsx'
@@ -21,7 +22,8 @@ function mensajeDeError(status: number) {
 }
 
 // HU42-T3 (decisión D8): el código de un envío anterior, en otro editor y solo para leer. No toca el borrador ni el
-// código del editor del problema. Sin ejecutor, sin envío, sin copiar al editor (HU42-T4) ni el detalle por caso.
+// código del editor del problema, salvo con «Copiar al editor actual» confirmado (HU42-T4). Sin ejecutor, sin envío
+// ni el detalle por caso.
 function VerEnvio({ id, envioId }: { id: number; envioId: number }) {
   const [problema, setProblema] = useState<ProblemaDetalle | null>(null)
   const [envio, setEnvio] = useState<EnvioDetalle | null>(null)
@@ -123,6 +125,7 @@ function VerEnvio({ id, envioId }: { id: number; envioId: number }) {
         <span className="etiqueta-problema">Solo lectura</span>
       </p>
       {!envio.codigo && <p>Este envío no tiene código guardado.</p>}
+      <BotonCopiarAlEditor problemaId={id} codigo={envio.codigo} numeroIntento={envio.numero_intento ?? undefined} />
       <div className="ver-envio-editor" role="region" aria-label={`Código del envío N.º ${numero}, solo lectura`}>
         <EditorCodigo
           valor={envio.codigo}

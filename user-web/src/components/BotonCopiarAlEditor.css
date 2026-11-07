@@ -1,0 +1,27 @@
+/* Una fila delgada sobre el editor de solo lectura, alineada a la derecha; en pantallas angostas el texto baja de
+   renglón. */
+.copiar-editor {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  margin-bottom: 0.5rem;
+}
+
+.copiar-editor-confirmacion {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-grande);
+  background: var(--fondo-suave);
+}
+
+.copiar-editor-titulo {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.copiar-editor-confirmacion button + button {
+  margin-left: 0.5rem;
+}
