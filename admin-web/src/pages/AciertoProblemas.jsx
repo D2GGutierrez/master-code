@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { porcentajeAcierto } from '../acierto.js'
+import { useEffect, useMemo, useState } from 'react'
+import { ordenarPorAcierto, porcentajeAcierto } from '../acierto.js'
 import { obtenerAciertos } from '../api/cursos.js'
 import Icono from '../components/Icono.jsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
@@ -12,8 +12,9 @@ function etiquetaDificultad(valor) {
   return DIFICULTADES.find((opcion) => opcion.valor === valor)?.etiqueta ?? valor
 }
 
-// HU44-T2: por cada problema del curso, cuántos envíos hubo, cuántos fueron correctos y el porcentaje de acierto. En el
-// orden en que llega de admin-api (ordenar por acierto es HU44-T3).
+// HU44-T2: por cada problema del curso, cuántos envíos hubo, cuántos fueron correctos y el porcentaje de acierto.
+// HU44-T3: por defecto, los de menor acierto (los más difíciles) primero; el orden se elige en el navegador y no se
+// guarda.
 function AciertoProblemas({ id }) {
   // null mientras carga; luego la lista (puede estar vacía).
   const [problemas, setProblemas] = useState(null)
@@ -23,6 +24,9 @@ function AciertoProblemas({ id }) {
   const [puedeReintentar, setPuedeReintentar] = useState(false)
   // Cambiarlo vuelve a ejecutar el efecto de carga.
   const [recargas, setRecargas] = useState(0)
+  // 'asc', 'desc' u 'original' (el de admin-api).
+  const [orden, setOrden] = useState('asc')
+  const ordenados = useMemo(() => problemas && ordenarPorAcierto(problemas, orden), [problemas, orden])
 
   useEffect(() => {
     // Al cambiar de curso o salir de la pantalla, la respuesta que llegue tarde se descarta.
@@ -98,7 +102,7 @@ function AciertoProblemas({ id }) {
             </tr>
           </thead>
           <tbody>
-            {problemas.map((problema) => {
+            {ordenados.map((problema) => {
               const porcentaje = porcentajeAcierto(problema.correctos, problema.intentos)
               return (
                 <tr key={problema.id}>
@@ -140,6 +144,16 @@ function AciertoProblemas({ id }) {
         </p>
         <h1>Aciertos por problema</h1>
       </Hero>
+      {!error && problemas?.length >= 2 && (
+        <p className="orden-aciertos">
+          <label htmlFor="orden-aciertos">Ordenar por</label>
+          <select id="orden-aciertos" value={orden} onChange={(evento) => setOrden(evento.target.value)}>
+            <option value="asc">Menor acierto primero (más difíciles)</option>
+            <option value="desc">Mayor acierto primero</option>
+            <option value="original">Orden original</option>
+          </select>
+        </p>
+      )}
       {contenido}
     </main>
   )
