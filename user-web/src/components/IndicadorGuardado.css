@@ -1,0 +1,10 @@
+/* Al final de la fila del editor, a la derecha; si no cabe, baja a su propia línea. */
+.indicador-guardado {
+  margin: 0 0 0 auto;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+
+.indicador-guardado-error {
+  color: var(--error);
+}

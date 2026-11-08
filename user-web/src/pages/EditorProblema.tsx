@@ -4,6 +4,7 @@ import { obtenerProblema, type ProblemaDetalle } from '../api/problemas.ts'
 import { codigoInicial } from '../codigoInicial.ts'
 import DosPaneles from '../components/DosPaneles.tsx'
 import Icono from '../components/Icono.tsx'
+import IndicadorGuardado from '../components/IndicadorGuardado.tsx'
 import PanelEditor from '../components/PanelEditor.tsx'
 import PanelEnunciado from '../components/PanelEnunciado.tsx'
 import { guardarDivision, leerDivisionGuardada } from '../division.ts'
@@ -89,7 +90,12 @@ function EditorProblema({ id }: { id: number }) {
   }, [id, recargas])
 
   // El problema y su código inicial llegan juntos: con el problema cargado ya no hay nada que el autoguardado pise.
-  useAutoguardado(id, codigo, codigoAbierto, problema !== null && correspondeEditor(problema))
+  const { estado, ultimoGuardado } = useAutoguardado(
+    id,
+    codigo,
+    codigoAbierto,
+    problema !== null && correspondeEditor(problema),
+  )
 
   const volver = <a href={`/problemas/${id}`}>Volver al problema</a>
 
@@ -135,6 +141,7 @@ function EditorProblema({ id }: { id: number }) {
         </a>
         <h1>{problema.titulo}</h1>
         <span className="etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
+        <IndicadorGuardado estado={estado} ultimoGuardado={ultimoGuardado} />
       </div>
       <DosPaneles
         divisionInicial={divisionGuardada}
