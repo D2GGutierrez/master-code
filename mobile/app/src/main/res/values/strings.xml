@@ -19,4 +19,12 @@
     <string name="mis_cursos_lenguaje">Lenguaje: %1$s</string>
     <string name="mis_cursos_inscrito_el">Inscrito el %1$s</string>
     <string name="mis_cursos_abrir">Abrir curso</string>
+    <string name="ejercicio_cargando">Cargando el ejercicio</string>
+    <string name="ejercicio_reintentar">Reintentar</string>
+    <string name="ejercicio_error_conexion">No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</string>
+    <string name="ejercicio_error_inesperado">No se pudo cargar el ejercicio. Inténtalo de nuevo.</string>
+    <string name="ejercicio_error_no_encontrado">No encontramos este ejercicio. Puede que ya no esté disponible.</string>
+    <string name="ejercicio_error_tipo">Este ejercicio no se responde en esta pantalla.</string>
+    <string name="predecir_campo">Lo que imprime</string>
+    <string name="completar_campo">Escribe lo que va en el espacio en blanco</string>
 </resources>

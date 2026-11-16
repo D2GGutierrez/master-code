@@ -404,3 +404,75 @@ class PuntajesDeLosProblemasTests(EvaluacionBase):
 
         self.assertEqual(self.puntajes_guardados(primera.data["id"]), {self.suma.pk: Decimal("10.00")})
         self.assertEqual(self.puntajes_guardados(segunda.data["id"]), {self.suma.pk: Decimal("90.00")})
+
+
+# HU63-T4 (CA-63.4): la suma que se le muestra al docente es la de los puntos que guardó admin-api. La suma se hace en el
+# formulario (admin-web); aquí se comprueba lo que la hace posible: lo guardado y lo devuelto suman exactamente lo enviado.
+class SumaDePuntosTests(EvaluacionBase):
+    def setUp(self):
+        super().setUp()
+        self.tercero = self.crear_problema("Tercero")
+
+    @staticmethod
+    def sumar(valores):
+        return sum((Decimal(str(valor)) for valor in valores), Decimal(0))
+
+    def suma_guardada(self, evaluacion_id):
+        filas = EvaluacionProblema.objects.filter(evaluacion_id=evaluacion_id)
+        return sum((fila.puntaje for fila in filas), Decimal(0))
+
+    def test_lo_guardado_y_lo_devuelto_suman_lo_que_se_envio(self):
+        enviados = ["30", "20.5", "49.5"]
+        response = self.publicar(
+            problemas=[self.item(p.pk, v) for p, v in zip([self.suma, self.ordena, self.tercero], enviados)]
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.suma_guardada(response.data["id"]), Decimal(100))
+        self.assertEqual(self.sumar([fila["puntaje"] for fila in response.json()["problemas"]]), Decimal(100))
+
+    # 0,1 + 0,2 en decimales da 0,3 exacto (en coma flotante da 0,30000000000000004).
+    def test_los_decimales_suman_exacto(self):
+        response = self.publicar(problemas=[self.item(self.suma.pk, "0.1"), self.item(self.ordena.pk, "0.2")])
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.suma_guardada(response.data["id"]), Decimal("0.30"))
+
+    def test_un_problema_de_cero_puntos_no_cambia_la_suma(self):
+        response = self.publicar(problemas=[self.item(self.suma.pk, 0), self.item(self.ordena.pk, 25)])
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.suma_guardada(response.data["id"]), Decimal(25))
+
+    # El tope de 999,99 es por problema; el total no tiene tope propio.
+    def test_el_total_puede_pasar_de_999_99_si_cada_problema_respeta_su_tope(self):
+        response = self.publicar(
+            problemas=[self.item(p.pk, "999.99") for p in (self.suma, self.ordena, self.tercero)]
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.suma_guardada(response.data["id"]), Decimal("2999.97"))
+
+    def test_cada_evaluacion_suma_solo_sus_propios_problemas(self):
+        primera = self.publicar(problemas=[self.item(self.suma.pk, 10), self.item(self.ordena.pk, 20)])
+        segunda = self.publicar(problemas=[self.item(self.suma.pk, 70)])
+
+        self.assertEqual(self.suma_guardada(primera.data["id"]), Decimal(30))
+        self.assertEqual(self.suma_guardada(segunda.data["id"]), Decimal(70))
+
+    # Un negativo no se «compensa» con otros puntos aunque la suma diera algo válido: 50 + (-20) = 30, y aun así se rechaza.
+    def test_un_puntaje_negativo_se_rechaza_aunque_la_suma_total_sea_positiva(self):
+        response = self.publicar(problemas=[self.item(self.suma.pk, 50), self.item(self.ordena.pk, -20)])
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(list(response.data["problemas"]), [1])
+        self.assertEqual(Evaluacion.objects.count(), 0)
+        self.assertEqual(EvaluacionProblema.objects.count(), 0)
+
+    def test_no_se_guarda_una_suma_parcial_si_uno_de_los_puntajes_no_sirve(self):
+        response = self.publicar(
+            problemas=[self.item(self.suma.pk, 40), self.item(self.ordena.pk, 30), self.item(self.tercero.pk, "abc")]
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(EvaluacionProblema.objects.count(), 0)

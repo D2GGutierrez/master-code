@@ -308,6 +308,52 @@ class EnviosApiTest extends PruebaDeApi {
                 .andExpect(jsonPath("$.aviso").value("Tu código no compiló. Revisa la línea 3. " + motor));
     }
 
+    // HU40-T5 (CA-40.3): el error de sintaxis de Python trae la línea en la traza («line 4»), no tras el archivo.
+    @Test
+    void un_error_de_sintaxis_de_python_muestra_su_linea_en_el_aviso() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO);
+        String motor = "  File \"/piston/jobs/abc/main.py\", line 4\n    print(\n         ^\nSyntaxError: '(' was never closed";
+        when(sandbox.ejecutar(any())).thenReturn(new EjecucionResultado(Estado.ERROR_COMPILACION, "", motor, null));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.aviso").value("Tu código no compiló. Revisa la línea 4. " + motor));
+    }
+
+    // HU40-T5: un error de sintaxis es un envío más (cuenta el intento) con resultado incorrecto y 0 puntos.
+    @Test
+    void un_error_de_sintaxis_queda_guardado_como_intento_incorrecto_con_cero_puntos() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.ERROR_COMPILACION, "", "SyntaxError en la línea 2", null));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resultado").value("incorrecto"))
+                .andExpect(jsonPath("$.puntaje").value(0.0))
+                .andExpect(jsonPath("$.numero_intento").value(1));
+
+        List<Map<String, Object>> filas = guardados(yo.id(), PROBLEMA);
+        assertThat(filas).hasSize(1);
+        assertThat(filas.get(0)).containsEntry("resultado", "incorrecto");
+    }
+
+    // HU40-T5: si un caso no compiló y otro se pasó de tiempo, el aviso es el de la compilación (lo primero que hay que arreglar).
+    @Test
+    void con_error_de_sintaxis_y_tiempo_agotado_a_la_vez_el_aviso_es_el_de_sintaxis() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        when(sandbox.ejecutar(any()))
+                .thenReturn(new EjecucionResultado(Estado.TIEMPO_AGOTADO, "", "Tiempo límite excedido.", null))
+                .thenReturn(new EjecucionResultado(Estado.ERROR_COMPILACION, "", "SyntaxError en la línea 2", null));
+
+        enviar(yo)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.aviso").value("Tu código no compiló. SyntaxError en la línea 2"));
+    }
+
     // Un error de ejecución mantiene su aviso fijo aunque el texto del programa diga «line 9»: ese texto lo escribe el
     // programa y podría llevar la entrada de un caso oculto.
     @Test
