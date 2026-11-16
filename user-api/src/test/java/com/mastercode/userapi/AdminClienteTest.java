@@ -37,6 +37,7 @@ import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.ProblemaResumenDto;
+import com.mastercode.userapi.admin.RespuestaDelProblemaDto;
 
 // El cliente de la API interna de admin-api (D3). Sin admin-api real: MockRestServiceServer responde.
 class AdminClienteTest {
@@ -394,5 +395,63 @@ class AdminClienteTest {
         servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/calificacion/"))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
         assertThrows(AdminNoDisponibleException.class, () -> cliente.problemaParaCalificar(7));
+    }
+
+    // H1: la ruta interna con la respuesta esperada y las alternativas con su marca de correcta, y un campo de más.
+    private static final String RESPUESTA_JSON = "{\"id\":8,\"curso_id\":10,\"tipo_ejercicio\":\"opcion_multiple\","
+            + "\"respuesta_esperada\":\"\",\"opciones\":["
+            + "{\"id\":81,\"texto\":\"Uno\",\"es_correcta\":false},"
+            + "{\"id\":82,\"texto\":\"Dos\",\"es_correcta\":true}],\"otro\":1}";
+
+    @Test
+    void respuesta_del_problema_pide_la_ruta_interna_con_la_clave_y_lee_las_alternativas() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/8/respuesta/"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Key", "clave-de-prueba"))
+                .andRespond(withSuccess(RESPUESTA_JSON, MediaType.APPLICATION_JSON));
+
+        RespuestaDelProblemaDto respuesta = cliente.respuestaDelProblema(8);
+
+        assertThat(respuesta.id()).isEqualTo(8);
+        assertThat(respuesta.cursoId()).isEqualTo(10);
+        assertThat(respuesta.tipoEjercicio()).isEqualTo("opcion_multiple");
+        assertThat(respuesta.opciones()).containsExactly(
+                new RespuestaDelProblemaDto.Opcion(81, "Uno", false),
+                new RespuestaDelProblemaDto.Opcion(82, "Dos", true));
+        servidor.verify();
+    }
+
+    @Test
+    void respuesta_del_problema_un_404_es_problema_no_visible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/9/respuesta/"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThrows(ProblemaNoVisibleException.class, () -> cliente.respuestaDelProblema(9));
+    }
+
+    @Test
+    void respuesta_del_problema_con_fallo_es_admin_no_disponible() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/8/respuesta/"))
+                .andRespond(withServerError());
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.respuestaDelProblema(8));
+
+        servidor.reset();
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/8/respuesta/"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        assertThrows(AdminNoDisponibleException.class, () -> cliente.respuestaDelProblema(8));
+    }
+
+    // HU46-T2: las alternativas que llegan en el detalle del estudiante; si admin-api mandara es_correcta, se ignora.
+    @Test
+    void problema_lee_las_alternativas_sin_la_marca_de_correcta() {
+        servidor.expect(requestTo("http://admin-api:8000/internal/problemas/7/"))
+                .andRespond(withSuccess("{\"id\":7,\"titulo\":\"Elige\",\"enunciado\":\"x\",\"lenguaje\":\"python\","
+                        + "\"dificultad\":\"facil\",\"plataforma\":\"movil\",\"tipo_ejercicio\":\"opcion_multiple\","
+                        + "\"casos_prueba\":[],\"curso_id\":10,\"opciones\":["
+                        + "{\"id\":71,\"texto\":\"Uno\",\"es_correcta\":true}]}", MediaType.APPLICATION_JSON));
+
+        ProblemaDto problema = cliente.problema(7);
+
+        assertThat(problema.opciones()).containsExactly(new ProblemaDto.Opcion(71, "Uno"));
     }
 }

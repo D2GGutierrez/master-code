@@ -205,12 +205,13 @@ class ProblemasApiTest extends PruebaDeApi {
         inscribir(crearEstudiante(email), 10);
         when(admin.problema(7)).thenReturn(DETALLE_P7);
 
-        // Diez campos exactos: lo que no se nombra aquí no sale hacia el estudiante.
+        // Once campos exactos: lo que no se nombra aquí no sale hacia el estudiante. «opciones» (HU46-T2) es la lista de
+        // alternativas, vacía salvo en opción múltiple; las que sí existen se prueban en AlternativasMovilApiTest.
         mvc.perform(get("/api/problemas/7").with(tokenDe(email, "estudiante")))
-                .andExpect(jsonPath("$.*", hasSize(10)))
+                .andExpect(jsonPath("$.*", hasSize(11)))
                 .andExpect(jsonPath("$.casos_prueba[0].*", hasSize(2)))
                 .andExpect(jsonPath("$.respuesta_esperada").doesNotExist())
-                .andExpect(jsonPath("$.opciones").doesNotExist())
+                .andExpect(jsonPath("$.opciones", hasSize(0)))
                 .andExpect(jsonPath("$.aprobado_por_docente").doesNotExist());
     }
 

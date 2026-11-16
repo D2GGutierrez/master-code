@@ -20,3 +20,14 @@ humo:
 # Es seguro repetirlo. La clave de las cuentas la pones tú: DEMO_CLAVE=... make datos-demo (ver infra/scripts/datos_demo.py).
 datos-demo:
 	python infra/scripts/datos_demo.py
+
+# SonarQube local (docs/sonarqube.md): `make sonar-up` arranca el servidor en http://localhost:9000 y `make sonar` analiza todo el monorepo.
+sonar-up:
+	docker compose -f docker-compose.sonar.yml up -d
+
+# Sin -v: el volumen se conserva y los análisis anteriores no se pierden.
+sonar-down:
+	docker compose -f docker-compose.sonar.yml down
+
+sonar:
+	bash infra/scripts/sonar.sh

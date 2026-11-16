@@ -57,6 +57,14 @@ class GuardianRutasTest extends PruebaDeApi {
             // OK: el problema sale de /internal/problemas/{id}/ de admin-api (visibles_para_estudiante()); sin aprobar o
             // sin estar inscrito da el mismo 404 y no se guarda nada. Lo comprueba BorradorApiTest (HU35-T2).
             "PUT /api/problemas/{problemaId}/borrador",
+            // OK: el problema sale de /internal/problemas/{id}/ de admin-api (visibles_para_estudiante()) y la respuesta
+            // esperada de /internal/problemas/{id}/respuesta/; sin aprobar o sin estar inscrito da el mismo 404 y no se
+            // corrige nada. Solo devuelve si acertó, y la respuesta correcta únicamente si falló; lo comprueba
+            // RespuestaMovilApiTest (H2).
+            "POST /api/problemas/{problemaId}/respuesta",
+            // NO APLICA: guarda el token de notificaciones del dispositivo del propio estudiante (el del token de sesión);
+            // no devuelve nada ni toca problemas. Lo comprueba DispositivoApiTest (HU52-T1).
+            "PUT /api/dispositivo",
             // NO APLICA: la usa admin-api con X-Internal-Key; solo cuenta envíos por problema (intentos y correctos), sin
             // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
             "GET /internal/envios/resumen",

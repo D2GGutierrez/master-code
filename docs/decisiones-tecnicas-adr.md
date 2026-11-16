@@ -234,3 +234,43 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Hecho en HU64-T3 (cierre por tiempo).** `user-api` guarda cuándo empezó cada estudiante su intento en `app_schema.app_intento_evaluacion` (migración V9: `estudiante_id`, `evaluacion_id` sin llave foránea porque la evaluación vive en `admin_schema`, `fecha_inicio`, y un solo intento por estudiante y evaluación). El reloj empieza la primera vez que el estudiante entra o envía código dentro de la ventana, y no se reinicia al volver a entrar. El cierre es perezoso, sin tarea programada: cada vez que entra o envía se compara la hora actual con el **menor** entre `inicio del intento + limite_minutos` y el fin de la ventana (`PlazoDelIntento`). Si ya pasó, `GET /api/evaluaciones/{id}` y `POST /api/problemas/{id}/envios` con `evaluacion_id` responden **403** `tiempo_agotado` («Se acabó el tiempo de tu evaluación.»), sin problemas, sin ejecutar el código y sin guardar el envío. El envío con `evaluacion_id` pasa por la misma puerta (`AccesoEvaluacionServicio`) y además exige que el problema sea de esa evaluación (404 si no); sin `evaluacion_id` es un envío de práctica y no depende de ningún reloj. Entrar fuera de la ventana o sin estar inscrito no crea ningún intento. Pendiente: el envío todavía no guarda a qué evaluación pertenece (hará falta para calificar la evaluación, HU65).
 >
 > **Alternativas descartadas:** una tarea programada que cierre los intentos vencidos (scheduler, concurrencia entre instancias y pruebas con tiempo simulado) y el híbrido de cierre perezoso más barrido de limpieza (solo tendría sentido con reportes que lean la columna directamente).
+
+## **ADR-9: Detalles del último sprint (decidido el 20 de noviembre de 2026)**
+
+### D12. Alcance del Sprint 4
+
+> **Decidido.** Es el último sprint: nada «pasa al Sprint 5». El plan completo se trabaja **en orden de niveles** (0, 1, 2, …), sin un corte acordado de antemano. Lo que no esté terminado al cierre se declara **no entregado** en la memoria y en la demostración, en lugar de entregarse a medias. El alcance mínimo recomendado en `docs/roadmap-sprint-4.md` (niveles 0 a 3) sirve de referencia para saber qué no puede faltar.
+>
+> **Alternativas descartadas:** fijar el corte antes de empezar (el equipo prefirió decidirlo con el avance real) y arrastrar lo pendiente a un sprint posterior (no existe).
+
+### D13. Tema de un problema (HU56 y siguientes)
+
+> **Decidido.** Un campo opcional `tema` en `Problema` (texto corto). La IA lo propone al generar el problema y el docente puede cambiarlo; vacío se muestra como «General». **Todavía no está hecho:** su tarea (H4) no forma parte de esta entrega.
+>
+> **Alternativas descartadas:** una tabla de temas por curso (migraciones, pantallas de administración y llaves foráneas que el último sprint no puede pagar) y deducir el tema del título o de las etiquetas (poco fiable).
+
+### D14. Dónde se guardan los intentos de los ejercicios móviles (HU45-T3)
+
+> **Decidido.** Cada intento es **una fila de `app_envio`** con `plataforma = 'movil'`: la respuesta escrita (o el texto de la alternativa elegida) va en `codigo`, `resultado` es `correcto` o `incorrecto` y `puntaje` es 100 o 0. Así el historial, el avance (D9) y el resumen del docente (D10) leen una sola tabla y no hay otra que sincronizar. **Todavía no se guardan:** H2 solo corrige; guardar el intento y limitar cuántos hay es HU45-T3.
+>
+> **Alternativas descartadas:** una tabla aparte para intentos móviles (duplica las consultas de avance, historial y resumen).
+
+### D15. Cómo se corrigen los ejercicios móviles (H1, H2, HU45-T1 y HU46-T2)
+
+> **Decidido.** Se corrige en `user-api`, sin IA y sin sandbox (ADR-2). Como `user-api` no puede leer `admin_schema` (ADR-1) y la ruta del estudiante nunca trae la respuesta, `admin-api` ofrece una ruta interna nueva, `GET /internal/problemas/{id}/respuesta/` (con `X-Internal-Key`, mecanismo de D3), que devuelve `id`, `curso_id`, `tipo_ejercicio`, `respuesta_esperada` y las alternativas con su `es_correcta`. Solo responde por problemas visibles para el estudiante (`visibles_para_estudiante()`, D5): uno sin aprobar, descartado o inexistente da el mismo 404.
+>
+> **Ruta única.** `POST /api/problemas/{id}/respuesta` con `{respuesta}` (predicción de salida) o `{opcion_id}` (opción múltiple) y respuesta `{resultado: "correcto" | "incorrecto", respuesta_correcta}`. `respuesta_correcta` aparece solo si falló. El acceso es el de abrir un problema (HU31-T2): no visible o curso sin inscripción da 404, y la respuesta esperada solo se pide a `admin-api` cuando el estudiante ya puede responder. Errores: 400 (falta la respuesta o la alternativa, alternativa de otro ejercicio, respuesta de más de 1 000 caracteres, ejercicio que no se resuelve por aquí), 404, 503 (`admin-api` no disponible). `completar_espacio` (HU47-T2) todavía responde 400 «todavía no…».
+>
+> **Normalización (HU45-T1).** Se compara el texto sin espacios al inicio y al final, con los espacios repetidos reducidos a uno, sin distinguir mayúsculas de minúsculas; un salto de línea cuenta como espacio. Los signos importan: «Hola, mundo» no es «Hola mundo». Una respuesta en blanco, o un ejercicio sin respuesta esperada, nunca acierta.
+>
+> **Alternativas (HU46-T2, CA-46.4).** El detalle del problema trae las alternativas con `id` y `texto`, **mezcladas en cada apertura**, y nunca `es_correcta`: la correcta no se puede identificar antes de responder. Los textos de todas las alternativas sí viajan (hace falta para mostrarlas). Se cambió una prueba de `admin-api` que exigía que el texto de la correcta no viajara: lo que no viaja es la marca.
+>
+> **Alternativas descartadas:** meter `respuesta_esperada` en la ruta del estudiante (la expone a cualquiera que abra la red del navegador), que `user-api` lea `admin_schema` (rompe ADR-1) y una ruta por tipo de ejercicio (la app tendría que conocer el tipo antes de enviar).
+
+### D16. Token de notificaciones del dispositivo (HU52-T1)
+
+> **Decidido.** La app móvil registra el token de Firebase Cloud Messaging con `PUT /api/dispositivo` y `{token}` (204; 400 si falta o pasa de 1 024 caracteres). `user-api` lo guarda en `app_schema.app_dispositivo` (migración V10: `estudiante_id` con llave foránea a `app_estudiante`, `token` único, `fecha_registro`). El estudiante sale del token de sesión, nunca del cuerpo. Es un PUT porque repetirlo no cambia nada, y si otro estudiante inicia sesión en el mismo teléfono el token **cambia de dueño** (upsert por token); un estudiante puede tener varios teléfonos.
+>
+> **Alcance.** Esta entrega es solo la parte de `user-api`. Obtener el token en la app, las dependencias de Firebase y enviar una notificación de prueba desde la consola de Firebase quedan para la app móvil (guía en `docs/notificaciones-push.md`). Formalmente HU52-T1 depende de HU49-T1 y de H5.
+>
+> **Alternativas descartadas:** una columna `token` en `app_estudiante` (un solo teléfono por persona y un token que sobrevive al cambio de dueño) y enviar las notificaciones desde `user-api` en este sprint (necesita credenciales de servicio de Firebase que el repositorio no debe guardar).

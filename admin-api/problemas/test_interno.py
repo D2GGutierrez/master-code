@@ -226,16 +226,32 @@ class ProblemaPorIdTests(InternoBase):
         self.assertNotIn(ENTRADA_OCULTA, texto)
         self.assertNotIn(SALIDA_OCULTA, texto)
 
-    def test_la_respuesta_esperada_y_la_alternativa_correcta_no_viajan(self):
-        prediccion = self.crear_problema(tipo=PREDICCION, respuesta_esperada=RESPUESTA_SECRETA)
-        opcion = self.crear_problema(tipo=OPCION)
-        OpcionRespuesta.objects.create(problema=opcion, texto=ALTERNATIVA_CORRECTA, es_correcta=True)
+    def test_la_respuesta_esperada_no_viaja(self):
+        problema = self.crear_problema(tipo=PREDICCION, respuesta_esperada=RESPUESTA_SECRETA)
 
-        for problema in (prediccion, opcion):
-            with self.subTest(tipo=problema.tipo_ejercicio):
-                texto = self.pedir(f"/internal/problemas/{problema.pk}/").content.decode()
-                self.assertNotIn(RESPUESTA_SECRETA, texto)
-                self.assertNotIn(ALTERNATIVA_CORRECTA, texto)
+        texto = self.pedir(f"/internal/problemas/{problema.pk}/").content.decode()
+
+        self.assertNotIn(RESPUESTA_SECRETA, texto)
+
+    def test_las_alternativas_viajan_sin_decir_cual_es_la_correcta(self):
+        # HU46-T2: el estudiante recibe todas las alternativas, la correcta incluida, pero ninguna marca la distingue
+        # (CA-46.4). Quien las mezcla es user-api; aquí solo se garantiza que no salga es_correcta.
+        problema = self.crear_problema(tipo=OPCION)
+        correcta = OpcionRespuesta.objects.create(problema=problema, texto=ALTERNATIVA_CORRECTA, es_correcta=True)
+        otra = OpcionRespuesta.objects.create(problema=problema, texto="Otra alternativa", es_correcta=False)
+
+        respuesta = self.pedir(f"/internal/problemas/{problema.pk}/")
+
+        self.assertEqual(
+            respuesta.json()["opciones"],
+            [{"id": correcta.pk, "texto": ALTERNATIVA_CORRECTA}, {"id": otra.pk, "texto": "Otra alternativa"}],
+        )
+        self.assertNotIn("es_correcta", respuesta.content.decode())
+
+    def test_un_problema_que_no_es_de_opcion_multiple_trae_la_lista_vacia(self):
+        problema = self.crear_problema()
+
+        self.assertEqual(self.pedir(f"/internal/problemas/{problema.pk}/").json()["opciones"], [])
 
     def test_no_salen_los_datos_internos_del_problema(self):
         problema = self.crear_problema(generado_por_ia=True)

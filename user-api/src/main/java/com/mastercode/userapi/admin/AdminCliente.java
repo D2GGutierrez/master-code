@@ -181,4 +181,26 @@ public class AdminCliente {
         }
         return problema;
     }
+
+    // H1 (HU45 a HU48): la respuesta esperada y las alternativas con su marca de correcta, solo para corregir un
+    // ejercicio del celular. Lanza ProblemaNoVisibleException si admin-api responde 404, igual que problema(): sin
+    // aprobar, descartado o inexistente.
+    public RespuestaDelProblemaDto respuestaDelProblema(long problemaId) {
+        RespuestaDelProblemaDto respuesta;
+        try {
+            respuesta = http.get()
+                    .uri("/internal/problemas/{id}/respuesta/", problemaId)
+                    .retrieve()
+                    .onStatus(estado -> estado.value() == 404, (peticion, respuestaHttp) -> {
+                        throw new ProblemaNoVisibleException();
+                    })
+                    .body(RespuestaDelProblemaDto.class);
+        } catch (RestClientException e) {
+            throw new AdminNoDisponibleException("admin-api no pudo entregar la respuesta del problema", e);
+        }
+        if (respuesta == null) {
+            throw new AdminNoDisponibleException("admin-api devolvió una respuesta vacía", null);
+        }
+        return respuesta;
+    }
 }

@@ -26,3 +26,6 @@ Claude outputs/
 .DS_Store
 Thumbs.db
 docs/roadmap-s2-datos.json
+
+# SonarQube (docs/sonarqube.md)
+.scannerwork/

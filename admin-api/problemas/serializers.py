@@ -185,9 +185,18 @@ class CasoPruebaEstudianteSerializer(serializers.ModelSerializer):
         fields = ["entrada", "salida_esperada"]
 
 
+class OpcionEstudianteSerializer(serializers.ModelSerializer):
+    # Sin es_correcta: el estudiante recibe las alternativas, pero nada que le diga cuál es la correcta (CA-46.4).
+    class Meta:
+        model = OpcionRespuesta
+        fields = ["id", "texto"]
+
+
 class ProblemaEstudianteSerializer(serializers.ModelSerializer):
     # Sin curso ni fecha_creacion: son datos internos que el estudiante no necesita para resolver.
     casos_prueba = serializers.SerializerMethodField()
+    # Solo las de opción múltiple las tienen; en los demás tipos sale la lista vacía (HU46-T2).
+    opciones = serializers.SerializerMethodField()
 
     class Meta:
         model = Problema
@@ -201,12 +210,16 @@ class ProblemaEstudianteSerializer(serializers.ModelSerializer):
             "tipo_ejercicio",
             "codigo_base",
             "casos_prueba",
+            "opciones",
         ]
 
     def get_casos_prueba(self, problema):
         # Único lugar donde se filtra: los ocultos solo sirven para calificar y nunca salen.
         publicos = problema.casos_prueba.filter(es_publico=True)
         return CasoPruebaEstudianteSerializer(publicos, many=True).data
+
+    def get_opciones(self, problema):
+        return OpcionEstudianteSerializer(problema.opciones.all(), many=True).data
 
 
 # Detalle para user-api (HU31-T2): lo mismo que ve el estudiante más el curso, porque user-api necesita
@@ -235,6 +248,27 @@ class ProblemaCalificacionSerializer(serializers.ModelSerializer):
 
     def get_casos_prueba(self, problema):
         return CasoPruebaCalificacionSerializer(problema.casos_prueba.order_by("id"), many=True).data
+
+
+# Para corregir un ejercicio del celular (H1; HU45 a HU48): la respuesta esperada y las alternativas CON su marca de cuál
+# es la correcta. Solo la sirve la ruta interna con clave (problemas/interno.py); user-api corrige con ellas y al
+# estudiante solo le devuelve si acertó, y la correcta únicamente cuando ya respondió (HU48-T2). Va aparte de la ruta de
+# calificación (código): aquella entrega casos y esta entrega respuestas, y ninguna de las dos sale hacia el estudiante.
+class OpcionCorreccionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpcionRespuesta
+        fields = ["id", "texto", "es_correcta"]
+
+
+class ProblemaRespuestaSerializer(serializers.ModelSerializer):
+    opciones = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Problema
+        fields = ["id", "curso_id", "tipo_ejercicio", "respuesta_esperada", "opciones"]
+
+    def get_opciones(self, problema):
+        return OpcionCorreccionSerializer(problema.opciones.all(), many=True).data
 
 
 # Fila del listado de problemas de un curso (HU29): sin enunciado ni casos, que solo hacen falta al abrir uno.

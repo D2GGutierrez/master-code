@@ -1,9 +1,12 @@
 package com.mastercode.userapi.problema;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,9 +51,15 @@ public class ProblemasController {
     record CasoDeEjemplo(String entrada, String salidaEsperada) {
     }
 
+    // Una alternativa de un ejercicio de opción múltiple (HU46-T2): solo id y texto, nada que diga cuál es la correcta.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    record Alternativa(long id, String texto) {
+    }
+
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     record ProblemaDetalle(long id, long cursoId, String titulo, String enunciado, String lenguaje, String dificultad,
-            String plataforma, String tipoEjercicio, String codigoBase, List<CasoDeEjemplo> casosPrueba) {
+            String plataforma, String tipoEjercicio, String codigoBase, List<CasoDeEjemplo> casosPrueba,
+            List<Alternativa> opciones) {
     }
 
     private final AdminCliente admin;
@@ -173,7 +182,17 @@ public class ProblemasController {
         return ResponseEntity.ok(new ProblemaDetalle(problema.id(), problema.cursoId(), problema.titulo(),
                 problema.enunciado(), problema.lenguaje(), problema.dificultad(), problema.plataforma(),
                 problema.tipoEjercicio(), problema.codigoBase() == null ? "" : problema.codigoBase(),
-                casos.stream().map(c -> new CasoDeEjemplo(c.entrada(), c.salidaEsperada())).toList()));
+                casos.stream().map(c -> new CasoDeEjemplo(c.entrada(), c.salidaEsperada())).toList(),
+                alternativasMezcladas(problema)));
+    }
+
+    // HU46-T2: las alternativas llegan en otro orden cada vez que se abre el ejercicio, así la correcta no queda siempre
+    // en el mismo lugar. Se copian a una lista nueva: la que trae el problema no se toca. Cada una lleva solo su id y su
+    // texto; la marca de cuál es la correcta no existe en ProblemaDto, así que no puede salir de aquí (CA-46.4).
+    private static List<Alternativa> alternativasMezcladas(ProblemaDto problema) {
+        List<ProblemaDto.Opcion> opciones = new ArrayList<>(problema.opciones() == null ? List.of() : problema.opciones());
+        Collections.shuffle(opciones, ThreadLocalRandom.current());
+        return opciones.stream().map(o -> new Alternativa(o.id(), o.texto())).toList();
     }
 
     // Un parámetro ausente o en blanco equivale a no filtrar.

@@ -12,6 +12,7 @@ from problemas.models import Plataforma, Problema
 from problemas.serializers import (
     ProblemaCalificacionSerializer,
     ProblemaInternoSerializer,
+    ProblemaRespuestaSerializer,
     ProblemaResumenSerializer,
 )
 
@@ -50,3 +51,13 @@ class ProblemaParaCalificarView(VistaInterna):
     def get(self, request, problema_id):
         problema = get_object_or_404(Problema.objects.visibles_para_estudiante(), pk=problema_id)
         return Response(ProblemaCalificacionSerializer(problema).data)
+
+
+class ProblemaParaCorregirView(VistaInterna):
+    # H1 (HU45 a HU48). La respuesta esperada y las alternativas con su marca de correcta, para que user-api corrija un
+    # ejercicio del celular. Es la única ruta que las entrega y solo con la clave interna; user-api nunca las reenvía
+    # al estudiante antes de que responda (CA-46.4). Parte de visibles_para_estudiante() como las demás: un problema sin
+    # aprobar o descartado da 404, la misma que uno inexistente.
+    def get(self, request, problema_id):
+        problema = get_object_or_404(Problema.objects.visibles_para_estudiante(), pk=problema_id)
+        return Response(ProblemaRespuestaSerializer(problema).data)
