@@ -74,6 +74,29 @@ Para `main`: exigir Pull Request, exigir 1 aprobación, exigir que el CI pase y 
 
 Al cerrar cada sprint se marca el estado final con una etiqueta: `git tag sprint-1` y `git push origin sprint-1`.
 
+### Etiquetas de los cuatro sprints (C3)
+
+Hasta el 20 de noviembre de 2026 `git tag -l` estaba vacío. Cada etiqueta va sobre el **último commit de `main` de su sprint**; el comando lo busca por fecha para no copiar hashes a mano. Se corren desde la raíz, con `main` al día (`git checkout main` y `git pull`):
+
+```bash
+git tag -a sprint-1 -m "Sprint 1: base del proyecto (5 al 16 de octubre)" "$(git rev-list -1 --before='2026-10-19 00:00' main)"
+git tag -a sprint-2 -m "Sprint 2: editor, sandbox, IA e inscripción (19 al 30 de octubre)" "$(git rev-list -1 --before='2026-11-02 00:00' main)"
+git tag -a sprint-3 -m "Sprint 3: calificación de punta a punta y evaluaciones (2 al 13 de noviembre)" "$(git rev-list -1 --before='2026-11-16 00:00' main)"
+git tag -a sprint-4 -m "Sprint 4: app móvil y cierre del MVP (16 al 27 de noviembre)" main
+git push origin sprint-1 sprint-2 sprint-3 sprint-4
+```
+
+Antes de empujar, comprueba con `git show --stat sprint-1` (y los otros) que cada etiqueta cae donde dice la tabla. Los hashes son los de hoy, para revisar que el comando acierta:
+
+| Etiqueta | Cierre del sprint | Último commit de `main` hasta esa fecha |
+| :--- | :--- | :--- |
+| `sprint-1` | viernes 16 de octubre | `8bb94ac` «pruebas de inicio de sesión móvil de punta a punta (HU22 T5)» |
+| `sprint-2` | viernes 30 de octubre | `3b7e4e7` «Mejoras de Interfaz Gráfica de la aplicación - Master Code» |
+| `sprint-3` | viernes 13 de noviembre | `f6f5f13` «indicador de último guardado en el editor (HU35-T4)» |
+| `sprint-4` | viernes 27 de noviembre | el último commit de `main` tras el Pull Request final; se etiqueta ese día |
+
+Si un commit tiene la fecha cambiada a pedido del profesor (ver el README), `--before` usa la fecha del commit y no la real: revisa la tabla antes de empujar. Etiquetar no cambia el código de nadie, pero `git push origin` de una etiqueta es público: hazlo una sola vez.
+
 ## 7. Origen de este repositorio
 
 Este repositorio empezó vacío al inicio del Sprint 1, para aplicar desde el primer commit las reglas de este documento. Las versiones anteriores se conservan sin cambios en los repositorios `master-code` y `master-code-tec`.

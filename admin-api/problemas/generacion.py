@@ -2,8 +2,11 @@ from django.db import transaction
 
 from problemas.completitud import faltante
 from problemas.ia import IaRespuestaInvalida
-from problemas.models import Plataforma, TipoEjercicio
+from problemas.models import Plataforma, Problema, TipoEjercicio
 from problemas.serializers import ProblemaSerializer
+
+# Largo máximo del tema: el del campo, para recortar en vez de rechazar lo que la IA se pase.
+TEMA_MAX = Problema._meta.get_field("tema").max_length
 
 # Qué tipos puede traer cada plataforma pedida (igual que ai-service y que la regla de HU15).
 TIPOS_POR_PLATAFORMA = {
@@ -44,6 +47,9 @@ def guardar_generados(curso, solicitud, generados):
             "casos_prueba": generado.get("casos_prueba") or [],
             "opciones": generado.get("opciones") or [],
             "respuesta_esperada": generado.get("respuesta_esperada") or "",
+            # H4: el tema es una ayuda, no un requisito. Si la IA no lo manda o se pasa del largo, se recorta y el
+            # docente lo corrige al revisar; nunca debe tumbar la tanda entera.
+            "tema": str(generado.get("tema") or "").strip()[:TEMA_MAX],
         }
         serializador = ProblemaSerializer(data=datos)
         if not serializador.is_valid():

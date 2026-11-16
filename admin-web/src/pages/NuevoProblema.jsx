@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { listarCursos } from '../api/cursos.js'
 import { crearProblema } from '../api/problemas.js'
 import { normalizarCodigoBase } from '../codigoBase.js'
-import Aviso from '../components/Aviso.jsx'
+import Alternativas from '../components/Alternativas.jsx'
 import CasosPrueba from '../components/CasosPrueba.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
 import Formulario from '../components/Formulario.jsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
+import { RespuestaHueco, RespuestaSalida } from '../components/RespuestaEsperada.jsx'
+import { faltanteDelEjercicio } from '../completitud.js'
 
 // Valores de las listas fijas que acepta admin-api; la etiqueta es solo para mostrar.
 const LENGUAJES = [
@@ -31,10 +33,31 @@ export const TIPOS_EJERCICIO = [
   { valor: 'completar_espacio', etiqueta: 'Completar espacio' },
 ]
 
-// admin-api aún no guarda la respuesta de los demás tipos (HU46, HU47): la sección queda reservada
-// y, como nunca recibe un valor, no se envía nada.
-function SeccionPendiente() {
-  return <Aviso mensaje="Esta sección estará disponible próximamente." />
+// Mismo tope que el campo `tema` de admin-api (H4).
+const TEMA_MAX = 60
+
+// H4 (D13): el tema es una etiqueta corta y opcional, por eso no usa el input de Formulario, que siempre es obligatorio.
+function CampoTema({ id, valor, error, onCambio }) {
+  const idAyuda = `${id}-ayuda`
+  return (
+    <>
+      <input
+        id={id}
+        name={id}
+        type="text"
+        maxLength={TEMA_MAX}
+        autoComplete="off"
+        value={valor}
+        onChange={(evento) => onCambio(evento.target.value)}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? `${idAyuda} ${id}-error` : idAyuda}
+      />
+      <p id={idAyuda} className="campo-ayuda">
+        Concepto que practica el problema, por ejemplo «bucles» o «listas». Sirve para el resumen de la sesión del
+        estudiante; si lo dejas vacío se muestra como «General».
+      </p>
+    </>
+  )
 }
 
 // HU34-T2: el código base se escribe como código (monoespaciado, sin ajuste de línea ni correcciones del navegador)
@@ -144,24 +167,27 @@ function NuevoProblema() {
       componente: CampoCodigoBase,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'escritura_codigo',
     },
+    // H3: cada tipo del celular pide su dato de corrección. Los nombres son los de admin-api (opciones y
+    // respuesta_esperada), para que sus errores salgan debajo del campo; lo oculto no se envía.
     {
-      nombre: 'alternativas',
+      nombre: 'opciones',
       etiqueta: 'Alternativas',
-      componente: SeccionPendiente,
+      componente: Alternativas,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'opcion_multiple',
     },
     {
-      nombre: 'salida_esperada',
+      nombre: 'respuesta_esperada',
       etiqueta: 'Salida esperada',
-      componente: SeccionPendiente,
+      componente: RespuestaSalida,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'prediccion_salida',
     },
     {
-      nombre: 'texto_completar',
+      nombre: 'respuesta_esperada',
       etiqueta: 'Texto que completa el espacio',
-      componente: SeccionPendiente,
+      componente: RespuestaHueco,
       mostrarSi: (valores) => valores.tipo_ejercicio === 'completar_espacio',
     },
+    { nombre: 'tema', etiqueta: 'Tema (opcional)', componente: CampoTema },
   ]
 
   async function crear(valores) {
@@ -175,6 +201,28 @@ function NuevoProblema() {
     // Sin tocar el campo no se envía y admin-api lo guarda vacío.
     if ('codigo_base' in datos) {
       datos.codigo_base = normalizarCodigoBase(datos.codigo_base)
+    }
+    if ('tema' in datos) {
+      datos.tema = datos.tema.trim()
+    }
+    // H3: las alternativas viajan sin el id de pantalla y la respuesta esperada sin espacios de más en los bordes.
+    if (datos.tipo_ejercicio === 'opcion_multiple') {
+      datos.opciones = (datos.opciones ?? []).map(({ texto, es_correcta }) => ({ texto: texto.trim(), es_correcta }))
+    }
+    if ('respuesta_esperada' in datos) {
+      datos.respuesta_esperada = datos.respuesta_esperada.trim()
+    }
+    // admin-api guarda un ejercicio incompleto como borrador sin aprobar y esta pantalla no lo puede completar luego:
+    // se avisa aquí, debajo del campo que falta, con la misma regla del servidor.
+    const falta = faltanteDelEjercicio({
+      tipo: datos.tipo_ejercicio,
+      enunciado: datos.enunciado ?? '',
+      opciones: datos.opciones,
+      respuestaEsperada: datos.respuesta_esperada,
+    })
+    if (falta) {
+      setErrores({ [falta.campo]: falta.mensaje })
+      return
     }
     setEnviando(true)
     setErrores({})
@@ -245,7 +293,7 @@ function NuevoProblema() {
       <Hero clase="hero-compacto">
         <p className="hero-sobretitulo">Panel docente</p>
         <h1>Nuevo problema</h1>
-        <p>Escribe el enunciado y los casos de prueba de un problema para uno de tus cursos.</p>
+        <p>Escribe el enunciado y lo que sirve para corregirlo (casos de prueba, alternativas o respuesta esperada) para uno de tus cursos.</p>
       </Hero>
       {creado ? contenido : <div className="panel-formulario panel-formulario-ancho">{contenido}</div>}
     </main>

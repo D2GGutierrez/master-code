@@ -245,7 +245,9 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 
 ### D13. Tema de un problema (HU56 y siguientes)
 
-> **Decidido.** Un campo opcional `tema` en `Problema` (texto corto). La IA lo propone al generar el problema y el docente puede cambiarlo; vacío se muestra como «General». **Todavía no está hecho:** su tarea (H4) no forma parte de esta entrega.
+> **Decidido.** Un campo opcional `tema` en `Problema` (texto corto, hasta 60 caracteres). La IA lo propone al generar el problema y el docente puede cambiarlo; vacío se muestra como «General».
+>
+> **Hecho (H4).** `Problema.tema` (migración `0011_problema_tema`), en el serializador del docente y en las dos rutas internas que consume `user-api` (el listado del curso y el detalle del problema); `user-api` ya ignora los campos que no conoce, así que lo usará HU56-T1 cuando lo necesite. `ai-service` lo pide en el prompt (`"tema"`: una a tres palabras) y lo devuelve en cada problema generado; si la IA no lo manda, queda vacío, y si se pasa de 60 caracteres se **recorta** en lugar de rechazar la tanda. El docente lo escribe, opcional, en el formulario de «Nuevo problema». **Límite conocido:** la bandeja de revisión de `admin-web` todavía no edita problemas, así que el tema que propone la IA se corrige por la API (`PUT /api/problemas/{id}/`, que ya lo admite) y no desde una pantalla.
 >
 > **Alternativas descartadas:** una tabla de temas por curso (migraciones, pantallas de administración y llaves foráneas que el último sprint no puede pagar) y deducir el tema del título o de las etiquetas (poco fiable).
 
@@ -302,3 +304,34 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Qué se entrega.** Ejercicios móviles (`plataforma` móvil o ambas, **nunca** `escritura_codigo`) y visibles de los cursos donde el estudiante está inscrito, del lenguaje de la sesión y que no se hayan entregado ya en esa sesión; se elige uno al azar. Otra sesión sí puede repetir ejercicios. Cerrar la sesión (`fecha_fin`) y guardar si acertó (`acerto`) quedan para HU53-T3 y HU53-T4.
 >
 > **Alternativas descartadas:** orden fijo (el Dojo sería siempre igual), guardar la lista de ejercicios al abrir la sesión (se queda vieja si el docente aprueba o archiva problemas) y una ruta propia para el detalle (la app ya sabe pintar el del problema).
+
+## **ADR-10: Duelos y marcador en vivo (HU57 a HU60; decidido el 20 de noviembre de 2026)**
+
+### D20. Mecanismo de tiempo real del marcador y regla de desconexión (HU59-T1)
+
+> **Decidido.** El marcador se mantiene al día con **consulta periódica** (*polling*): mientras la pantalla de la partida está abierta, la app pide `GET /api/partidas/{id}/marcador` cada **2 segundos**, con el mismo JWT del resto de la API. La respuesta trae el marcador de los dos jugadores, de qué ejercicio va cada uno, el estado de la partida (`en_curso`, `terminada`) y el estado de conexión del rival. Se descartan Server-Sent Events y WebSocket.
+>
+> **Por qué.** Es lo único de las tres opciones que no pide nada nuevo: es una ruta más de `user-api` bajo la seguridad que ya existe, sin hilos abiertos por jugador, sin estado de conexión en memoria (que se perdería al reiniciar el servicio) y sin proxy que mantenga conexiones largas. Aguanta bien la conexión lenta (HU59-T5): una consulta que falla se reintenta sola y nada se queda a medias. Y 2 s se siente «en vivo» para un duelo de ejercicios cortos, donde cada respuesta tarda mucho más que eso.
+>
+> | Criterio | Consulta periódica (elegida) | Server-Sent Events | WebSocket |
+> | :--- | :--- | :--- | :--- |
+> | Cambios en el servidor | Una ruta GET | Un `SseEmitter` por jugador y su limpieza | Configuración del *handshake* con JWT, sesiones y mensajes |
+> | Seguridad | La del resto de la API | La cabecera con el JWT hay que armarla a mano en el cliente | El JWT no viaja en cabecera en el *handshake* del navegador; hay que inventar otro camino |
+> | Estado en el servidor | Ninguno (todo en la base) | Conexiones abiertas en memoria | Sesiones abiertas en memoria |
+> | Conexión lenta o con cortes | Se reintenta sola | Hay que programar la reconexión y qué se perdió | Igual que SSE, más latido (*ping*) |
+> | Cómo se prueba | Con `MockMvc`, como todo lo demás | Pruebas asíncronas con tiempos | Cliente WebSocket de prueba |
+> | Lo que cuesta | Más peticiones (una cada 2 s por jugador, unas 60 por minuto en total para dos) | Menos peticiones | Menos peticiones |
+>
+> **Cuidado con la conexión lenta.** La app no lanza una consulta nueva hasta que termina la anterior (no se acumulan). Si una falla, espera el doble (2 → 4 → 8 s, tope 10 s) y vuelve a 2 s con la primera que responda. Si la respuesta no cambió, `user-api` contesta **304** sin cuerpo (ETag), para que una red mala solo mueva cabeceras.
+>
+> **Regla de desconexión (CA-59.3 y CA-59.4).** Un jugador tiene **30 segundos para volver**; si no vuelve, **pierde la partida**. Con consulta periódica no hay una conexión que se cierre y avise: lo que se observa es la **última señal**, que es la última petición del jugador sobre esa partida (consultar el marcador o responder un ejercicio). Por eso:
+>
+> 1. Cada petición de un jugador sobre su partida guarda `ultima_senal` en su fila de la partida.
+> 2. A los **10 segundos** sin señal el rival ve «tu rival se desconectó» (el marcador trae `rival_conectado: false`); no pasa nada más.
+> 3. Los 30 segundos se cuentan **desde la última señal** (con consulta cada 2 s, es la mejor estimación de cuándo se cayó). Si el jugador vuelve antes, la partida sigue donde estaba, porque todo el estado vive en el servidor.
+> 4. **No hay un temporizador en el servidor.** La regla se evalúa cada vez que alguien consulta o responde en esa partida: si el rival lleva más de 30 s sin señal y la partida sigue `en_curso`, se cierra como ganada por quien sigue presente (motivo `abandono`). El que se había caído ve la partida perdida cuando vuelve a consultar. Si **los dos** pasan de 30 s sin señal, se cierra como empate por abandono; el criterio de los empates en general es de H9.
+> 5. Una partida abandonada cuenta como ganada para el otro en el ranking (HU60).
+>
+> **Para las tareas que vienen.** HU57-T1 debe crear la columna `ultima_senal` (marca de tiempo, nula hasta la primera petición) en la fila de cada jugador de la partida; HU59-T2 hace la ruta del marcador y guarda la señal; HU59-T4 implementa el paso 4 y las pruebas con un plazo corto configurable (los 30 s y los 10 s van en `application.yml`, no escritos en el código, como la caducidad del reto de HU57-T4); HU59-T3 hace la consulta cada 2 s en la app y HU59-T5 prueba la conexión lenta.
+>
+> **Alternativas descartadas:** Server-Sent Events y WebSocket (más inmediatos, pero piden estado en memoria, pruebas asíncronas y una seguridad aparte que el último sprint no puede pagar; si el proyecto sigue después, se pueden cambiar sin tocar la regla de desconexión, que solo depende de `ultima_senal`), un temporizador en el servidor que cierre la partida a los 30 s (obliga a un proceso en segundo plano que sobreviva reinicios, y la evaluación al consultar da el mismo resultado visible) y contar los 30 s desde que se detecta la desconexión (con consulta periódica nunca se «detecta» nada: solo se mide el silencio).

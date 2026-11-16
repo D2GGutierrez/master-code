@@ -48,7 +48,7 @@ def test_generate_con_mock_devuelve_los_problemas_pedidos(monkeypatch):
     problemas = respuesta.json()["problemas"]
     assert len(problemas) == 3
     assert {p["tipo_ejercicio"] for p in problemas} <= set(TIPOS_POR_PLATAFORMA["ambas"])
-    assert set(problemas[0]) == {"titulo", "enunciado", "tipo_ejercicio", "casos_prueba", "opciones", "respuesta_esperada"}
+    assert set(problemas[0]) == {"titulo", "tema", "enunciado", "tipo_ejercicio", "casos_prueba", "opciones", "respuesta_esperada"}
 
 
 def test_generate_solo_devuelve_tipos_de_la_plataforma(monkeypatch):

@@ -60,6 +60,9 @@ class Problema(models.Model):
     # «Starter code» (HU34 T1): código que se le entrega al estudiante ya escrito, por ejemplo la firma de la función
     # que debe completar. Vacío = el editor se abre vacío. Solo tiene sentido en escritura_codigo, pero no se exige.
     codigo_base = models.TextField(blank=True)
+    # Tema del problema (H4, D13): una etiqueta corta como «bucles» o «listas». La IA lo propone al generar y el
+    # docente lo corrige al revisar. Vacío = sin tema; el resumen de la sesión lo muestra como «General».
+    tema = models.CharField(max_length=60, blank=True)
     # Quién aprobó el problema y cuándo (HU19 T3). Vacíos mientras no se aprueba.
     # SET_NULL: si el docente se elimina, el problema y la fecha de aprobación se conservan.
     aprobado_por = models.ForeignKey(

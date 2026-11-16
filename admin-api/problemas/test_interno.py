@@ -133,7 +133,7 @@ class ProblemasDelCursoTests(InternoBase):
         fila = respuesta.json()[0]
         self.assertEqual(
             set(fila),
-            {"id", "titulo", "lenguaje", "dificultad", "plataforma", "tipo_ejercicio", "fecha_publicacion"},
+            {"id", "titulo", "lenguaje", "dificultad", "plataforma", "tipo_ejercicio", "tema", "fecha_publicacion"},
         )
         self.assertEqual(fila["titulo"], "Suma de dos")
         self.assertEqual(fila["dificultad"], "medio")
@@ -209,6 +209,7 @@ class ProblemaPorIdTests(InternoBase):
                 "plataforma": "web",
                 "tipo_ejercicio": ESCRITURA,
                 "codigo_base": "",
+                "tema": "",
                 "casos_prueba": [{"entrada": "2 3", "salida_esperada": "5"}],
                 "curso_id": self.curso.pk,
                 "opciones": [],

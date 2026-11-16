@@ -2,7 +2,14 @@ import json
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 # Mismas listas que admin-api (cursos/serializers.py y problemas/models.py): si cambian allá, cambian aquí.
 LENGUAJES = ("python", "java", "javascript")
@@ -12,6 +19,9 @@ TIPOS = ("escritura_codigo", "prediccion_salida", "opcion_multiple", "completar_
 
 # Mismas combinaciones que acepta admin-api: web solo escribe código, móvil nunca lo ejecuta.
 TIPOS_POR_PLATAFORMA = {"web": TIPOS[:1], "movil": TIPOS[1:], "ambas": TIPOS}
+
+# Largo máximo del tema de un problema (H4). Igual que el campo `tema` de admin-api.
+TEMA_MAX = 60
 
 
 class ErrorDeFormato(ValueError):
@@ -47,6 +57,14 @@ class ProblemaGenerado(BaseModel):
     casos_prueba: list[CasoPrueba] = []
     opciones: list[Opcion] = []
     respuesta_esperada: str = ""
+    # H4 (D13): etiqueta corta del concepto que practica el problema. Es opcional: si el LLM no la manda queda vacía,
+    # y si se pasa del largo se recorta, porque un tema largo no debe tumbar una tanda que por lo demás está bien.
+    tema: str = ""
+
+    @field_validator("tema", mode="before")
+    @classmethod
+    def _tema_corto(cls, valor):
+        return str(valor or "").strip()[:TEMA_MAX]
 
     @model_validator(mode="after")
     def _datos_segun_el_tipo(self):

@@ -91,6 +91,7 @@ class ProblemaSerializer(serializers.ModelSerializer):
             "opciones",
             "respuesta_esperada",
             "codigo_base",
+            "tema",
             "generado_por_ia",
             "aprobado_por_docente",
             "fecha_aprobacion",
@@ -146,6 +147,7 @@ class ProblemaSerializer(serializers.ModelSerializer):
         opciones = validated_data.pop("opciones", [])
         validated_data.setdefault("respuesta_esperada", "")
         validated_data.setdefault("codigo_base", "")
+        validated_data.setdefault("tema", "")
         for campo, valor in validated_data.items():
             setattr(instance, campo, valor)
         instance.save()
@@ -209,6 +211,7 @@ class ProblemaEstudianteSerializer(serializers.ModelSerializer):
             "plataforma",
             "tipo_ejercicio",
             "codigo_base",
+            "tema",
             "casos_prueba",
             "opciones",
         ]
@@ -278,4 +281,4 @@ class ProblemaResumenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Problema
-        fields = ["id", "titulo", "lenguaje", "dificultad", "plataforma", "tipo_ejercicio", "fecha_publicacion"]
+        fields = ["id", "titulo", "lenguaje", "dificultad", "plataforma", "tipo_ejercicio", "tema", "fecha_publicacion"]

@@ -1,0 +1,52 @@
+<!-- Cinturón blanco (HU50-T3): imagen del nivel «blanco» de app_nivel_cinturon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#9E9E9E"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M5,38 L42,38 L42,56 L5,56 Z" />
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#9E9E9E"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M54,38 L91,38 L91,56 L54,56 Z" />
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#9E9E9E"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M38,58 L26,88 L38,92 L50,60 Z" />
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#9E9E9E"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M58,58 L46,60 L58,92 L70,88 Z" />
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#9E9E9E"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M38,34 L58,34 Q62,34 62,38 L62,58 Q62,62 58,62 L38,62 Q34,62 34,58 L34,38 Q34,34 38,34 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M7,41.5 L40,41.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M56,41.5 L89,41.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M38,39 L58,39" />
+</vector>

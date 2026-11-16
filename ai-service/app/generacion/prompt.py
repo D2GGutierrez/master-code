@@ -55,12 +55,14 @@ Reglas generales:
 - Cada problema es distinto y resoluble: la respuesta debe ser única y verificable. Prohibido usar azar, fecha, hora o cualquier resultado que cambie entre ejecuciones.
 - Las salidas esperadas deben coincidir exactamente con lo que produciría el código descrito. Revísalas antes de responder.
 - "titulo" tiene como máximo 150 caracteres.
+- "tema" es una etiqueta corta (una a tres palabras, máximo 60 caracteres) del concepto que practica el problema, por ejemplo "bucles", "listas" o "condicionales". No repitas el título.
 
 Formato de respuesta: solo un objeto JSON, sin texto antes ni después y sin bloques de markdown. Usa exactamente estas claves; omite las listas y campos que no corresponden al tipo:
 {{
   "problemas": [
     {{
       "titulo": "texto corto",
+      "tema": "etiqueta corta",
       "enunciado": "texto del problema",
       "tipo_ejercicio": "uno de los tipos permitidos",
       "casos_prueba": [{{"entrada": "texto", "salida_esperada": "texto", "es_publico": true}}],

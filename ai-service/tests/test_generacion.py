@@ -108,3 +108,29 @@ def test_el_prompt_lleva_los_datos_y_solo_los_tipos_de_la_plataforma():
     assert "java" in prompt
     assert '"opcion_multiple"' in prompt
     assert '"escritura_codigo":' not in prompt
+
+
+# --- H4 (D13): el tema que propone la IA ---
+
+
+def test_el_tema_que_manda_la_ia_se_conserva():
+    problemas = validar_respuesta(respuesta({**ESCRITURA, "tema": "  bucles  "}), solicitud())
+
+    assert problemas[0].tema == "bucles"
+
+
+def test_sin_tema_queda_vacio_y_no_falla():
+    assert validar_respuesta(respuesta(ESCRITURA), solicitud())[0].tema == ""
+    assert validar_respuesta(respuesta({**ESCRITURA, "tema": None}), solicitud())[0].tema == ""
+
+
+def test_un_tema_demasiado_largo_se_recorta_en_vez_de_rechazar_la_tanda():
+    problemas = validar_respuesta(respuesta({**ESCRITURA, "tema": "x" * 100}), solicitud())
+
+    assert problemas[0].tema == "x" * 60
+
+
+def test_el_prompt_pide_el_tema_de_cada_problema():
+    prompt = construir_prompt(solicitud())
+
+    assert '"tema": "etiqueta corta"' in prompt

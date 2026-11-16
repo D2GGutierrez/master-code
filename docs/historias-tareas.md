@@ -809,7 +809,7 @@ Como estudiante, quiero completar el espacio en blanco de un fragmento de códig
 
 | ID | Descripción | Servicio | Resp. | Depende de | Cubre CA | Hecho cuando | Hrs. |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| HU47-T1 | Definir cómo se marca el espacio en blanco dentro del fragmento de código de un problema completar_espacio (por ejemplo con un marcador ___) y cómo se guarda la respuesta esperada. | admin-api | Juan Diego | HU13-T1 | 47.1 | El marcador ___ y la forma de guardar la respuesta esperada quedan documentados y funcionan en admin-api. | 1 |
+| HU47-T1 | Definir cómo se marca el espacio en blanco dentro del fragmento de código de un problema completar_espacio (por ejemplo con un marcador ___) y cómo se guarda la respuesta esperada. | admin-api | Carlos | HU13-T1 | 47.1 | El marcador ___ y la forma de guardar la respuesta esperada quedan documentados y funcionan en admin-api. | 1 |
 | HU47-T2 | Implementar la corrección con normalización simple: ignorar espacios sobrantes y diferencias de mayúsculas. | user-api | Juan Diego | HU47-T1 | 47.3, 47.4 | La corrección ignora espacios sobrantes y diferencias de mayúsculas. | 2 |
 | HU47-T3 | Construir la pantalla con el campo de texto dentro del fragmento de código. | mobile | Gael | HU47-T1, HU22-T4 | 47.1, 47.2 | La pantalla muestra el fragmento con un campo de texto en el espacio en blanco. | 1 |
 | HU47-T4 | Prueba con respuestas escritas de forma distinta pero igualmente válidas. | user-api | Gael (+ Juan Diego) | HU47-T2 | 47.3, 47.4 | La prueba acepta respuestas escritas de forma distinta pero equivalentes. | 1 |
@@ -847,7 +847,7 @@ Como estudiante, quiero subir de cinturón en un lenguaje conforme acumulo punto
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | HU50-T1 | Crear el modelo Cinturon (APP_CINTURON): estudiante, lenguaje, nivel (de blanco a negro) y puntos acumulados, con la cantidad de puntos que exige cada nivel. | user-api | Juan Diego | HU22-T1 | 50.1, 50.3 | La tabla APP_CINTURON existe con los puntos que exige cada nivel. | 1 |
 | HU50-T2 | Sumar puntos al cinturón del lenguaje correspondiente cada vez que el estudiante resuelve un ejercicio. | user-api | Juan Diego | HU50-T1 | 50.1 | Resolver un ejercicio suma puntos al cinturón de su lenguaje. | 1 |
-| HU50-T3 | Diseñar la imagen que representa cada cinturón en la app. | mobile | Gael | HU50-T1 | 50.4 | Hay una imagen por cada nivel de cinturón en la app. | 2 |
+| HU50-T3 | Diseñar la imagen que representa cada cinturón en la app. | mobile | Carlos | HU50-T1 | 50.4 | Hay una imagen por cada nivel de cinturón en la app. | 2 |
 | HU50-T4 | Definir cuántos puntos otorga cada tipo de ejercicio y probar la subida de nivel. | user-api | Juan Diego | HU50-T2 | 50.2, 50.3 | docs/puntos-cinturon.md define los puntos por tipo de ejercicio y una prueba comprueba la subida de nivel. | 1 |
 | **Subtotal** | | | | | | | **5 h** |
 
@@ -893,7 +893,7 @@ Como estudiante, quiero que la dificultad suba o baje según mis aciertos, para 
 
 | ID | Descripción | Servicio | Resp. | Depende de | Cubre CA | Hecho cuando | Hrs. |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| HU54-T1 | Documentar en docs/ la regla que sube o baja la dificultad según los aciertos (dos aciertos seguidos suben un nivel y dos errores seguidos lo bajan). | docs | Juan Diego | — | 54.1 | docs/ describe la regla: dos aciertos seguidos suben un nivel y dos errores seguidos lo bajan. | 1 |
+| HU54-T1 | Documentar en docs/ la regla que sube o baja la dificultad según los aciertos (dos aciertos seguidos suben un nivel y dos errores seguidos lo bajan). | docs | Carlos | — | 54.1 | docs/ describe la regla: dos aciertos seguidos suben un nivel y dos errores seguidos lo bajan. | 1 |
 | HU54-T2 | Implementar la elección del siguiente ejercicio según esa regla. | user-api | Juan Diego | HU54-T1, HU53-T2 | 54.1, 54.2 | El siguiente ejercicio respeta el nivel resultante de la regla. | 2 |
 | HU54-T3 | Guardar el nivel de dificultad alcanzado al terminar la sesión. | user-api | Juan Diego | HU54-T2 | 54.3 | Al terminar la sesión se guarda el nivel alcanzado. | 1 |
 | HU54-T4 | Definir el nivel de dificultad inicial de un estudiante nuevo. | user-api | Juan Diego | HU54-T3 | 54.4 | Un estudiante nuevo empieza en el nivel inicial documentado. | 1 |
@@ -954,7 +954,7 @@ Como estudiante, quiero ver el marcador en vivo durante la partida, para saber s
 
 | ID | Descripción | Servicio | Resp. | Depende de | Cubre CA | Hecho cuando | Hrs. |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| HU59-T1 | Elegir el mecanismo de tiempo real (WebSocket, Server-Sent Events o consulta periódica) y registrar la decisión en un nuevo ADR. | docs | Juan Diego | — | 59.2, 59.3, 59.4 | Un ADR nuevo registra el mecanismo elegido (WebSocket, SSE o consulta periódica) y la regla de desconexión. | 1 |
+| HU59-T1 | Elegir el mecanismo de tiempo real (WebSocket, Server-Sent Events o consulta periódica) y registrar la decisión en un nuevo ADR. | docs | Carlos | — | 59.2, 59.3, 59.4 | Un ADR nuevo registra el mecanismo elegido (WebSocket, SSE o consulta periódica) y la regla de desconexión. | 1 |
 | HU59-T2 | Implementar en el servidor la actualización del marcador de la partida. | user-api | Juan Diego | HU59-T1, HU58-T2 | 59.2 | El servidor actualiza el marcador con cada respuesta. | 2 |
 | HU59-T3 | Mostrar el marcador en vivo en la pantalla de la partida. | mobile | Gael | HU59-T2 | 59.1, 59.2 | La pantalla de la partida muestra el marcador en vivo. | 2 |
 | HU59-T4 | Manejar la desconexión de un jugador y el caso en que no vuelve. Regla propuesta: el jugador tiene 30 segundos para volver; si no vuelve, pierde la partida (se fija en el ADR de HU59 T1). | user-api + mobile | Juan Diego (+ Gael) | HU59-T2 | 59.3, 59.4 | Un jugador desconectado tiene 30 segundos para volver; si no vuelve, pierde la partida (regla del ADR). | 1 |

@@ -1,6 +1,6 @@
 import json
 
-from app.generacion.esquema import TIPOS_POR_PLATAFORMA, Solicitud
+from app.generacion.esquema import TEMA_MAX, TIPOS_POR_PLATAFORMA, Solicitud
 from app.providers.llm.base import ProveedorLLM
 
 # Un fragmento mínimo por lenguaje: imprime 5 (2 + 3).
@@ -30,7 +30,12 @@ class Mock(ProveedorLLM):
 
 def _problema(tipo: str, numero: int, solicitud: Solicitud) -> dict:
     # Los 150 caracteres son el tope de titulo; el tema puede traer hasta 200.
-    problema = {"titulo": f"[Mock] {numero}. {solicitud.tema}"[:150], "tipo_ejercicio": tipo}
+    problema = {
+        "titulo": f"[Mock] {numero}. {solicitud.tema}"[:150],
+        # H4: el mock propone como tema el que pidió el docente, recortado al largo permitido.
+        "tema": solicitud.tema[:TEMA_MAX],
+        "tipo_ejercicio": tipo,
+    }
     lenguaje = solicitud.lenguaje
     if tipo == "escritura_codigo":
         problema["enunciado"] = (
