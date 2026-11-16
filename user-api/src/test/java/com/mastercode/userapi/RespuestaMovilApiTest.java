@@ -1,5 +1,6 @@
 package com.mastercode.userapi;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.never;
@@ -28,6 +29,7 @@ class RespuestaMovilApiTest extends PruebaDeApi {
     private static final long CURSO = 10;
     private static final long PREDICCION = 7;
     private static final long OPCION = 8;
+    private static final long COMPLETAR = 9;
     private static final String SALIDA_SECRETA = "SALIDA-SECRETA-4471";
     private static final String ALTERNATIVA_SECRETA = "ALTERNATIVA-SECRETA-9902";
 
@@ -46,6 +48,10 @@ class RespuestaMovilApiTest extends PruebaDeApi {
                 new RespuestaDelProblemaDto.Opcion(83, "Tres", false)));
     }
 
+    private static RespuestaDelProblemaDto completar() {
+        return new RespuestaDelProblemaDto(COMPLETAR, CURSO, "completar_espacio", "len", List.of());
+    }
+
     private String alumnoInscrito() {
         String email = correoUnico();
         inscribir(crearEstudiante(email), CURSO);
@@ -55,6 +61,11 @@ class RespuestaMovilApiTest extends PruebaDeApi {
     private void prepararPrediccion() {
         when(admin.problema(PREDICCION)).thenReturn(problema(PREDICCION, "prediccion_salida", CURSO));
         when(admin.respuestaDelProblema(PREDICCION)).thenReturn(prediccion());
+    }
+
+    private void prepararCompletar() {
+        when(admin.problema(COMPLETAR)).thenReturn(problema(COMPLETAR, "completar_espacio", CURSO));
+        when(admin.respuestaDelProblema(COMPLETAR)).thenReturn(completar());
     }
 
     private void prepararOpcion() {
@@ -97,6 +108,77 @@ class RespuestaMovilApiTest extends PruebaDeApi {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultado").value("incorrecto"))
                 .andExpect(jsonPath("$.respuesta_correcta").value(SALIDA_SECRETA));
+    }
+
+    // HU50-T2: un acierto suma puntos al cinturón del lenguaje del ejercicio, solo la primera vez.
+    private int puntosDelCinturon(String email, String lenguaje) {
+        return jdbc.sql("""
+                SELECT coalesce(sum(c.puntos), 0) FROM app_schema.app_cinturon c
+                JOIN app_schema.app_estudiante e ON e.id = c.estudiante_id
+                WHERE e.email = ? AND c.lenguaje = ?
+                """)
+                .params(email, lenguaje).query(Integer.class).single();
+    }
+
+    @Test
+    void un_acierto_suma_puntos_al_cinturon_pero_repetirlo_no_y_un_fallo_tampoco() throws Exception {
+        String yo = alumnoInscrito();
+        prepararPrediccion();
+        prepararOpcion();
+
+        responder(yo, PREDICCION, "{\"respuesta\":\"otra cosa\"}").andExpect(status().isOk());
+        assertThat(puntosDelCinturon(yo, "python")).isZero();
+
+        responder(yo, PREDICCION, "{\"respuesta\":\"" + SALIDA_SECRETA + "\"}").andExpect(status().isOk());
+        assertThat(puntosDelCinturon(yo, "python")).isEqualTo(10);
+
+        responder(yo, PREDICCION, "{\"respuesta\":\"" + SALIDA_SECRETA + "\"}").andExpect(status().isOk());
+        assertThat(puntosDelCinturon(yo, "python")).isEqualTo(10);
+
+        responder(yo, OPCION, "{\"opcion_id\":82}").andExpect(status().isOk());
+        assertThat(puntosDelCinturon(yo, "python")).isEqualTo(20);
+    }
+
+    @Test
+    void una_respuesta_invalida_no_suma_puntos() throws Exception {
+        String yo = alumnoInscrito();
+        prepararPrediccion();
+
+        responder(yo, PREDICCION, "{}").andExpect(status().isBadRequest());
+
+        assertThat(puntosDelCinturon(yo, "python")).isZero();
+    }
+
+    // HU47-T2: el espacio por completar se corrige con la misma normalización que la predicción de salida.
+    @Test
+    void un_espacio_completado_con_espacios_y_mayusculas_de_mas_acierta() throws Exception {
+        String yo = alumnoInscrito();
+        prepararCompletar();
+
+        responder(yo, COMPLETAR, "{\"respuesta\":\"  LEN \"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultado").value("correcto"))
+                .andExpect(jsonPath("$.respuesta_correcta").doesNotExist());
+    }
+
+    @Test
+    void un_espacio_mal_completado_es_incorrecto_y_trae_la_respuesta_correcta() throws Exception {
+        String yo = alumnoInscrito();
+        prepararCompletar();
+
+        responder(yo, COMPLETAR, "{\"respuesta\":\"length\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultado").value("incorrecto"))
+                .andExpect(jsonPath("$.respuesta_correcta").value("len"));
+    }
+
+    @Test
+    void un_espacio_en_blanco_es_un_400() throws Exception {
+        String yo = alumnoInscrito();
+        prepararCompletar();
+
+        responder(yo, COMPLETAR, "{\"respuesta\":\"   \"}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Escribe tu respuesta antes de enviarla."));
     }
 
     @Test

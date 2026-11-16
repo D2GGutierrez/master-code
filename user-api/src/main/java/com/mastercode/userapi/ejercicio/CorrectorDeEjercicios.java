@@ -14,19 +14,19 @@ public class CorrectorDeEjercicios {
     // Una predicción de salida o un espacio por completar es una línea o unas pocas; más que esto no es una respuesta.
     static final int MAX_RESPUESTA = 1_000;
 
-    // respuesta es el texto escrito (predicción de salida); opcionId, la alternativa elegida (opción múltiple).
+    // respuesta es el texto escrito (predicción de salida o lo que completa el espacio); opcionId, la alternativa elegida
+    // (opción múltiple).
     public Veredicto corregir(RespuestaDelProblemaDto problema, String respuesta, Long opcionId) {
         return switch (problema.tipoEjercicio()) {
-            case "prediccion_salida" -> corregirPrediccion(problema, respuesta);
+            // HU47-T2: completar el espacio se corrige igual que predecir la salida: el texto escrito contra la
+            // respuesta esperada, sin espacios sobrantes ni diferencias de mayúsculas (CA-47.3).
+            case "prediccion_salida", "completar_espacio" -> corregirTexto(problema, respuesta);
             case "opcion_multiple" -> corregirOpcion(problema, opcionId);
-            // HU47-T2 lo corrige con la misma normalización; aún no existe.
-            case "completar_espacio" ->
-                throw new RespuestaInvalidaException("Este tipo de ejercicio todavía no se puede responder aquí.");
             default -> throw new RespuestaInvalidaException("Este ejercicio se resuelve enviando código.");
         };
     }
 
-    private static Veredicto corregirPrediccion(RespuestaDelProblemaDto problema, String respuesta) {
+    private static Veredicto corregirTexto(RespuestaDelProblemaDto problema, String respuesta) {
         if (respuesta == null || respuesta.isBlank()) {
             throw new RespuestaInvalidaException("Escribe tu respuesta antes de enviarla.");
         }

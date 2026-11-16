@@ -65,6 +65,14 @@ class GuardianRutasTest extends PruebaDeApi {
             // NO APLICA: guarda el token de notificaciones del dispositivo del propio estudiante (el del token de sesión);
             // no devuelve nada ni toca problemas. Lo comprueba DispositivoApiTest (HU52-T1).
             "PUT /api/dispositivo",
+            // NO APLICA: empieza una sesión del Dojo del propio estudiante (el del token); no devuelve problemas. Lo
+            // comprueba DojoApiTest (HU53-T2).
+            "POST /api/dojo/sesiones",
+            // OK: los candidatos salen de /internal/cursos/{id}/problemas/ de admin-api (visibles_para_estudiante()) solo de
+            // los cursos donde el estudiante está inscrito, y el ejercicio entregado de /internal/problemas/{id}/ (uno que
+            // dejó de ser visible se salta). Sin respuesta esperada ni marca de la alternativa correcta, y la sesión de otro
+            // estudiante da 404. Lo comprueba DojoApiTest (HU53-T2).
+            "POST /api/dojo/sesiones/{sesionId}/siguiente",
             // NO APLICA: la usa admin-api con X-Internal-Key; solo cuenta envíos por problema (intentos y correctos), sin
             // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
             "GET /internal/envios/resumen",

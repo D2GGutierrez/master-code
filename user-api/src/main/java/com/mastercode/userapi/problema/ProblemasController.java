@@ -57,7 +57,7 @@ public class ProblemasController {
     }
 
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    record ProblemaDetalle(long id, long cursoId, String titulo, String enunciado, String lenguaje, String dificultad,
+    public record ProblemaDetalle(long id, long cursoId, String titulo, String enunciado, String lenguaje, String dificultad,
             String plataforma, String tipoEjercicio, String codigoBase, List<CasoDeEjemplo> casosPrueba,
             List<Alternativa> opciones) {
     }
@@ -178,12 +178,18 @@ public class ProblemasController {
             return noEncontrado();
         }
 
+        return ResponseEntity.ok(detalleDe(problema));
+    }
+
+    // Lo que ve el estudiante de un problema que ya puede abrir. Lo usa también el Dojo (HU53-T2) para entregar el
+    // siguiente ejercicio con la misma forma que el detalle, sin que la app tenga que pedirlo aparte.
+    public static ProblemaDetalle detalleDe(ProblemaDto problema) {
         List<ProblemaDto.Caso> casos = problema.casosPrueba() == null ? List.of() : problema.casosPrueba();
-        return ResponseEntity.ok(new ProblemaDetalle(problema.id(), problema.cursoId(), problema.titulo(),
+        return new ProblemaDetalle(problema.id(), problema.cursoId(), problema.titulo(),
                 problema.enunciado(), problema.lenguaje(), problema.dificultad(), problema.plataforma(),
                 problema.tipoEjercicio(), problema.codigoBase() == null ? "" : problema.codigoBase(),
                 casos.stream().map(c -> new CasoDeEjemplo(c.entrada(), c.salidaEsperada())).toList(),
-                alternativasMezcladas(problema)));
+                alternativasMezcladas(problema));
     }
 
     // HU46-T2: las alternativas llegan en otro orden cada vez que se abre el ejercicio, así la correcta no queda siempre

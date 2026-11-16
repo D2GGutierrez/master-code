@@ -278,6 +278,65 @@ class EnviosApiTest extends PruebaDeApi {
         assertThat(texto(respuesta)).doesNotContain(ENTRADA_OCULTA);
     }
 
+    // ---------- puntos del cinturón (HU50-T2) ----------
+
+    private int puntosDelCinturon(long estudianteId, String lenguaje) {
+        return jdbc.sql("SELECT coalesce(sum(puntos), 0) FROM app_schema.app_cinturon WHERE estudiante_id = ? AND lenguaje = ?")
+                .params(estudianteId, lenguaje).query(Integer.class).single();
+    }
+
+    @Test
+    void resolver_el_ejercicio_suma_puntos_al_cinturon_del_lenguaje_solo_la_primera_vez() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        sandboxImprime(Map.of("2 3", "5", "10 20", "30"));
+
+        enviar(yo).andExpect(status().isCreated()).andExpect(jsonPath("$.resultado").value("correcto"));
+        assertThat(puntosDelCinturon(yo.id(), "python")).isEqualTo(30);
+
+        enviar(yo).andExpect(status().isCreated()).andExpect(jsonPath("$.resultado").value("correcto"));
+        assertThat(puntosDelCinturon(yo.id(), "python")).isEqualTo(30);
+    }
+
+    @Test
+    void un_envio_parcial_o_incorrecto_no_suma_puntos() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        sandboxImprime(Map.of("2 3", "5", "10 20", "31"));
+
+        enviar(yo).andExpect(status().isCreated()).andExpect(jsonPath("$.resultado").value("parcial"));
+        sandboxImprime(Map.of("2 3", "6", "10 20", "31"));
+        enviar(yo).andExpect(status().isCreated()).andExpect(jsonPath("$.resultado").value("incorrecto"));
+
+        assertThat(puntosDelCinturon(yo.id(), "python")).isZero();
+    }
+
+    // El primer envío falla y uno posterior acierta: ahí es cuando se suman los puntos.
+    @Test
+    void los_puntos_se_suman_cuando_por_fin_acierta() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO, OTRO_OCULTO);
+        sandboxImprime(Map.of("2 3", "6", "10 20", "31"));
+        enviar(yo).andExpect(status().isCreated());
+        assertThat(puntosDelCinturon(yo.id(), "python")).isZero();
+
+        sandboxImprime(Map.of("2 3", "5", "10 20", "30"));
+        enviar(yo).andExpect(status().isCreated()).andExpect(jsonPath("$.resultado").value("correcto"));
+
+        assertThat(puntosDelCinturon(yo.id(), "python")).isEqualTo(30);
+    }
+
+    @Test
+    void un_envio_que_falla_por_el_servicio_no_suma_puntos() throws Exception {
+        Alumno yo = alumnoInscrito();
+        prepararProblema(PUBLICO);
+        when(sandbox.ejecutar(any())).thenThrow(new SandboxNoDisponibleException("sin conexión", null));
+
+        enviar(yo).andExpect(status().isServiceUnavailable());
+
+        assertThat(puntosDelCinturon(yo.id(), "python")).isZero();
+    }
+
     // ---------- errores del código del estudiante (HU40, en lo mínimo) ----------
 
     @Test

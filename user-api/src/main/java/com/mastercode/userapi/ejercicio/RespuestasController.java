@@ -17,6 +17,7 @@ import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.RespuestaDelProblemaDto;
+import com.mastercode.userapi.cinturon.CinturonServicio;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 
@@ -40,11 +41,14 @@ public class RespuestasController {
     private final AdminCliente admin;
     private final InscripcionRepository inscripciones;
     private final CorrectorDeEjercicios corrector;
+    private final CinturonServicio cinturones;
 
-    public RespuestasController(AdminCliente admin, InscripcionRepository inscripciones, CorrectorDeEjercicios corrector) {
+    public RespuestasController(AdminCliente admin, InscripcionRepository inscripciones, CorrectorDeEjercicios corrector,
+            CinturonServicio cinturones) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.corrector = corrector;
+        this.cinturones = cinturones;
     }
 
     // El acceso es el de abrir un problema (HU31-T2): uno no visible o de un curso donde el estudiante no está inscrito
@@ -78,6 +82,10 @@ public class RespuestasController {
             veredicto = corrector.corregir(paraCorregir, solicitud.respuesta(), solicitud.opcionId());
         } catch (RespuestaInvalidaException e) {
             return ResponseEntity.badRequest().body(new Detalle(e.getMessage()));
+        }
+        // HU50-T2: un acierto suma puntos al cinturón del lenguaje del ejercicio (solo la primera vez que lo resuelve).
+        if (veredicto.correcta()) {
+            cinturones.sumarPorAcierto(estudiante.getId(), problema.lenguaje(), problemaId, problema.tipoEjercicio());
         }
         return ResponseEntity.ok(new Resultado(veredicto.correcta() ? "correcto" : "incorrecto",
                 veredicto.respuestaCorrecta()));

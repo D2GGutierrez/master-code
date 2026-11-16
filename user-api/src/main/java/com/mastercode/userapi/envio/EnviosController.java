@@ -26,6 +26,7 @@ import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
+import com.mastercode.userapi.cinturon.CinturonServicio;
 import com.mastercode.userapi.evaluacion.AccesoEvaluacionServicio;
 import com.mastercode.userapi.evaluacion.EvaluacionesController;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
@@ -74,15 +75,18 @@ public class EnviosController {
     private final EnvioRepository envios;
     private final AvanceDelCursoServicio avance;
     private final AccesoEvaluacionServicio evaluaciones;
+    private final CinturonServicio cinturones;
 
     public EnviosController(AdminCliente admin, InscripcionRepository inscripciones, SandboxCliente sandbox,
-            EnvioRepository envios, AvanceDelCursoServicio avance, AccesoEvaluacionServicio evaluaciones) {
+            EnvioRepository envios, AvanceDelCursoServicio avance, AccesoEvaluacionServicio evaluaciones,
+            CinturonServicio cinturones) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.sandbox = sandbox;
         this.envios = envios;
         this.avance = avance;
         this.evaluaciones = evaluaciones;
+        this.cinturones = cinturones;
     }
 
     // HU41-T1: el historial de envíos del estudiante en un problema, del más reciente al más antiguo. El estudiante sale
@@ -206,6 +210,10 @@ public class EnviosController {
                 aviso == null ? null : aviso.replace("\0", ""), porCaso);
         // HU43-T3: con un envío nuevo el avance del curso puede haber cambiado; se descarta el que estaba en caché.
         avance.invalidar(estudiante.getId(), problema.cursoId());
+        // HU50-T2: resolver el ejercicio (todos los casos) suma puntos al cinturón del lenguaje, solo la primera vez.
+        if ("correcto".equals(resultado)) {
+            cinturones.sumarPorAcierto(estudiante.getId(), lenguaje, problemaId, problema.tipoEjercicio());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnvioCalificado(fila.id(), fila.numeroIntento(),
                 resultado, puntaje, superados, total, aviso, evaluados));

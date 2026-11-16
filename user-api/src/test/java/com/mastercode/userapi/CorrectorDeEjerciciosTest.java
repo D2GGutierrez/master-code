@@ -21,6 +21,10 @@ class CorrectorDeEjerciciosTest {
         return new RespuestaDelProblemaDto(1, 10, "prediccion_salida", esperada, List.of());
     }
 
+    private static RespuestaDelProblemaDto completar(String esperada) {
+        return new RespuestaDelProblemaDto(4, 10, "completar_espacio", esperada, List.of());
+    }
+
     private static RespuestaDelProblemaDto opcionMultiple() {
         return new RespuestaDelProblemaDto(2, 10, "opcion_multiple", "", List.of(
                 new RespuestaDelProblemaDto.Opcion(21, "Uno", false),
@@ -78,13 +82,50 @@ class CorrectorDeEjerciciosTest {
                 .isInstanceOf(RespuestaInvalidaException.class).hasMessageContaining("no es de este ejercicio");
     }
 
+    // HU47-T2 (CA-47.3, CA-47.4)
     @Test
-    void un_ejercicio_de_codigo_o_de_completar_no_se_corrige_aqui() {
+    void un_espacio_completado_con_espacios_y_mayusculas_de_mas_es_correcto() {
+        for (String escrita : new String[] { "len", "  len  ", "LEN", " Len\n" }) {
+            Veredicto v = corrector.corregir(completar("len"), escrita, null);
+
+            assertThat(v.correcta()).as(escrita).isTrue();
+            assertThat(v.respuestaCorrecta()).isNull();
+        }
+    }
+
+    @Test
+    void un_espacio_con_varias_palabras_ignora_los_espacios_repetidos() {
+        assertThat(corrector.corregir(completar("range(10)  + 1"), "RANGE(10) +   1", null).correcta()).isTrue();
+    }
+
+    @Test
+    void un_espacio_mal_completado_trae_la_respuesta_correcta() {
+        Veredicto v = corrector.corregir(completar("len"), "length", null);
+
+        assertThat(v.correcta()).isFalse();
+        assertThat(v.respuestaCorrecta()).isEqualTo("len");
+    }
+
+    @Test
+    void lo_que_no_es_espacio_no_se_borra_al_comparar() {
+        // «range(10)» y «range (10)» no son lo mismo: solo se juntan los espacios repetidos, no se quitan los de en medio.
+        assertThat(corrector.corregir(completar("range(10)"), "range (10)", null).correcta()).isFalse();
+    }
+
+    @Test
+    void un_espacio_sin_respuesta_o_demasiado_larga_es_invalido() {
+        assertThatThrownBy(() -> corrector.corregir(completar("len"), null, null))
+                .isInstanceOf(RespuestaInvalidaException.class).hasMessageContaining("Escribe");
+        assertThatThrownBy(() -> corrector.corregir(completar("len"), "  ", null))
+                .isInstanceOf(RespuestaInvalidaException.class).hasMessageContaining("Escribe");
+        assertThatThrownBy(() -> corrector.corregir(completar("len"), "x".repeat(1_001), null))
+                .isInstanceOf(RespuestaInvalidaException.class).hasMessageContaining("demasiado larga");
+    }
+
+    @Test
+    void un_ejercicio_de_codigo_no_se_corrige_aqui() {
         assertThatThrownBy(() -> corrector.corregir(
                 new RespuestaDelProblemaDto(3, 10, "escritura_codigo", "", List.of()), "x", null))
                 .isInstanceOf(RespuestaInvalidaException.class).hasMessageContaining("código");
-        assertThatThrownBy(() -> corrector.corregir(
-                new RespuestaDelProblemaDto(4, 10, "completar_espacio", "len", List.of()), "len", null))
-                .isInstanceOf(RespuestaInvalidaException.class);
     }
 }
