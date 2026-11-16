@@ -114,29 +114,52 @@ class CompletitudTests(ProblemasBase):
         return [{"texto": f"opción {i}", "es_correcta": c} for i, c in enumerate(correctas)]
 
     def test_escritura_de_codigo_necesita_un_caso(self):
-        self.assertEqual(faltante(ESCRITURA, [], [], "")[0], "casos_prueba")
-        self.assertIsNone(faltante(ESCRITURA, [{"entrada": "", "salida_esperada": "1"}], [], ""))
+        self.assertEqual(faltante(ESCRITURA, [], [], "", "")[0], "casos_prueba")
+        self.assertIsNone(faltante(ESCRITURA, [{"entrada": "", "salida_esperada": "1"}], [], "", ""))
 
     def test_opcion_multiple_necesita_entre_2_y_6_con_una_sola_correcta(self):
-        self.assertEqual(faltante(OPCION, [], [], "")[0], "opciones")
-        self.assertEqual(faltante(OPCION, [], self.alternativas(True), "")[0], "opciones")
-        self.assertEqual(faltante(OPCION, [], self.alternativas(*[False] * 7), "")[0], "opciones")
-        self.assertIn("exactamente una", faltante(OPCION, [], self.alternativas(False, False), "")[1])
-        self.assertIn("exactamente una", faltante(OPCION, [], self.alternativas(True, True), "")[1])
-        self.assertIsNone(faltante(OPCION, [], self.alternativas(True, False), ""))
-        self.assertIsNone(faltante(OPCION, [], self.alternativas(True, *[False] * 5), ""))
+        self.assertEqual(faltante(OPCION, [], [], "", "")[0], "opciones")
+        self.assertEqual(faltante(OPCION, [], self.alternativas(True), "", "")[0], "opciones")
+        self.assertEqual(faltante(OPCION, [], self.alternativas(*[False] * 7), "", "")[0], "opciones")
+        self.assertIn("exactamente una", faltante(OPCION, [], self.alternativas(False, False), "", "")[1])
+        self.assertIn("exactamente una", faltante(OPCION, [], self.alternativas(True, True), "", "")[1])
+        self.assertIsNone(faltante(OPCION, [], self.alternativas(True, False), "", ""))
+        self.assertIsNone(faltante(OPCION, [], self.alternativas(True, *[False] * 5), "", ""))
 
     def test_una_alternativa_vacia_no_vale(self):
         opciones = [{"texto": "A", "es_correcta": True}, {"texto": "  ", "es_correcta": False}]
 
-        self.assertIn("vacía", faltante(OPCION, [], opciones, "")[1])
+        self.assertIn("vacía", faltante(OPCION, [], opciones, "", "")[1])
 
-    def test_prediccion_y_completar_necesitan_respuesta_esperada(self):
-        for tipo in (PREDICCION, COMPLETAR):
-            with self.subTest(tipo=tipo):
-                self.assertEqual(faltante(tipo, [], [], "")[0], "respuesta_esperada")
-                self.assertEqual(faltante(tipo, [], [], "   ")[0], "respuesta_esperada")
-                self.assertIsNone(faltante(tipo, [], [], "5"))
+    def test_prediccion_necesita_respuesta_esperada(self):
+        self.assertEqual(faltante(PREDICCION, [], [], "", "¿Qué imprime?")[0], "respuesta_esperada")
+        self.assertEqual(faltante(PREDICCION, [], [], "   ", "¿Qué imprime?")[0], "respuesta_esperada")
+        self.assertIsNone(faltante(PREDICCION, [], [], "5", "¿Qué imprime?"))
+
+    # HU47-T1: el enunciado de «completar el espacio» lleva exactamente un hueco de tres o más guiones bajos.
+    def test_completar_necesita_un_hueco_y_la_respuesta_esperada(self):
+        con_hueco = "Completa para que imprima 5:\n\nprint(2 ___ 3)"
+        self.assertEqual(faltante(COMPLETAR, [], [], "+", "")[0], "enunciado")
+        self.assertEqual(faltante(COMPLETAR, [], [], "+", "Completa el código.")[0], "enunciado")
+        self.assertEqual(faltante(COMPLETAR, [], [], "", con_hueco)[0], "respuesta_esperada")
+        self.assertEqual(faltante(COMPLETAR, [], [], "   ", con_hueco)[0], "respuesta_esperada")
+        self.assertIsNone(faltante(COMPLETAR, [], [], "+", con_hueco))
+
+    def test_el_hueco_puede_tener_tres_o_mas_guiones_bajos(self):
+        for hueco in ("___", "____", "________"):
+            with self.subTest(hueco=hueco):
+                self.assertIsNone(faltante(COMPLETAR, [], [], "+", f"print(2 {hueco} 3)"))
+
+    def test_dos_huecos_o_guiones_bajos_de_menos_no_valen(self):
+        self.assertIn("exactamente un", faltante(COMPLETAR, [], [], "+", "a ___ b ___ c")[1])
+        # Dos guiones bajos son código normal (por ejemplo __init__), no un hueco.
+        self.assertEqual(faltante(COMPLETAR, [], [], "+", "def __init__(self): ...")[0], "enunciado")
+        # Un hueco partido por un espacio son dos rachas cortas, no un hueco.
+        self.assertEqual(faltante(COMPLETAR, [], [], "+", "print(2 __ _ 3)")[0], "enunciado")
+
+    def test_el_hueco_solo_se_exige_en_completar_el_espacio(self):
+        self.assertIsNone(faltante(PREDICCION, [], [], "5", "Sin hueco"))
+        self.assertIsNone(faltante(PREDICCION, [], [], "5", "Con ___ hueco ___ doble"))
 
     def test_faltante_de_lee_las_relaciones_del_problema(self):
         problema = self.crear_problema(self.crear_curso(), OPCION)

@@ -25,6 +25,12 @@ class AprobarProblemaIncompletoTests(RevisionBase):
             )
         return problema
 
+    # HU47-T1: «completar el espacio» con el enunciado y la respuesta esperada que se indiquen.
+    def completar(self, enunciado, respuesta=""):
+        problema = self.crear_problema(COMPLETAR, completo=False)
+        Problema.objects.filter(pk=problema.pk).update(enunciado=enunciado, respuesta_esperada=respuesta)
+        return problema
+
     def assert_sigue_pendiente(self, problema):
         # Contra la base y no contra la respuesta: la marca, quién y cuándo siguen vacíos.
         problema.refresh_from_db()
@@ -65,9 +71,19 @@ class AprobarProblemaIncompletoTests(RevisionBase):
                 "exactamente una",
             ),
             "completar el espacio sin respuesta esperada": (
-                self.crear_problema(COMPLETAR, completo=False),
+                self.completar("print(2 ___ 3)"),
                 "respuesta_esperada",
                 "respuesta esperada",
+            ),
+            "completar el espacio sin hueco en el enunciado": (
+                self.completar("Completa el código.", "+"),
+                "enunciado",
+                "exactamente un espacio en blanco",
+            ),
+            "completar el espacio con dos huecos": (
+                self.completar("a ___ b ___ c", "+"),
+                "enunciado",
+                "exactamente un espacio en blanco",
             ),
             "predicción con respuesta solo de espacios": (
                 con_espacios,
@@ -82,6 +98,15 @@ class AprobarProblemaIncompletoTests(RevisionBase):
                 self.assertEqual(response.status_code, 400)
                 self.assertIn(motivo, response.json()[campo][0])
                 self.assert_sigue_pendiente(problema)
+
+    def test_completar_el_espacio_con_un_hueco_y_su_respuesta_si_se_aprueba(self):
+        problema = self.completar("Completa para que imprima 5:\n\nprint(2 ____ 3)", "+")
+
+        response = self.aprobar(problema)
+
+        self.assertEqual(response.status_code, 200)
+        problema.refresh_from_db()
+        self.assertTrue(problema.aprobado_por_docente)
 
     def test_el_mismo_problema_una_vez_completo_si_se_aprueba_con_quien_y_cuando(self):
         problema = self.crear_problema(ESCRITURA, completo=False)

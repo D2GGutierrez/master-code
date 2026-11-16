@@ -9,6 +9,8 @@ import {
   aInstante,
   armarProblemas,
   PUNTOS_POR_DEFECTO,
+  textoTotal,
+  totalPuntos,
   validarEvaluacion,
   validarPuntos,
 } from '../evaluacion.js'
@@ -349,6 +351,10 @@ function NuevaEvaluacion({ cursoId }) {
             erroresPuntos={erroresPuntos}
           />
         </div>
+        {/* HU63-T3: se actualiza al marcar, desmarcar o editar puntos; role="status" lo anuncia a los lectores de pantalla. */}
+        <p className="evaluacion-total" role="status">
+          Total de la evaluación: <strong>{textoTotal(totalPuntos(armarProblemas(banco, seleccionados, puntos)))}</strong>
+        </p>
         <button type="submit" disabled={enviando}>
           {enviando ? 'Creando…' : 'Crear evaluación'}
         </button>

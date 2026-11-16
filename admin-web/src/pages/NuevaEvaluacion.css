@@ -14,3 +14,13 @@
   outline: 2px solid var(--acento);
   outline-offset: 2px;
 }
+
+/* HU63-T3: el total de puntos, justo encima del botón. */
+.evaluacion-total {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.evaluacion-total strong {
+  color: var(--texto);
+}

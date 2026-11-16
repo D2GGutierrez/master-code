@@ -54,6 +54,7 @@ def guardar_generados(curso, solicitud, generados):
             datos_ok.get("casos_prueba", []),
             datos_ok.get("opciones", []),
             datos_ok.get("respuesta_esperada", ""),
+            datos_ok.get("enunciado", ""),
         )
         if pendiente:
             raise IaRespuestaInvalida(f"problema incompleto: {pendiente[0]}")

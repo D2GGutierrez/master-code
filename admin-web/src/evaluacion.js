@@ -84,3 +84,16 @@ export function armarProblemas(banco, seleccionados, puntos) {
     puntaje: normalizarPuntos(puntos?.[id]),
   }))
 }
+
+// HU63-T3 (CA-63.3, CA-63.4): la suma de los puntos de la lista que se envía (la de armarProblemas); un problema con
+// puntos aún no válidos no suma. Se suma en centésimas enteras para que 0,1 + 0,2 dé 0,3 y no 0,30000000000000004.
+export function totalPuntos(problemas) {
+  const centesimas = (problemas ?? []).reduce((suma, { puntaje }) => suma + Math.round((puntaje ?? 0) * 100), 0)
+  return centesimas / 100
+}
+
+// «12,5 puntos», «1 punto»: coma decimal y hasta dos decimales, como se escriben en el campo.
+export function textoTotal(total) {
+  const numero = new Intl.NumberFormat('es-ES', { maximumFractionDigits: LIMITES_PUNTOS.decimales }).format(total)
+  return `${numero} ${total === 1 ? 'punto' : 'puntos'}`
+}

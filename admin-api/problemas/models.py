@@ -54,7 +54,8 @@ class Problema(models.Model):
     # aprobado_por_docente=False, y los estudiantes solo ven los aprobados.
     generado_por_ia = models.BooleanField(default=False)
     aprobado_por_docente = models.BooleanField(default=False)
-    # Solo para prediccion_salida y completar_espacio (el texto exacto que se espera). Vacía en los demás.
+    # Solo para prediccion_salida y completar_espacio (el texto exacto que se espera). Vacía en los demás. En
+    # completar_espacio es lo que completa el hueco ___ del enunciado (HU47-T1, completitud.py).
     respuesta_esperada = models.TextField(blank=True)
     # «Starter code» (HU34 T1): código que se le entrega al estudiante ya escrito, por ejemplo la firma de la función
     # que debe completar. Vacío = el editor se abre vacío. Solo tiene sentido en escritura_codigo, pero no se exige.

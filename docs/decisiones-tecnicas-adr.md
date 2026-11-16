@@ -157,7 +157,7 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Decidido.** En `admin-api`, `Problema` suma `generado_por_ia`, `aprobado_por_docente` y `respuesta_esperada`, y se crea `OpcionRespuesta` (`ADMIN_OPCION_RESPUESTA`, que era HU46-T1) porque la IA también genera ejercicios de opción múltiple y hay que guardar sus alternativas. Lo generado nace con `generado_por_ia=true` y `aprobado_por_docente=false`: la IA nunca publica sola (ADR-2). Un estudiante solo ve lo que cumple `Problema.objects.visibles_para_estudiante()` (aprobado y no archivado); HU31 debe partir de esa consulta.
 >
 > - **Los problemas creados a mano nacen aprobados si están completos**, con el docente que los creó como aprobador. Si les falta algo (por ejemplo, un `opcion_multiple` sin alternativas) se guardan como borrador sin aprobar. La migración aprueba los problemas de escritura de código que ya existían y tienen al menos un caso de prueba.
-> - **«Completo»** (`problemas/completitud.py`): `escritura_codigo` con al menos un caso de prueba; `opcion_multiple` con entre 2 y 6 alternativas y exactamente una correcta; `prediccion_salida` y `completar_espacio` con `respuesta_esperada`. La misma regla decide el guardado de lo que genera la IA, el 400 de Aprobar y si un problema manual nace aprobado.
+> - **«Completo»** (`problemas/completitud.py`): `escritura_codigo` con al menos un caso de prueba; `opcion_multiple` con entre 2 y 6 alternativas y exactamente una correcta; `prediccion_salida` con `respuesta_esperada`; `completar_espacio` con `respuesta_esperada` y exactamente un hueco en el enunciado (D17). La misma regla decide el guardado de lo que genera la IA, el 400 de Aprobar y si un problema manual nace aprobado.
 > - **La plataforma de cada problema generado sale de su tipo** (`escritura_codigo` va a `web`; los otros tres a `movil`). Pedir «ambas» significa «genera para las dos», no que cada problema se publique en las dos.
 >
 > **Rutas de `admin-api`** (todas exigen sesión de docente; un problema o curso ajeno da 404):
@@ -274,3 +274,11 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Alcance.** Esta entrega es solo la parte de `user-api`. Obtener el token en la app, las dependencias de Firebase y enviar una notificación de prueba desde la consola de Firebase quedan para la app móvil (guía en `docs/notificaciones-push.md`). Formalmente HU52-T1 depende de HU49-T1 y de H5.
 >
 > **Alternativas descartadas:** una columna `token` en `app_estudiante` (un solo teléfono por persona y un token que sobrevive al cambio de dueño) y enviar las notificaciones desde `user-api` en este sprint (necesita credenciales de servicio de Firebase que el repositorio no debe guardar).
+
+### D17. Cómo se marca el espacio en blanco de «completar el espacio» (HU47-T1)
+
+> **Decidido.** El **fragmento de código va en el `enunciado`**, igual que ya lo genera la IA, y el espacio en blanco es **una racha de tres o más guiones bajos** (`___`, `____`…). La **respuesta esperada va en `respuesta_esperada`**: el texto exacto que completa el hueco. Un problema `completar_espacio` es «completo» solo si su enunciado trae **exactamente un** hueco y tiene `respuesta_esperada`; la regla es la de `problemas/completitud.py`, la misma al guardar lo que genera la IA (se rechaza la tanda entera), al crear a mano (nace sin aprobar) y al aprobar (400 con el error en `enunciado`). Dos guiones bajos (`__init__`) no son un hueco. En los demás tipos el enunciado puede llevar guiones bajos sin restricción.
+>
+> **Para la app (HU47-T3).** Parte el enunciado en la racha de guiones bajos y pone el campo de texto en ese lugar; la respuesta esperada nunca viaja al estudiante (se corrige en `user-api`, D15; la normalización simple es HU47-T2).
+>
+> **Alternativas descartadas:** `codigo_base` para el fragmento (obliga a cambiar el prompt y el esquema de `ai-service` y deja sin fragmento los problemas ya generados) y varios huecos con varias respuestas (HU47-T2 y HU47-T3 asumen una sola comparación).
