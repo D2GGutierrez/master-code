@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,6 +38,7 @@ private val FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 fun MisCursosScreen(
     viewModel: MisCursosViewModel,
     alAbrirCurso: (Long) -> Unit,
+    alAbrirDojo: () -> Unit,
     alVencerSesion: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,6 +59,11 @@ fun MisCursosScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(vertical = 16.dp),
         )
+        // HU53-T3: la puerta al Dojo.
+        Button(
+            onClick = alAbrirDojo,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
+        ) { Text(stringResource(R.string.mis_cursos_dojo)) }
         when (val contenido = uiState.contenido) {
             ContenidoMisCursos.Cargando, ContenidoMisCursos.SesionVencida -> Centrado {
                 val descripcion = stringResource(R.string.mis_cursos_cargando)

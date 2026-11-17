@@ -3,6 +3,7 @@ package com.mastercode.app.data.problemas
 import com.mastercode.app.data.auth.AuthRepository
 import com.mastercode.app.data.auth.ErrorHttp
 import com.mastercode.app.data.auth.ResultadoRenovacion
+import com.mastercode.app.data.auth.conAccess
 import java.io.IOException
 
 sealed interface ResultadoProblema {
@@ -12,6 +13,18 @@ sealed interface ResultadoProblema {
     data object SesionVencida : ResultadoProblema
     data object SinConexion : ResultadoProblema
     data object ErrorInesperado : ResultadoProblema
+}
+
+// Qué pasó al enviar una respuesta (HU45-T3, HU48-T2). Conflicto es el 409: ya no se puede responder (se acabaron los
+// intentos, la sesión del Dojo terminó o ese ejercicio ya se respondió en ella). Invalida es el 400.
+sealed interface ResultadoDeEnvio {
+    data class Enviada(val resultado: ResultadoDeRespuesta) : ResultadoDeEnvio
+    data object Conflicto : ResultadoDeEnvio
+    data object Invalida : ResultadoDeEnvio
+    data object NoEncontrado : ResultadoDeEnvio
+    data object SesionVencida : ResultadoDeEnvio
+    data object SinConexion : ResultadoDeEnvio
+    data object ErrorInesperado : ResultadoDeEnvio
 }
 
 // El token sale de AuthRepository, el mismo que usa el login: no hay un segundo lugar con tokens.
@@ -40,5 +53,26 @@ class ProblemaRepository(private val api: ProblemaApi, private val auth: AuthRep
         }
     } catch (e: IOException) {
         ResultadoProblema.SinConexion
+    }
+
+    // Envía una respuesta con la misma renovación de token que problema().
+    suspend fun responder(respuesta: RespuestaDelEstudiante): ResultadoDeEnvio = auth.conAccess(
+        vencida = ResultadoDeEnvio.SesionVencida,
+        sinConexion = ResultadoDeEnvio.SinConexion,
+        inesperado = ResultadoDeEnvio.ErrorInesperado,
+    ) { access ->
+        try {
+            ResultadoDeEnvio.Enviada(api.responder(access, respuesta))
+        } catch (e: ErrorHttp) {
+            when (e.codigo) {
+                401 -> null
+                400 -> ResultadoDeEnvio.Invalida
+                404 -> ResultadoDeEnvio.NoEncontrado
+                409 -> ResultadoDeEnvio.Conflicto
+                else -> ResultadoDeEnvio.ErrorInesperado
+            }
+        } catch (e: IOException) {
+            ResultadoDeEnvio.SinConexion
+        }
     }
 }

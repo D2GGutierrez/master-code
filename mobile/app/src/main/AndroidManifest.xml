@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Para saber cuándo vuelve la señal y reenviar las respuestas guardadas (HU48-T3). Es un permiso normal: se concede
+         al instalar, no se le pide nada al estudiante. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".MasterCodeApp"

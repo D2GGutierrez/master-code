@@ -18,11 +18,14 @@ import com.mastercode.userapi.admin.CursoNoExisteException;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.ProblemaResumenDto;
+import com.mastercode.userapi.ejercicio.IntentosMoviles;
+import com.mastercode.userapi.envio.EnvioRepository;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 
 // HU53-T2 (CA-53.2, CA-53.3): elige el siguiente ejercicio de una sesión del Dojo. Candidatos: los ejercicios del celular
 // (plataforma móvil o ambas, nunca de escribir código) que admin-api entrega como visibles en los cursos donde el
 // estudiante está inscrito, del lenguaje de la sesión y que no se hayan entregado ya en ella. Entre ellos, uno al azar.
+// HU45-T3: no se ofrecen los ejercicios cuyos intentos ya se agotaron.
 // HU54-T2 (CA-54.2): se elige entre los del nivel de la sesión; si en ese nivel no queda ninguno, entre los del nivel más
 // cercano (a igual distancia, el más fácil). El nivel de la sesión lo mueve la regla al responder, no esta sustitución.
 @Service
@@ -33,12 +36,14 @@ public class SiguienteEjercicioServicio {
     private final AdminCliente admin;
     private final InscripcionRepository inscripciones;
     private final SesionDojoRepository sesiones;
+    private final EnvioRepository envios;
 
     public SiguienteEjercicioServicio(AdminCliente admin, InscripcionRepository inscripciones,
-            SesionDojoRepository sesiones) {
+            SesionDojoRepository sesiones, EnvioRepository envios) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.sesiones = sesiones;
+        this.envios = envios;
     }
 
     // vacío: ya no quedan ejercicios por entregar en esta sesión. Lanza AdminNoDisponibleException si admin-api no
@@ -68,6 +73,8 @@ public class SiguienteEjercicioServicio {
     // Los candidatos agrupados por su nivel de dificultad; uno con una dificultad desconocida no se ofrece.
     private Map<Nivel, Set<Long>> candidatos(SesionDojoRepository.Sesion sesion) {
         Set<Long> yaEntregados = sesiones.entregados(sesion.id());
+        // HU45-T3: un ejercicio con los intentos agotados ya no se ofrece.
+        Map<Long, Integer> intentos = envios.intentosMovilPorProblema(sesion.estudianteId());
         Map<Nivel, Set<Long>> candidatos = new EnumMap<>(Nivel.class);
         for (Nivel nivel : Nivel.values()) {
             candidatos.put(nivel, new LinkedHashSet<>());
@@ -84,7 +91,8 @@ public class SiguienteEjercicioServicio {
                 boolean delLenguaje = problema.lenguaje() != null && problema.lenguaje().equalsIgnoreCase(sesion.lenguaje());
                 boolean delCelular = !ESCRITURA_CODIGO.equals(problema.tipoEjercicio());
                 Optional<Nivel> nivel = Nivel.de(problema.dificultad());
-                if (delLenguaje && delCelular && nivel.isPresent() && !yaEntregados.contains(problema.id())) {
+                if (delLenguaje && delCelular && nivel.isPresent() && !yaEntregados.contains(problema.id())
+                        && IntentosMoviles.restantes(intentos.getOrDefault(problema.id(), 0)) > 0) {
                     candidatos.get(nivel.get()).add(problema.id());
                 }
             }

@@ -3,7 +3,9 @@ package com.mastercode.userapi.envio;
 import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
@@ -149,5 +151,69 @@ public class EnvioRepository {
                 .params(estudianteId, problemaId)
                 .query(Resumen.class)
                 .list();
+    }
+
+    // HU45-T3: cuántos envíos lleva el estudiante en un problema (los intentos que ya usó).
+    public int intentosDe(long estudianteId, long problemaId) {
+        return jdbc.sql("SELECT count(*) FROM app_schema.app_envio WHERE estudiante_id = ? AND problema_id = ?")
+                .params(estudianteId, problemaId)
+                .query(Integer.class)
+                .single();
+    }
+
+    // Los intentos usados en cada problema que tiene envíos desde el celular. El Dojo deja de ofrecer los agotados.
+    public Map<Long, Integer> intentosMovilPorProblema(long estudianteId) {
+        Map<Long, Integer> intentos = new HashMap<>();
+        jdbc.sql("""
+                SELECT problema_id, count(*)::int AS intentos FROM app_schema.app_envio
+                WHERE estudiante_id = ? AND plataforma = 'movil' GROUP BY problema_id
+                """)
+                .param(estudianteId)
+                .query((rs, fila) -> intentos.put(rs.getLong("problema_id"), rs.getInt("intentos")))
+                .list();
+        return intentos;
+    }
+
+    // true si el estudiante ya tiene un envío con esa clave: es un reenvío de un intento que ya llegó (CA-48.5).
+    public boolean existeClave(long estudianteId, String clave) {
+        return jdbc.sql("SELECT count(*) FROM app_schema.app_envio WHERE estudiante_id = ? AND clave_cliente = ?")
+                .params(estudianteId, clave)
+                .query(Integer.class)
+                .single() > 0;
+    }
+
+    // HU45-T3: apunta una respuesta del celular como un envío más del estudiante. respuesta es lo que mandó (el texto, o
+    // «opcion:ID» en opción múltiple). El puntaje es 100 si acertó y 0 si no. Devuelve el número de intento, o vacío si
+    // la clave ya estaba registrada (un reenvío). Si dos respuestas del mismo problema chocan en el número de intento
+    // se vuelve a calcular, igual que registrar().
+    public Optional<Integer> registrarRespuestaMovil(long estudianteId, long problemaId, String respuesta,
+            boolean correcta, String clave) {
+        for (int vuelta = 0; vuelta < VUELTAS; vuelta++) {
+            Optional<Integer> numero = jdbc.sql("""
+                    INSERT INTO app_schema.app_envio
+                        (estudiante_id, problema_id, plataforma, codigo, resultado, puntaje, clave_cliente, numero_intento)
+                    VALUES (:estudiante, :problema, 'movil', :respuesta, :resultado, :puntaje, :clave,
+                        (SELECT COUNT(*) + 1 FROM app_schema.app_envio
+                         WHERE estudiante_id = :estudiante AND problema_id = :problema))
+                    ON CONFLICT DO NOTHING
+                    RETURNING numero_intento
+                    """)
+                    .param("estudiante", estudianteId)
+                    .param("problema", problemaId)
+                    .param("respuesta", respuesta)
+                    .param("resultado", correcta ? "correcto" : "incorrecto")
+                    .param("puntaje", correcta ? 100 : 0)
+                    .param("clave", clave, Types.VARCHAR)
+                    .query(Integer.class)
+                    .optional();
+            if (numero.isPresent()) {
+                return numero;
+            }
+            // Sin fila: o la clave ya existía (reenvío) o el número de intento chocó con otra respuesta a la vez.
+            if (clave != null && existeClave(estudianteId, clave)) {
+                return Optional.empty();
+            }
+        }
+        throw new IllegalStateException("No se pudo numerar el intento tras varias vueltas.");
     }
 }

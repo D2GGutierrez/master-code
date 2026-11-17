@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.mastercode.userapi.Detalle;
 import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaDto;
+import com.mastercode.userapi.envio.EnvioRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 import com.mastercode.userapi.problema.ProblemasController;
 
@@ -50,12 +51,14 @@ public class DojoController {
     private final SesionDojoRepository sesiones;
     private final SesionDojoServicio sesionesServicio;
     private final SiguienteEjercicioServicio siguiente;
+    private final EnvioRepository envios;
 
     public DojoController(SesionDojoRepository sesiones, SesionDojoServicio sesionesServicio,
-            SiguienteEjercicioServicio siguiente) {
+            SiguienteEjercicioServicio siguiente, EnvioRepository envios) {
         this.sesiones = sesiones;
         this.sesionesServicio = sesionesServicio;
         this.siguiente = siguiente;
+        this.envios = envios;
     }
 
     // Empieza una sesión (CA-53.1): de un lenguaje, para el estudiante del token.
@@ -91,7 +94,8 @@ public class DojoController {
         if (problema.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(ProblemasController.detalleDe(problema.get()));
+        return ResponseEntity.ok(ProblemasController.detalleDe(problema.get(),
+                ProblemasController.intentosRestantes(problema.get(), estudiante.getId(), envios)));
     }
 
     // HU54-T3 y HU56: termina la sesión. Guarda el nivel alcanzado y devuelve el resumen: aciertos, puntos que sumó al

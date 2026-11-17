@@ -9,6 +9,8 @@ import com.mastercode.app.data.auth.Tokens
 import com.mastercode.app.data.problemas.FakeProblemaApi
 import com.mastercode.app.data.problemas.ProblemaDelEjercicio
 import com.mastercode.app.data.problemas.ProblemaRepository
+import com.mastercode.app.data.respuestas.EnviadorDeRespuestas
+import com.mastercode.app.data.respuestas.MemoriaPendientes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,8 +47,10 @@ class EjercicioViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun crearViewModel(problema: ProblemaDelEjercicio, tipoEsperado: String = problema.tipoEjercicio) =
-        EjercicioViewModel(ProblemaRepository(problemaApi, auth), problema.id, tipoEsperado)
+    private fun crearViewModel(problema: ProblemaDelEjercicio, tipoEsperado: String = problema.tipoEjercicio): EjercicioViewModel {
+        val repository = ProblemaRepository(problemaApi, auth)
+        return EjercicioViewModel(repository, EnviadorDeRespuestas(repository, MemoriaPendientes()), problema.id, tipoEsperado)
+    }
 
     @Test
     fun pasaDeCargandoAlEjercicioYLoPideConSuId() {

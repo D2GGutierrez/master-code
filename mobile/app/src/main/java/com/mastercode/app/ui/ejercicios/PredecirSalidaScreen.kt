@@ -10,14 +10,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mastercode.app.R
 
-// HU45-T2 (CA-45.1, CA-45.2): el fragmento de código y un campo para escribir lo que imprimiría. Todavía no envía la
-// respuesta (HU45-T3) ni se llega a ella desde otra pantalla (el Dojo, HU53-T3).
+// HU45-T2 (CA-45.1, CA-45.2): el fragmento de código y un campo para escribir lo que imprimiría. El envío, el resultado
+// y los intentos los pone MarcoDeEjercicio (HU45-T3, HU48-T2); se llega a ella desde el Dojo (HU53-T3).
 @Composable
 fun PredecirSalidaScreen(viewModel: EjercicioViewModel, alVencerSesion: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    MarcoDeEjercicio(uiState, alReintentar = viewModel::cargar, alVencerSesion = alVencerSesion) { enunciado ->
-        val partes = separarCodigo(enunciado)
+    MarcoDeEjercicio(
+        uiState,
+        alReintentar = viewModel::cargar,
+        alVencerSesion = alVencerSesion,
+        alEnviar = viewModel::enviar,
+        alIntentarDeNuevo = viewModel::intentarDeNuevo,
+    ) { problema ->
+        val partes = separarCodigo(problema.enunciado)
         if (partes.pregunta.isNotEmpty()) Text(partes.pregunta)
         if (partes.codigo.isNotEmpty()) {
             BloqueDeCodigo(modifier = Modifier.fillMaxWidth()) { TextoDeCodigo(partes.codigo) }
@@ -28,6 +34,7 @@ fun PredecirSalidaScreen(viewModel: EjercicioViewModel, alVencerSesion: () -> Un
             onValueChange = viewModel::alCambiarRespuesta,
             label = { Text(stringResource(R.string.predecir_campo)) },
             minLines = 2,
+            enabled = uiState.editable,
             modifier = Modifier.fillMaxWidth(),
         )
     }

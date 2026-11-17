@@ -1,5 +1,7 @@
 package com.mastercode.app.data.auth
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 
 sealed interface ResultadoLogin {
@@ -39,7 +41,14 @@ class AuthRepository(private val api: AuthApi, private val storage: TokenStorage
         ResultadoLogin.SinConexion
     }
 
-    suspend fun renovar(): ResultadoRenovacion {
+    // Una renovación a la vez: el refresh rota, y si dos pedidos (por ejemplo «Mis cursos» y el reenvío en segundo plano de
+    // respuestas guardadas, HU48-T3) usaran el mismo a la vez, el segundo recibiría 401 y cerraría la sesión sin motivo.
+    // Así el segundo espera y usa el refresh que dejó el primero.
+    private val candadoDeRenovacion = Mutex()
+
+    suspend fun renovar(): ResultadoRenovacion = candadoDeRenovacion.withLock { renovarSinCandado() }
+
+    private suspend fun renovarSinCandado(): ResultadoRenovacion {
         val refresh = storage.leerRefresh() ?: return ResultadoRenovacion.SesionExpirada
         return try {
             // Rotación: el servidor invalida el refresh usado y entrega uno nuevo, que reemplaza al guardado.

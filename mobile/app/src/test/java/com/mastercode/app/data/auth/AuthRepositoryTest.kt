@@ -1,5 +1,8 @@
 package com.mastercode.app.data.auth
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -75,5 +78,31 @@ class AuthRepositoryTest {
 
         assertEquals(ResultadoRenovacion.SinConexion, repository.renovar())
         assertEquals("refresh-vigente", storage.refresh)
+    }
+
+    // El refresh rota: dos renovaciones a la vez (por ejemplo, «Mis cursos» y el reenvío de respuestas guardadas) no deben
+    // usar el mismo refresh, o la segunda recibiría 401 y cerraría la sesión sin motivo.
+    @Test
+    fun dosRenovacionesAlMismoTiempoSeHacenUnaTrasOtraConElRefreshQueDejoLaPrimera() = runBlocking {
+        val recibidos = mutableListOf<String>()
+        var vueltas = 0
+        val apiLenta = object : AuthApi {
+            override suspend fun login(email: String, password: String): Tokens = error("no se usa")
+
+            override suspend fun renovar(refresh: String): Tokens {
+                recibidos += refresh
+                delay(30)
+                vueltas++
+                return Tokens(access = "access-$vueltas", refresh = "refresh-$vueltas")
+            }
+        }
+        val repositorio = AuthRepository(apiLenta, MemoriaTokenStorage(refresh = "refresh-0"))
+
+        val a = async { repositorio.renovar() }
+        val b = async { repositorio.renovar() }
+
+        assertEquals(ResultadoRenovacion.Exito, a.await())
+        assertEquals(ResultadoRenovacion.Exito, b.await())
+        assertEquals(listOf("refresh-0", "refresh-1"), recibidos)
     }
 }

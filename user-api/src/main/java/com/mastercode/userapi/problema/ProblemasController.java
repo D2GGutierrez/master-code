@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.mastercode.userapi.Detalle;
@@ -25,6 +26,8 @@ import com.mastercode.userapi.admin.CursoNoExisteException;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.ProblemaResumenDto;
+import com.mastercode.userapi.ejercicio.IntentosMoviles;
+import com.mastercode.userapi.envio.EnvioRepository;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 
@@ -59,20 +62,22 @@ public class ProblemasController {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record ProblemaDetalle(long id, long cursoId, String titulo, String enunciado, String lenguaje, String dificultad,
             String plataforma, String tipoEjercicio, String codigoBase, List<CasoDeEjemplo> casosPrueba,
-            List<Alternativa> opciones) {
+            List<Alternativa> opciones, @JsonInclude(JsonInclude.Include.NON_NULL) Integer intentosRestantes) {
     }
 
     private final AdminCliente admin;
     private final InscripcionRepository inscripciones;
     private final EstadoProblemasRepository estados;
     private final AvanceDelCursoServicio avance;
+    private final EnvioRepository envios;
 
     public ProblemasController(AdminCliente admin, InscripcionRepository inscripciones,
-            EstadoProblemasRepository estados, AvanceDelCursoServicio avance) {
+            EstadoProblemasRepository estados, AvanceDelCursoServicio avance, EnvioRepository envios) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.estados = estados;
         this.avance = avance;
+        this.envios = envios;
     }
 
     // Filtros opcionales, que se pueden combinar (HU30-T1, CA-30.1 y CA-30.2):
@@ -178,18 +183,31 @@ public class ProblemasController {
             return noEncontrado();
         }
 
-        return ResponseEntity.ok(detalleDe(problema));
+        return ResponseEntity.ok(detalleDe(problema, intentosRestantes(problema, estudiante.getId(), envios)));
+    }
+
+    // HU45-T3: los intentos que le quedan al estudiante en un ejercicio del celular; null en los de código, que no tienen
+    // límite (el campo no sale).
+    public static Integer intentosRestantes(ProblemaDto problema, long estudianteId, EnvioRepository envios) {
+        if (problema.tipoEjercicio() == null || "escritura_codigo".equals(problema.tipoEjercicio())) {
+            return null;
+        }
+        return IntentosMoviles.restantes(envios.intentosDe(estudianteId, problema.id()));
     }
 
     // Lo que ve el estudiante de un problema que ya puede abrir. Lo usa también el Dojo (HU53-T2) para entregar el
     // siguiente ejercicio con la misma forma que el detalle, sin que la app tenga que pedirlo aparte.
     public static ProblemaDetalle detalleDe(ProblemaDto problema) {
+        return detalleDe(problema, null);
+    }
+
+    public static ProblemaDetalle detalleDe(ProblemaDto problema, Integer intentosRestantes) {
         List<ProblemaDto.Caso> casos = problema.casosPrueba() == null ? List.of() : problema.casosPrueba();
         return new ProblemaDetalle(problema.id(), problema.cursoId(), problema.titulo(),
                 problema.enunciado(), problema.lenguaje(), problema.dificultad(), problema.plataforma(),
                 problema.tipoEjercicio(), problema.codigoBase() == null ? "" : problema.codigoBase(),
                 casos.stream().map(c -> new CasoDeEjemplo(c.entrada(), c.salidaEsperada())).toList(),
-                alternativasMezcladas(problema));
+                alternativasMezcladas(problema), intentosRestantes);
     }
 
     // HU46-T2: las alternativas llegan en otro orden cada vez que se abre el ejercicio, así la correcta no queda siempre

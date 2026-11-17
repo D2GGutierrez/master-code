@@ -19,9 +19,8 @@ import com.mastercode.userapi.admin.AdminNoDisponibleException;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.RespuestaDelProblemaDto;
-import com.mastercode.userapi.cinturon.CinturonServicio;
 import com.mastercode.userapi.dojo.SesionDojoRepository;
-import com.mastercode.userapi.dojo.SesionDojoServicio;
+import com.mastercode.userapi.envio.EnvioRepository;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 
@@ -33,31 +32,36 @@ public class RespuestasController {
 
     // respuesta: lo escrito (predicción de salida); opcion_id: la alternativa elegida (opción múltiple); sesion_id: la
     // sesión del Dojo en la que se entregó el ejercicio, si se responde dentro de una (HU54): el resultado mueve el nivel.
+    // intento_id: identificador único que la app le pone a cada intento; sirve para que un reenvío tras perder la señal
+    // no cuente dos veces (HU48-T3).
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    record Solicitud(String respuesta, Long opcionId, Long sesionId) {
+    record Solicitud(String respuesta, Long opcionId, Long sesionId, String intentoId) {
     }
+
+    // Largo máximo de intento_id (una UUID tiene 36).
+    private static final int MAX_CLAVE = 40;
 
     // respuesta_correcta solo sale si falló (HU48-T2) y nunca antes de que el estudiante responda (CA-46.4).
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    record Resultado(String resultado, String respuestaCorrecta) {
+    record Resultado(String resultado, String respuestaCorrecta, int intentosRestantes) {
     }
 
     private final AdminCliente admin;
     private final InscripcionRepository inscripciones;
     private final CorrectorDeEjercicios corrector;
-    private final CinturonServicio cinturones;
     private final SesionDojoRepository sesiones;
-    private final SesionDojoServicio sesionesServicio;
+    private final EnvioRepository envios;
+    private final RegistroDeRespuestas registro;
 
     public RespuestasController(AdminCliente admin, InscripcionRepository inscripciones, CorrectorDeEjercicios corrector,
-            CinturonServicio cinturones, SesionDojoRepository sesiones, SesionDojoServicio sesionesServicio) {
+            SesionDojoRepository sesiones, EnvioRepository envios, RegistroDeRespuestas registro) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.corrector = corrector;
-        this.cinturones = cinturones;
         this.sesiones = sesiones;
-        this.sesionesServicio = sesionesServicio;
+        this.envios = envios;
+        this.registro = registro;
     }
 
     // El acceso es el de abrir un problema (HU31-T2): uno no visible o de un curso donde el estudiante no está inscrito
@@ -77,6 +81,14 @@ public class RespuestasController {
             return noEncontrado();
         }
 
+        // HU48-T3: un reenvío (misma clave que un intento ya guardado) no gasta intento, no vuelve a contar ni exige que
+        // la sesión siga abierta: solo devuelve el mismo resultado, porque la respuesta original pudo no llegar a la app.
+        String clave = solicitud.intentoId() == null || solicitud.intentoId().isBlank() ? null : solicitud.intentoId().trim();
+        if (clave != null && clave.length() > MAX_CLAVE) {
+            return ResponseEntity.badRequest().body(new Detalle("intento_id es demasiado largo."));
+        }
+        boolean reenvio = clave != null && envios.existeClave(estudiante.getId(), clave);
+
         // HU54: dentro de una sesión del Dojo, esta debe ser del estudiante, seguir abierta y tener el ejercicio pendiente.
         Optional<SesionDojoRepository.Sesion> sesion = Optional.empty();
         if (solicitud.sesionId() != null) {
@@ -84,12 +96,18 @@ public class RespuestasController {
             if (sesion.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("Sesión no encontrada."));
             }
-            if (!sesion.get().abierta()) {
+            if (!reenvio && !sesion.get().abierta()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new Detalle("Esta sesión ya terminó."));
             }
-            if (!sesiones.pendiente(sesion.get().id(), problemaId)) {
+            if (!reenvio && !sesiones.pendiente(sesion.get().id(), problemaId)) {
                 return sinPendiente();
             }
+        }
+
+        // HU45-T3 (CA-45.5): una respuesta nueva se rechaza si ya no quedan intentos, antes de pedir la respuesta esperada.
+        if (!reenvio && IntentosMoviles.restantes(envios.intentosDe(estudiante.getId(), problemaId)) == 0) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new Detalle("Ya usaste los " + IntentosMoviles.MAXIMO + " intentos de este ejercicio."));
         }
 
         RespuestaDelProblemaDto paraCorregir;
@@ -107,17 +125,19 @@ public class RespuestasController {
         } catch (RespuestaInvalidaException e) {
             return ResponseEntity.badRequest().body(new Detalle(e.getMessage()));
         }
-        // HU54-T2: la respuesta corregida mueve el nivel de la sesión. false: otra respuesta a la vez ya lo resolvió.
-        if (sesion.isPresent()
-                && !sesionesServicio.registrarRespuesta(sesion.get(), problemaId, problema.tema(), veredicto.correcta())) {
-            return sinPendiente();
+        // Lo que guardó el intento: el texto escrito o la alternativa elegida.
+        String guardado = solicitud.opcionId() != null ? "opcion:" + solicitud.opcionId() : solicitud.respuesta();
+        if (!reenvio) {
+            try {
+                registro.registrar(estudiante.getId(), problema, guardado, veredicto.correcta(), sesion, clave);
+            } catch (RegistroDeRespuestas.SesionSinPendienteException e) {
+                return sinPendiente();
+            }
         }
-        // HU50-T2: un acierto suma puntos al cinturón del lenguaje del ejercicio (solo la primera vez que lo resuelve).
-        if (veredicto.correcta()) {
-            cinturones.sumarPorAcierto(estudiante.getId(), problema.lenguaje(), problemaId, problema.tipoEjercicio());
-        }
+        // Un reenvío que gana la carrera contra su original se registra como «ya estaba»: se responde igual, sin contar.
+        int usados = envios.intentosDe(estudiante.getId(), problemaId);
         return ResponseEntity.ok(new Resultado(veredicto.correcta() ? "correcto" : "incorrecto",
-                veredicto.respuestaCorrecta()));
+                veredicto.respuestaCorrecta(), IntentosMoviles.restantes(usados)));
     }
 
     private static ResponseEntity<Detalle> noEncontrado() {
