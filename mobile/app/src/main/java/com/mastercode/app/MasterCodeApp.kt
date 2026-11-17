@@ -8,6 +8,8 @@ import com.mastercode.app.data.cursos.HttpMisCursosApi
 import com.mastercode.app.data.cursos.MisCursosRepository
 import com.mastercode.app.data.dojo.DojoRepository
 import com.mastercode.app.data.dojo.HttpDojoApi
+import com.mastercode.app.data.perfil.HttpZonaHorariaApi
+import com.mastercode.app.data.perfil.ZonaHorariaRepository
 import com.mastercode.app.data.problemas.HttpProblemaApi
 import com.mastercode.app.data.problemas.ProblemaRepository
 import com.mastercode.app.data.red.MonitorDeRed
@@ -38,6 +40,10 @@ class MasterCodeApp : Application() {
     // HU48-T3: envía las respuestas y guarda en el teléfono las que no pudo enviar.
     val enviadorDeRespuestas by lazy {
         EnviadorDeRespuestas(problemaRepository, PreferenciasPendientes(this))
+    }
+    // H6: la app le dice a user-api en qué zona horaria está el teléfono (MainActivity lo llama al abrir con sesión).
+    val zonaHorariaRepository by lazy {
+        ZonaHorariaRepository(HttpZonaHorariaApi(BuildConfig.USER_API_URL), authRepository)
     }
     // HU55-T1: dónde queda guardado el estado de la sesión del Dojo.
     val almacenDeSesion by lazy { PreferenciasDeSesion(this) }

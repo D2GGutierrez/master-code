@@ -65,6 +65,15 @@ class GuardianRutasTest extends PruebaDeApi {
             // NO APLICA: guarda el token de notificaciones del dispositivo del propio estudiante (el del token de sesión);
             // no devuelve nada ni toca problemas. Lo comprueba DispositivoApiTest (HU52-T1).
             "PUT /api/dispositivo",
+            // NO APLICA: guarda la zona horaria del propio estudiante (la del token de sesión); no devuelve nada ni toca
+            // problemas. Lo comprueba ZonaHorariaApiTest (H6).
+            "PUT /api/yo/zona-horaria",
+            // NO APLICA: devuelve solo las cuentas de racha del propio estudiante (días seguidos por lenguaje); sin
+            // problemas, enunciados ni casos. Lo comprueba RachaApiTest (HU49-T2).
+            "GET /api/yo/racha",
+            // NO APLICA: devuelve solo el nivel, los puntos y lo que falta para el siguiente cinturón del propio
+            // estudiante, por lenguaje; sin problemas, enunciados ni casos. Lo comprueba CinturonesApiTest (HU51-T1).
+            "GET /api/yo/cinturones",
             // NO APLICA: empieza una sesión del Dojo del propio estudiante (el del token); no devuelve problemas. Lo
             // comprueba DojoApiTest (HU53-T2).
             "POST /api/dojo/sesiones",

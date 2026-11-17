@@ -3,6 +3,7 @@ package com.mastercode.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,11 @@ class MainActivity : ComponentActivity() {
                 // El Dojo (HU53-T3) se abre desde «Mis cursos». Cada visita usa un ViewModel nuevo: se empieza una sesión limpia.
                 var enDojo by rememberSaveable { mutableStateOf(false) }
                 var visitaAlDojo by rememberSaveable { mutableIntStateOf(0) }
+                // H6: con la sesión iniciada se le dice a user-api la zona horaria del teléfono (también al volver a iniciar
+                // sesión). Si falla, no se avisa: se reintenta la próxima vez que se abra la app.
+                LaunchedEffect(conSesion) {
+                    if (conSesion) app.zonaHorariaRepository.enviar()
+                }
                 if (conSesion && enDojo) {
                     DojoScreen(
                         viewModel = viewModel(

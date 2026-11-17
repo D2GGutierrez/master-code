@@ -10,9 +10,10 @@ import com.mastercode.userapi.cinturon.CinturonServicio;
 import com.mastercode.userapi.dojo.SesionDojoRepository;
 import com.mastercode.userapi.dojo.SesionDojoServicio;
 import com.mastercode.userapi.envio.EnvioRepository;
+import com.mastercode.userapi.racha.RachaServicio;
 
 // HU45-T3: lo que se guarda cuando el celular responde un ejercicio ya corregido. Todo va en una sola transacción: el
-// intento (un envío más, D14), el resultado dentro de la sesión del Dojo (HU54) y los puntos del cinturón (HU50-T2). O
+// intento (un envío más, D14), el resultado dentro de la sesión del Dojo (HU54) y los puntos del cinturón (HU50-T2) y la racha (HU49-T2). O
 // queda todo o no queda nada.
 @Service
 public class RegistroDeRespuestas {
@@ -24,11 +25,14 @@ public class RegistroDeRespuestas {
     private final EnvioRepository envios;
     private final SesionDojoServicio sesiones;
     private final CinturonServicio cinturones;
+    private final RachaServicio rachas;
 
-    public RegistroDeRespuestas(EnvioRepository envios, SesionDojoServicio sesiones, CinturonServicio cinturones) {
+    public RegistroDeRespuestas(EnvioRepository envios, SesionDojoServicio sesiones, CinturonServicio cinturones,
+            RachaServicio rachas) {
         this.envios = envios;
         this.sesiones = sesiones;
         this.cinturones = cinturones;
+        this.rachas = rachas;
     }
 
     @Transactional
@@ -44,6 +48,8 @@ public class RegistroDeRespuestas {
         // HU50-T2: un acierto suma puntos al cinturón del lenguaje del ejercicio (solo la primera vez que lo resuelve).
         if (correcta) {
             cinturones.sumarPorAcierto(estudianteId, problema.lenguaje(), problema.id(), problema.tipoEjercicio());
+            // HU49-T2: el acierto mantiene la racha de práctica del día, en la hora local del estudiante.
+            rachas.registrarAcierto(estudianteId, problema.lenguaje());
         }
     }
 }

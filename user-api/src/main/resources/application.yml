@@ -29,6 +29,10 @@ sandbox:
 ejecuciones:
   limite-por-minuto: ${EJECUCIONES_POR_MINUTO:10}
 
+# H6 (ADR-13, D23): zona horaria con la que se decide el día de un estudiante cuya app todavía no mandó la suya.
+estudiante:
+  zona-horaria-por-defecto: ${ZONA_HORARIA_POR_DEFECTO:America/Lima}
+
 spring:
   # HU43-T3 (ADR-8 D9): caché en memoria del proceso, sin Redis. El vencimiento corto es por si el docente aprueba o
   # archiva problemas, que no pasa por user-api y por eso no invalida la caché.

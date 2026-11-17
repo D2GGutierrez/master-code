@@ -27,6 +27,7 @@ import com.mastercode.userapi.admin.ProblemaCalificableDto;
 import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.cinturon.CinturonServicio;
+import com.mastercode.userapi.racha.RachaServicio;
 import com.mastercode.userapi.evaluacion.AccesoEvaluacionServicio;
 import com.mastercode.userapi.evaluacion.EvaluacionesController;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
@@ -76,10 +77,11 @@ public class EnviosController {
     private final AvanceDelCursoServicio avance;
     private final AccesoEvaluacionServicio evaluaciones;
     private final CinturonServicio cinturones;
+    private final RachaServicio rachas;
 
     public EnviosController(AdminCliente admin, InscripcionRepository inscripciones, SandboxCliente sandbox,
             EnvioRepository envios, AvanceDelCursoServicio avance, AccesoEvaluacionServicio evaluaciones,
-            CinturonServicio cinturones) {
+            CinturonServicio cinturones, RachaServicio rachas) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.sandbox = sandbox;
@@ -87,6 +89,7 @@ public class EnviosController {
         this.avance = avance;
         this.evaluaciones = evaluaciones;
         this.cinturones = cinturones;
+        this.rachas = rachas;
     }
 
     // HU41-T1: el historial de envíos del estudiante en un problema, del más reciente al más antiguo. El estudiante sale
@@ -213,6 +216,8 @@ public class EnviosController {
         // HU50-T2: resolver el ejercicio (todos los casos) suma puntos al cinturón del lenguaje, solo la primera vez.
         if ("correcto".equals(resultado)) {
             cinturones.sumarPorAcierto(estudiante.getId(), lenguaje, problemaId, problema.tipoEjercicio());
+            // HU49-T2: un acierto también mantiene la racha de práctica del día (en la hora local del estudiante).
+            rachas.registrarAcierto(estudiante.getId(), lenguaje);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnvioCalificado(fila.id(), fila.numeroIntento(),

@@ -1,5 +1,6 @@
 package com.mastercode.userapi.cinturon;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -12,6 +13,10 @@ public class CinturonRepository {
 
     // El cinturón de un estudiante en un lenguaje: su nivel (1 = blanco) y los puntos que lleva.
     public record Cinturon(long estudianteId, String lenguaje, int nivel, int puntos) {
+    }
+
+    // Un nivel de la tabla de referencia: el nombre y los puntos acumulados desde los que se tiene.
+    public record Nivel(int nivel, String nombre, int puntosRequeridos) {
     }
 
     private final JdbcClient jdbc;
@@ -29,6 +34,30 @@ public class CinturonRepository {
                 .params(estudianteId, lenguaje)
                 .query(Cinturon.class)
                 .optional();
+    }
+
+    // Todos los cinturones del estudiante (uno por lenguaje en el que ya acertó), por lenguaje.
+    public List<Cinturon> listar(long estudianteId) {
+        return jdbc.sql("""
+                SELECT estudiante_id, lenguaje, nivel, puntos
+                FROM app_schema.app_cinturon
+                WHERE estudiante_id = ?
+                ORDER BY lenguaje
+                """)
+                .param(estudianteId)
+                .query(Cinturon.class)
+                .list();
+    }
+
+    // Los niveles de blanco a negro, de menor a mayor (HU51-T1 calcula con ellos lo que falta para el siguiente).
+    public List<Nivel> niveles() {
+        return jdbc.sql("""
+                SELECT nivel, nombre, puntos_requeridos
+                FROM app_schema.app_nivel_cinturon
+                ORDER BY nivel
+                """)
+                .query(Nivel.class)
+                .list();
     }
 
     // Apunta que este ejercicio ya dio puntos. true si es la primera vez; false si ya los había dado. Una sola sentencia

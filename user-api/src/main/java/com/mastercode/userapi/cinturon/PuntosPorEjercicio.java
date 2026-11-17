@@ -2,8 +2,8 @@ package com.mastercode.userapi.cinturon;
 
 import java.util.Map;
 
-// HU50-T2: cuántos puntos da resolver un ejercicio de cada tipo. Son valores PROVISIONALES: HU50-T4 los confirma en
-// docs/puntos-cinturon.md y los deja aquí (CA-50.2). Un tipo que no está en la tabla no da puntos.
+// HU50-T2 y HU50-T4: cuántos puntos da resolver un ejercicio de cada tipo (CA-50.2). Son los de docs/puntos-cinturon.md;
+// PuntosCinturonDocTest comprueba que los dos lugares dicen lo mismo. Un tipo que no está en la tabla no da puntos.
 public final class PuntosPorEjercicio {
 
     private static final Map<String, Integer> PUNTOS = Map.of(
