@@ -47,12 +47,14 @@ Si en el nivel resultante ya no queda ningún ejercicio sin entregar, se toma el
 
 | Tarea | Qué fija | Estado de este documento |
 | :--- | :--- | :--- |
-| HU54-T3 | Al terminar la sesión se guarda el nivel alcanzado (CA-54.3). | Pendiente: el lugar donde se guarda lo decide esa tarea. |
-| HU54-T4 | El nivel inicial de un estudiante nuevo (CA-54.4). | Pendiente. **Propuesta:** `facil`, para que el primer ejercicio nunca frustre; quien no es nuevo parte del nivel guardado en HU54-T3. Se confirma al hacer HU54-T4 y se escribe aquí. |
+| HU54-T3 | Al terminar la sesión se guarda el nivel alcanzado (CA-54.3). | **Hecho (D21).** `POST /api/dojo/sesiones/{id}/terminar` lo guarda en `app_nivel_dificultad` (uno por estudiante y lenguaje). La sesión siguiente del lenguaje parte de él. |
+| HU54-T4 | El nivel inicial de un estudiante nuevo (CA-54.4). | **Hecho (D21): `facil`**, para que el primer ejercicio nunca frustre; quien tiene nivel guardado parte de ese. |
 
 ## Dónde vive el código
 
-La regla es una función pura de `user-api` (sin base de datos ni reloj): recibe el nivel, las dos rachas y si la respuesta fue acierto, y devuelve el nivel y las rachas nuevas. Así HU54-T5 puede probarla con rachas largas de aciertos y de errores sin levantar nada (CA-54.5). Las rachas de la sesión se guardan junto al nivel, para que sobrevivan si la app se cierra y se reanuda (HU55).
+La regla es una función pura de `user-api` (sin base de datos ni reloj): recibe el nivel, las dos rachas y si la respuesta fue acierto, y devuelve el nivel y las rachas nuevas. Así HU54-T5 puede probarla con rachas largas de aciertos y de errores sin levantar nada (CA-54.5). Las rachas de la sesión se guardan junto al nivel (`app_sesion_dojo.nivel`, `racha_aciertos`, `racha_errores`), para que sobrevivan si la app se cierra y se reanuda (HU55). El código está en `user-api/.../dojo/` (`Nivel`, `ReglaDificultad`, `SesionDojoServicio`).
+
+**Cómo llega una respuesta a la regla:** el celular manda `sesion_id` junto con la respuesta (`POST /api/problemas/{id}/respuesta`, D15). Sin `sesion_id` la respuesta no mueve ningún nivel.
 
 ## Cómo probarla (HU54-T5)
 

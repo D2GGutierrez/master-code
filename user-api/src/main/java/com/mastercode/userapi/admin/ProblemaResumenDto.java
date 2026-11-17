@@ -15,5 +15,12 @@ public record ProblemaResumenDto(
         String dificultad,
         String plataforma,
         @JsonProperty("tipo_ejercicio") String tipoEjercicio,
-        @JsonProperty("fecha_publicacion") OffsetDateTime fechaPublicacion) {
+        @JsonProperty("fecha_publicacion") OffsetDateTime fechaPublicacion,
+        String tema) {
+
+    // Sin tema: para quien no lo necesita (D13: puede llegar vacío).
+    public ProblemaResumenDto(long id, String titulo, String lenguaje, String dificultad, String plataforma,
+            String tipoEjercicio, OffsetDateTime fechaPublicacion) {
+        this(id, titulo, lenguaje, dificultad, plataforma, tipoEjercicio, fechaPublicacion, null);
+    }
 }

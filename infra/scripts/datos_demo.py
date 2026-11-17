@@ -6,8 +6,10 @@ Crea (y si ya existen, reutiliza) estas cuentas y datos:
     pendientes en la bandeja de revisión para aprobarlos o descartarlos en vivo.
   - 6 estudiantes con inscripciones y envíos variados (resueltos, a medias, fallidos y sin intentar), para que
     «Mi avance», la lista de inscritos y el estado de cada problema tengan algo que mostrar.
+  - Para la demo del celular (C1), tres de esos estudiantes con una sesión del Dojo ya jugada (ejercicios del celular
+    acertados y fallados, que dejan puntos y un cinturón), el nivel de dificultad guardado y una racha de práctica.
 
-Es seguro correrlo más de una vez: no duplica cuentas, cursos, inscripciones ni envíos. Si la IA falló a medias,
+Es seguro correrlo más de una vez: no duplica cuentas, cursos, inscripciones, envíos ni sesiones del Dojo. Si la IA falló a medias,
 volver a correrlo completa lo que falte.
 
 Antes: `docker compose up -d --build` (db, admin-api, user-api y ai-service) y, para que los envíos se califiquen
@@ -16,6 +18,10 @@ La contraseña de todas las cuentas de demostración la pones tú, con la variab
 imprime. Al menos 8 caracteres, no demasiado común ni parecida al nombre o al correo. En Git Bash, desde la raíz:
     read -s -p "Clave de demo: " DEMO_CLAVE; export DEMO_CLAVE; echo
     python infra/scripts/datos_demo.py
+
+Los intentos del celular se hacen por la API real (sesión del Dojo, respuesta, terminar), así que pasan por la
+regla de dificultad y suman puntos de verdad. La racha no tiene todavía una ruta que la actualice (HU49-T2), así que se
+escribe directo en la base con `--db-shell` (por defecto, el contenedor `db` de docker compose).
 
 Los envíos «correctos» de los estudiantes no son soluciones reales: son programas que devuelven la salida
 esperada de cada caso de prueba, armados a partir de los casos que el docente puede ver. Sirven solo para tener
@@ -107,6 +113,14 @@ ESTUDIANTES = [
     },
 ]
 
+# Lo que cada estudiante hizo en el celular (C1). respuestas: una letra por ejercicio del Dojo, A = acierto y E = error
+# (si el curso tiene menos ejercicios del celular, se detiene antes). racha: (días seguidos actuales, la máxima).
+MOVIL = {
+    "ana.torres.demo": {"lenguaje": "python", "respuestas": "AAEAAA", "racha": (5, 9)},
+    "luis.ramirez.demo": {"lenguaje": "python", "respuestas": "EEA", "racha": (1, 2)},
+    "lucia.paredes.demo": {"lenguaje": "python", "respuestas": "AAAEE", "racha": (3, 3)},
+}
+
 # Intentos fallidos: un programa que no resuelve nada.
 INCORRECTO = {
     "python": 'print("todavia no se como resolverlo")\n',
@@ -175,6 +189,7 @@ class Demo:
         self.ia = argumentos.ai_service.rstrip("/")
         self.django_shell = shlex.split(argumentos.django_shell)
         self.dominio = argumentos.dominio
+        self.db_shell = shlex.split(argumentos.db_shell)
         self.clave = clave
         self.fallos: list[str] = []
         self.token_docente = ""
@@ -205,6 +220,19 @@ class Demo:
         if resultado.returncode != 0 or not lineas:
             raise Fallo(f"el shell de Django falló: {(resultado.stderr or resultado.stdout).strip()[-200:]}")
         return lineas[-1].strip()
+
+    def sql(self, consulta: str) -> str:
+        """Corre SQL en la base (por stdin) y devuelve la última línea de la salida."""
+        try:
+            resultado = subprocess.run(
+                self.db_shell, cwd=RAIZ, input=consulta, capture_output=True, text=True, timeout=60
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise Fallo(f"no se pudo ejecutar psql ({error}); revisa --db-shell") from None
+        if resultado.returncode != 0:
+            raise Fallo(f"la base respondió con error: {(resultado.stderr or resultado.stdout).strip()[-200:]}")
+        lineas = [linea for linea in resultado.stdout.splitlines() if linea.strip()]
+        return lineas[-1].strip() if lineas else ""
 
     def correo(self, usuario: str) -> str:
         return f"{usuario}@{self.dominio}"
@@ -391,6 +419,59 @@ class Demo:
                     enviados += 1
         return f"{inscritos} inscripciones nuevas, {enviados} envíos nuevos" + (f", {omitidos} problemas ya tenían intentos" if omitidos else "")
 
+    # ---------- celular (C1) ----------
+
+    def respuesta_para(self, problema_id: int, acierta: bool) -> dict:
+        """El cuerpo de POST /api/problemas/{id}/respuesta; la respuesta esperada se lee con la vista del docente."""
+        problema = self.detalle_docente(problema_id)
+        if problema.get("tipo_ejercicio") == "opcion_multiple":
+            opcion = next((o for o in problema.get("opciones", []) if bool(o.get("es_correcta")) == acierta), None)
+            exigir(opcion is not None, f"el problema {problema_id} no tiene una alternativa para {'acertar' if acierta else 'fallar'}")
+            return {"opcion_id": opcion["id"]}
+        return {"respuesta": problema.get("respuesta_esperada", "") if acierta else "no lo sé"}
+
+    def preparar_celular(self, perfil: dict):
+        movil = MOVIL[perfil["usuario"]]
+        correo = self.correo(perfil["usuario"])
+        literal_correo = "'" + correo.replace("'", "''") + "'"
+        ya = self.sql(
+            "SELECT count(*) FROM app_schema.app_sesion_dojo s JOIN app_schema.app_estudiante e ON e.id = s.estudiante_id "
+            f"WHERE e.email = {literal_correo};"
+        )
+        if ya not in ("", "0"):
+            return "ya tenía sesiones del Dojo: no se repite"
+        token = self.asegurar_cuenta("estudiante", perfil["nombre"], correo, "mobile")
+        sesion = llamar("POST", f"{self.usuario}/api/dojo/sesiones", {"lenguaje": movil["lenguaje"]}, token)
+        estado_esperado(sesion, 201, f"Empezar la sesión del Dojo de {correo}")
+        sesion_id = sesion.json["id"]
+        respondidos = 0
+        for letra in movil["respuestas"]:
+            siguiente = llamar("POST", f"{self.usuario}/api/dojo/sesiones/{sesion_id}/siguiente", token=token)
+            if siguiente.estado == 204:
+                break
+            estado_esperado(siguiente, 200, "El siguiente ejercicio del Dojo")
+            problema_id = siguiente.json["id"]
+            cuerpo = {**self.respuesta_para(problema_id, letra == "A"), "sesion_id": sesion_id}
+            respuesta = llamar("POST", f"{self.usuario}/api/problemas/{problema_id}/respuesta", cuerpo, token)
+            estado_esperado(respuesta, 200, f"La respuesta de {correo} al ejercicio {problema_id}")
+            respondidos += 1
+        resumen = llamar("POST", f"{self.usuario}/api/dojo/sesiones/{sesion_id}/terminar", token=token)
+        estado_esperado(resumen, 200, "Terminar la sesión del Dojo")
+        datos = resumen.json or {}
+        actual, maxima = movil["racha"]
+        self.sql(
+            "INSERT INTO app_schema.app_racha (estudiante_id, lenguaje, racha_actual, racha_maxima, fecha_ultima_actividad) "
+            f"SELECT id, '{movil['lenguaje']}', {int(actual)}, {int(maxima)}, CURRENT_DATE "
+            f"FROM app_schema.app_estudiante WHERE email = {literal_correo} "
+            "ON CONFLICT (estudiante_id, lenguaje) DO NOTHING;"
+        )
+        if respondidos == 0:
+            return "el curso no tiene ejercicios del celular visibles: solo se guardó la racha"
+        return (
+            f"{respondidos} ejercicios, {datos.get('aciertos')} aciertos, {datos.get('puntos_sumados')} puntos, "
+            f"nivel {datos.get('nivel_alcanzado')}, racha {actual}"
+        )
+
     # ---------- recorrido ----------
 
     def correr(self) -> int:
@@ -420,6 +501,10 @@ class Demo:
             self.paso(f"Curso «{plan['nombre']}»: aprobación", lambda plan=plan: self.aprobar_los_que_toca(plan))
         for perfil in ESTUDIANTES:
             self.paso(f"Estudiante {perfil['nombre']}", lambda perfil=perfil: self.preparar_estudiante(perfil))
+            if perfil["usuario"] in MOVIL:
+                self.paso(
+                    f"Celular de {perfil['nombre']}: Dojo, cinturón y racha", lambda perfil=perfil: self.preparar_celular(perfil)
+                )
 
         print()
         print("Cuentas (todas con la clave que pusiste en DEMO_CLAVE):")
@@ -463,6 +548,11 @@ def main() -> int:
         "--django-shell",
         default="docker compose exec -T admin-api python manage.py shell -v 0 -c",
         help="comando que ejecuta el código Python que se le pasa al final, dentro de admin-api (activa al docente)",
+    )
+    parser.add_argument(
+        "--db-shell",
+        default="docker compose exec -T db sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -v ON_ERROR_STOP=1 -tA'",
+        help="comando que ejecuta por stdin el SQL que se le pase, dentro de la base (guarda la racha del celular)",
     )
     argumentos = parser.parse_args()
     try:

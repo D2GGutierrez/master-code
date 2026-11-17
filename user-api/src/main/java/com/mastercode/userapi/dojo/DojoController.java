@@ -1,5 +1,6 @@
 package com.mastercode.userapi.dojo;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import com.mastercode.userapi.Detalle;
 import com.mastercode.userapi.admin.AdminNoDisponibleException;
@@ -31,14 +36,25 @@ public class DojoController {
     record Solicitud(String lenguaje) {
     }
 
-    record SesionIniciada(long id, String lenguaje) {
+    // nivel: la dificultad con la que parte la sesión (HU54-T3, HU54-T4).
+    record SesionIniciada(long id, String lenguaje, String nivel) {
+    }
+
+    // HU56: lo que ve el estudiante al terminar. cinturon sale null si todavía no tiene cinturón en ese lenguaje.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    record ResumenDeSesion(String nivelAlcanzado, int respondidos, int aciertos, int puntosSumados,
+            List<SesionDojoRepository.TemaFallado> temasMasFallados, SesionDojoServicio.CinturonActual cinturon) {
     }
 
     private final SesionDojoRepository sesiones;
+    private final SesionDojoServicio sesionesServicio;
     private final SiguienteEjercicioServicio siguiente;
 
-    public DojoController(SesionDojoRepository sesiones, SiguienteEjercicioServicio siguiente) {
+    public DojoController(SesionDojoRepository sesiones, SesionDojoServicio sesionesServicio,
+            SiguienteEjercicioServicio siguiente) {
         this.sesiones = sesiones;
+        this.sesionesServicio = sesionesServicio;
         this.siguiente = siguiente;
     }
 
@@ -49,8 +65,9 @@ public class DojoController {
         if (!LENGUAJES.contains(lenguaje)) {
             return ResponseEntity.badRequest().body(new Detalle("lenguaje debe ser python, java o javascript."));
         }
-        long id = sesiones.crear(estudiante.getId(), lenguaje);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new SesionIniciada(id, lenguaje));
+        Nivel nivel = sesionesServicio.nivelInicial(estudiante.getId(), lenguaje);
+        long id = sesiones.crear(estudiante.getId(), lenguaje, nivel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SesionIniciada(id, lenguaje, nivel.valor()));
     }
 
     // Entrega el siguiente ejercicio de la sesión (CA-53.2) y lo apunta como entregado, así no vuelve a salir en ella
@@ -75,5 +92,22 @@ public class DojoController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(ProblemasController.detalleDe(problema.get()));
+    }
+
+    // HU54-T3 y HU56: termina la sesión. Guarda el nivel alcanzado y devuelve el resumen: aciertos, puntos que sumó al
+    // cinturón y los temas donde más falló. Una sesión ajena o inexistente da 404; una que ya terminó, 409.
+    @PostMapping("/api/dojo/sesiones/{sesionId}/terminar")
+    public ResponseEntity<?> terminar(@PathVariable long sesionId, @RequestAttribute("estudiante") Estudiante estudiante) {
+        Optional<SesionDojoRepository.Sesion> sesion = sesiones.buscar(sesionId, estudiante.getId());
+        if (sesion.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("Sesión no encontrada."));
+        }
+        Optional<SesionDojoServicio.Resumen> resumen = sesionesServicio.terminar(sesion.get());
+        if (resumen.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new Detalle("Esta sesión ya terminó."));
+        }
+        SesionDojoServicio.Resumen r = resumen.get();
+        return ResponseEntity.ok(new ResumenDeSesion(r.nivelAlcanzado(), r.respondidos(), r.aciertos(), r.puntosSumados(),
+                r.temasMasFallados(), r.cinturon().orElse(null)));
     }
 }

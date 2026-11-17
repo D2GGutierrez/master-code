@@ -335,3 +335,24 @@ Ejecución de código de estudiantes: nunca se ejecuta código sin sandbox; lím
 > **Para las tareas que vienen.** HU57-T1 debe crear la columna `ultima_senal` (marca de tiempo, nula hasta la primera petición) en la fila de cada jugador de la partida; HU59-T2 hace la ruta del marcador y guarda la señal; HU59-T4 implementa el paso 4 y las pruebas con un plazo corto configurable (los 30 s y los 10 s van en `application.yml`, no escritos en el código, como la caducidad del reto de HU57-T4); HU59-T3 hace la consulta cada 2 s en la app y HU59-T5 prueba la conexión lenta.
 >
 > **Alternativas descartadas:** Server-Sent Events y WebSocket (más inmediatos, pero piden estado en memoria, pruebas asíncronas y una seguridad aparte que el último sprint no puede pagar; si el proyecto sigue después, se pueden cambiar sin tocar la regla de desconexión, que solo depende de `ultima_senal`), un temporizador en el servidor que cierre la partida a los 30 s (obliga a un proceso en segundo plano que sobreviva reinicios, y la evaluación al consultar da el mismo resultado visible) y contar los 30 s desde que se detecta la desconexión (con consulta periódica nunca se «detecta» nada: solo se mide el silencio).
+
+## **ADR-11: Dificultad y resumen del Dojo (HU49, HU54 y HU56; decidido el 20 de noviembre de 2026)**
+
+### D21. Dónde viven el nivel, las rachas y el resumen de la sesión (HU54-T2/T3/T4, HU56-T1/T3, HU49-T1)
+
+> **Decidido.**
+>
+> 1. **La regla es una función pura** (`ReglaDificultad`, docs/regla-dificultad.md). Su estado (nivel y las dos rachas) vive **en la sesión** (`app_sesion_dojo.nivel`, `racha_aciertos`, `racha_errores`, migración V15), así sobrevive si la app se cierra y se reanuda.
+> 2. **Una respuesta pertenece a una sesión si trae `sesion_id`.** La ruta es la de siempre (`POST /api/problemas/{id}/respuesta`, D15) con un campo opcional `sesion_id`. Con él, el ejercicio debe estar entregado y pendiente en esa sesión abierta del estudiante (404 si la sesión no es suya, 409 si terminó o el ejercicio ya se respondió); el resultado se apunta (`acerto`, `tema`) y mueve el nivel. Sin `sesion_id` la ruta se comporta como antes y no toca ninguna sesión. Una respuesta inválida (400) no cuenta.
+> 3. **El siguiente ejercicio** sale del nivel de la sesión; si no queda ninguno ahí, del nivel más cercano (a igual distancia, el más fácil). La sustitución no cambia el nivel.
+> 4. **Terminar la sesión** es `POST /api/dojo/sesiones/{id}/terminar`: cierra la sesión, **guarda el nivel alcanzado** en `app_nivel_dificultad` (uno por estudiante y lenguaje, HU54-T3) y devuelve el resumen. Una sesión que nunca se termina no guarda nivel: la siguiente parte del último nivel guardado.
+> 5. **Nivel inicial (HU54-T4): `facil`.** Quien no tiene nivel guardado en ese lenguaje parte de `facil`; quien lo tiene, de ese nivel.
+> 6. **Los puntos no se suman dos veces (HU56-T3).** HU50-T2 ya suma al cinturón al acertar (solo la primera vez por ejercicio), también dentro del Dojo. Esperar al final para sumarlos duplicaría la lógica y perdería los puntos de una sesión abandonada. Por eso «sumar los puntos de la sesión al cinturón» queda cubierto así: los puntos llegan al cinturón en cada acierto y el resumen **informa** cuántos sumó la sesión (`puntos_sumados`, leído del registro de puntos de ese ejercicio desde que empezó la sesión) y el cinturón que queda (`cinturon`, o `null` si todavía no tiene).
+> 7. **Temas con más fallos (HU56-T1).** Se apunta el `tema` del problema (D13) al responder; el resumen trae hasta 3 temas con sus fallos, de más a menos y, a igual cantidad, por nombre. Sin tema cuenta como «General».
+> 8. **Racha de práctica (HU49-T1):** tabla `app_racha` (V14), una fila por estudiante y lenguaje con racha actual, máxima y fecha del último día practicado. Esta tarea solo crea la tabla; quien la actualiza es HU49-T2.
+>
+> **Resumen (respuesta de `terminar`).** `{ "nivel_alcanzado", "respondidos", "aciertos", "puntos_sumados", "temas_mas_fallados": [{ "tema", "fallos" }], "cinturon": { "nivel", "puntos" } | null }`.
+>
+> **Para las tareas que vienen.** La app del celular debe mandar `sesion_id` al responder dentro del Dojo y llamar a `terminar` al salir (HU55 usa el resumen). HU54-T5 prueba la regla (ya hay pruebas de la función pura en `ReglaDificultadTest`; faltan los casos largos que pida esa tarea). `tema` llega de admin-api en el detalle y en el listado de cada curso; `user-api` no se lo muestra al estudiante.
+>
+> **Alternativas descartadas:** una ruta nueva solo para responder dentro de la sesión (duplica la corrección de D15); calcular el nivel releyendo todas las respuestas de la sesión (más lento y la regla ya es incremental); sumar los puntos del cinturón solo al terminar (ver el punto 6).

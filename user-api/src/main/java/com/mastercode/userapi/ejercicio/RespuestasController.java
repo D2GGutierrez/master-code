@@ -1,5 +1,7 @@
 package com.mastercode.userapi.ejercicio;
 
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,8 @@ import com.mastercode.userapi.admin.ProblemaDto;
 import com.mastercode.userapi.admin.ProblemaNoVisibleException;
 import com.mastercode.userapi.admin.RespuestaDelProblemaDto;
 import com.mastercode.userapi.cinturon.CinturonServicio;
+import com.mastercode.userapi.dojo.SesionDojoRepository;
+import com.mastercode.userapi.dojo.SesionDojoServicio;
 import com.mastercode.userapi.inscripcion.InscripcionRepository;
 import com.mastercode.userapi.perfil.Estudiante;
 
@@ -27,9 +31,10 @@ import com.mastercode.userapi.perfil.Estudiante;
 @RestController
 public class RespuestasController {
 
-    // respuesta: lo escrito (predicción de salida); opcion_id: la alternativa elegida (opción múltiple).
+    // respuesta: lo escrito (predicción de salida); opcion_id: la alternativa elegida (opción múltiple); sesion_id: la
+    // sesión del Dojo en la que se entregó el ejercicio, si se responde dentro de una (HU54): el resultado mueve el nivel.
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    record Solicitud(String respuesta, Long opcionId) {
+    record Solicitud(String respuesta, Long opcionId, Long sesionId) {
     }
 
     // respuesta_correcta solo sale si falló (HU48-T2) y nunca antes de que el estudiante responda (CA-46.4).
@@ -42,13 +47,17 @@ public class RespuestasController {
     private final InscripcionRepository inscripciones;
     private final CorrectorDeEjercicios corrector;
     private final CinturonServicio cinturones;
+    private final SesionDojoRepository sesiones;
+    private final SesionDojoServicio sesionesServicio;
 
     public RespuestasController(AdminCliente admin, InscripcionRepository inscripciones, CorrectorDeEjercicios corrector,
-            CinturonServicio cinturones) {
+            CinturonServicio cinturones, SesionDojoRepository sesiones, SesionDojoServicio sesionesServicio) {
         this.admin = admin;
         this.inscripciones = inscripciones;
         this.corrector = corrector;
         this.cinturones = cinturones;
+        this.sesiones = sesiones;
+        this.sesionesServicio = sesionesServicio;
     }
 
     // El acceso es el de abrir un problema (HU31-T2): uno no visible o de un curso donde el estudiante no está inscrito
@@ -68,6 +77,21 @@ public class RespuestasController {
             return noEncontrado();
         }
 
+        // HU54: dentro de una sesión del Dojo, esta debe ser del estudiante, seguir abierta y tener el ejercicio pendiente.
+        Optional<SesionDojoRepository.Sesion> sesion = Optional.empty();
+        if (solicitud.sesionId() != null) {
+            sesion = sesiones.buscar(solicitud.sesionId(), estudiante.getId());
+            if (sesion.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("Sesión no encontrada."));
+            }
+            if (!sesion.get().abierta()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new Detalle("Esta sesión ya terminó."));
+            }
+            if (!sesiones.pendiente(sesion.get().id(), problemaId)) {
+                return sinPendiente();
+            }
+        }
+
         RespuestaDelProblemaDto paraCorregir;
         try {
             paraCorregir = admin.respuestaDelProblema(problemaId);
@@ -83,6 +107,11 @@ public class RespuestasController {
         } catch (RespuestaInvalidaException e) {
             return ResponseEntity.badRequest().body(new Detalle(e.getMessage()));
         }
+        // HU54-T2: la respuesta corregida mueve el nivel de la sesión. false: otra respuesta a la vez ya lo resolvió.
+        if (sesion.isPresent()
+                && !sesionesServicio.registrarRespuesta(sesion.get(), problemaId, problema.tema(), veredicto.correcta())) {
+            return sinPendiente();
+        }
         // HU50-T2: un acierto suma puntos al cinturón del lenguaje del ejercicio (solo la primera vez que lo resuelve).
         if (veredicto.correcta()) {
             cinturones.sumarPorAcierto(estudiante.getId(), problema.lenguaje(), problemaId, problema.tipoEjercicio());
@@ -93,6 +122,11 @@ public class RespuestasController {
 
     private static ResponseEntity<Detalle> noEncontrado() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("Problema no encontrado."));
+    }
+
+    private static ResponseEntity<Detalle> sinPendiente() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new Detalle("Este ejercicio no está pendiente de respuesta en la sesión."));
     }
 
     private static ResponseEntity<Detalle> noDisponible() {
