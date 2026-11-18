@@ -6,6 +6,11 @@ import com.mastercode.app.data.auth.HttpAuthApi
 import com.mastercode.app.data.auth.KeystoreTokenStorage
 import com.mastercode.app.data.cursos.HttpMisCursosApi
 import com.mastercode.app.data.cursos.MisCursosRepository
+import com.mastercode.app.data.dispositivo.DispositivoRepository
+import com.mastercode.app.data.dispositivo.HttpDispositivoApi
+import com.mastercode.app.data.dispositivo.PreferenciasDeAvisos
+import com.mastercode.app.data.dispositivo.PreferenciasDeToken
+import com.mastercode.app.data.dispositivo.SinFirebase
 import com.mastercode.app.data.dojo.DojoRepository
 import com.mastercode.app.data.dojo.HttpDojoApi
 import com.mastercode.app.data.perfil.HttpZonaHorariaApi
@@ -47,6 +52,13 @@ class MasterCodeApp : Application() {
     }
     // HU55-T1: dónde queda guardado el estado de la sesión del Dojo.
     val almacenDeSesion by lazy { PreferenciasDeSesion(this) }
+    // HU52-T1: registra en user-api el token de Firebase del teléfono. Sin el SDK de Firebase (SinFirebase) no hay token y no
+    // se manda nada; al agregarlo, se cambia SinFirebase por el proveedor real (docs/notificaciones-push.md).
+    val dispositivoRepository by lazy {
+        DispositivoRepository(HttpDispositivoApi(BuildConfig.USER_API_URL), authRepository, SinFirebase, PreferenciasDeToken(this))
+    }
+    // HU52-T3: los avisos de práctica (activados y hora), solo en el teléfono.
+    val almacenDeAvisos by lazy { PreferenciasDeAvisos(this) }
 
     // Los reenvíos viven con la app, no con una pantalla: si el estudiante sale, el reenvío sigue.
     private val ambito = CoroutineScope(SupervisorJob() + Dispatchers.Default)

@@ -98,6 +98,21 @@ public class SesionDojoRepository {
                 .single() > 0;
     }
 
+    // HU55-T2: el último ejercicio entregado, si todavía no se respondió: es donde se quedó el estudiante al salir. Si el
+    // último ya tiene respuesta (o no se entregó ninguno) no hay nada que retomar.
+    public Optional<Long> ejercicioPendiente(long sesionId) {
+        return jdbc.sql("""
+                SELECT problema_id FROM (
+                    SELECT problema_id, acerto FROM app_schema.app_sesion_dojo_ejercicio
+                    WHERE sesion_id = ? ORDER BY orden DESC LIMIT 1
+                ) ultimo
+                WHERE acerto IS NULL
+                """)
+                .param(sesionId)
+                .query(Long.class)
+                .optional();
+    }
+
     // Apunta si acertó y el tema, solo si seguía sin responder: false si ya tenía respuesta (dos respuestas a la vez) o no
     // se entregó en la sesión.
     public boolean registrarRespuesta(long sesionId, long problemaId, boolean acerto, String tema) {

@@ -6,6 +6,9 @@
     <!-- Para saber cuándo vuelve la señal y reenviar las respuestas guardadas (HU48-T3). Es un permiso normal: se concede
          al instalar, no se le pide nada al estudiante. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Para mostrar los avisos de práctica (HU52-T1). Desde Android 13 se pide al estudiante al activar los avisos
+         (AvisosScreen); en versiones anteriores se concede al instalar. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".MasterCodeApp"

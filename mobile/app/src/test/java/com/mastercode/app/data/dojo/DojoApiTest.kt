@@ -105,4 +105,116 @@ class DojoApiTest {
 
         assertEquals(409, codigo)
     }
+
+    // HU55-T2: el JSON copia el de DojoController.estado.
+    @Test
+    fun leeElEstadoDeLaSesionConElEjercicioQueSeDejoSinResponder() = runTest {
+        cuerpoRespuesta = """
+            {"id": 41, "lenguaje": "python", "nivel": "medio", "abierta": true, "aciertos": 2, "respondidos": 3,
+             "ejercicio_actual": {"id": 12, "curso_id": 10, "titulo": "Elige", "enunciado": "¿Cuál imprime 5?",
+               "tipo_ejercicio": "opcion_multiple", "opciones": [{"id": 31, "texto": "print(5)"}], "intentos_restantes": 2}}
+        """.trimIndent()
+
+        val estado = api().sesion("access-falso", 41)
+
+        assertEquals("GET", metodo)
+        assertEquals("/api/dojo/sesiones/41", ruta)
+        assertEquals("Bearer access-falso", authorization)
+        assertEquals(41L, estado.id)
+        assertEquals("python", estado.lenguaje)
+        assertEquals(true, estado.abierta)
+        assertEquals(2, estado.aciertos)
+        assertEquals(3, estado.respondidos)
+        assertEquals(
+            ProblemaDelEjercicio(12, "Elige", "¿Cuál imprime 5?", "opcion_multiple", listOf(OpcionDelEjercicio(31, "print(5)")), 2),
+            estado.ejercicioActual,
+        )
+    }
+
+    @Test
+    fun sinEjercicioPendienteElEstadoLoTraeVacio() = runTest {
+        cuerpoRespuesta = """
+            {"id": 41, "lenguaje": "java", "nivel": "facil", "abierta": false, "aciertos": 0, "respondidos": 0, "ejercicio_actual": null}
+        """.trimIndent()
+
+        val estado = api().sesion("access-falso", 41)
+
+        assertNull(estado.ejercicioActual)
+        assertEquals(false, estado.abierta)
+    }
+
+    @Test
+    fun unaSesionAjenaLlegaComoErrorHttp404() = runTest {
+        codigoRespuesta = 404
+        cuerpoRespuesta = """{"detail": "Sesión no encontrada."}"""
+
+        val codigo = try {
+            api().sesion("access-falso", 41)
+            null
+        } catch (e: ErrorHttp) {
+            e.codigo
+        }
+
+        assertEquals(404, codigo)
+    }
+
+    @Test
+    fun unaRespuestaIlegibleDelEstadoEsUnError() = runTest {
+        cuerpoRespuesta = """{"id": 41}"""
+
+        val codigo = try {
+            api().sesion("access-falso", 41)
+            null
+        } catch (e: ErrorHttp) {
+            e.codigo
+        }
+
+        assertEquals(200, codigo)
+    }
+
+    // HU55-T3: el JSON copia el de POST /api/dojo/sesiones/{id}/terminar.
+    @Test
+    fun terminarLeeElResumenConTemasYCinturon() = runTest {
+        cuerpoRespuesta = """
+            {"nivel_alcanzado": "medio", "respondidos": 5, "aciertos": 3, "puntos_sumados": 30,
+             "temas_mas_fallados": [{"tema": "Bucles", "fallos": 2}, {"tema": "Listas", "fallos": 1}],
+             "cinturon": {"nivel": 1, "puntos": 30}}
+        """.trimIndent()
+
+        val resumen = api().terminar("access-falso", 41)
+
+        assertEquals("POST", metodo)
+        assertEquals("/api/dojo/sesiones/41/terminar", ruta)
+        assertEquals("Bearer access-falso", authorization)
+        assertEquals(
+            ResumenDeSesion("medio", 5, 3, 30, listOf(TemaFallado("Bucles", 2), TemaFallado("Listas", 1)), 1, 30),
+            resumen,
+        )
+    }
+
+    @Test
+    fun terminarSinPuntosNiTemasTraeElCinturonVacio() = runTest {
+        cuerpoRespuesta = """
+            {"nivel_alcanzado": "facil", "respondidos": 0, "aciertos": 0, "puntos_sumados": 0, "temas_mas_fallados": [], "cinturon": null}
+        """.trimIndent()
+
+        val resumen = api().terminar("access-falso", 41)
+
+        assertEquals(ResumenDeSesion("facil", 0, 0, 0, emptyList(), null, null), resumen)
+    }
+
+    @Test
+    fun terminarUnaSesionCerradaLlegaComoErrorHttp409() = runTest {
+        codigoRespuesta = 409
+        cuerpoRespuesta = """{"detail": "Esta sesión ya terminó."}"""
+
+        val codigo = try {
+            api().terminar("access-falso", 41)
+            null
+        } catch (e: ErrorHttp) {
+            e.codigo
+        }
+
+        assertEquals(409, codigo)
+    }
 }

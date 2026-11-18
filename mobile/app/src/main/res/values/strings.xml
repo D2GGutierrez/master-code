@@ -56,5 +56,24 @@
     <string name="dojo_error_conexion">No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.</string>
     <string name="dojo_error_inesperado">Ocurrió un error inesperado. Inténtalo de nuevo.</string>
     <string name="dojo_error_sesion">Esta sesión ya no está disponible. Empieza otra.</string>
+    <string name="mis_cursos_avisos">Avisos de práctica</string>
+    <string name="avisos_titulo">Avisos de práctica</string>
+    <string name="avisos_activar">Recibir avisos</string>
+    <string name="avisos_hora_formato">%1$02d:%2$02d</string>
+    <string name="avisos_hora_actual">Te avisamos a las %1$s.</string>
+    <string name="avisos_cambiar_hora">Cambiar la hora</string>
+    <string name="avisos_volver">Volver a mis cursos</string>
+    <string name="dojo_reanudar_titulo">Sesión sin terminar</string>
+    <string name="dojo_reanudar_texto">Dejaste una sesión de %1$s a medias, con %2$d aciertos de %3$d respondidos. ¿Quieres continuar donde quedaste?</string>
+    <string name="dojo_reanudar_continuar">Continuar</string>
+    <string name="dojo_reanudar_nueva">Empezar de nuevo</string>
+    <string name="dojo_terminar">Terminar sesión</string>
+    <string name="dojo_terminar_titulo">¿Terminar la sesión?</string>
+    <string name="dojo_terminar_texto">Se cerrará tu sesión de práctica y verás tu resumen.</string>
+    <string name="dojo_terminar_confirmar">Terminar</string>
+    <string name="dojo_terminar_cancelar">Seguir practicando</string>
+    <string name="dojo_resumen_titulo">Sesión terminada</string>
+    <string name="dojo_resumen_aciertos">Aciertos: %1$d de %2$d respondidos</string>
+    <string name="dojo_resumen_puntos">Puntos sumados: %1$d</string>
     <string name="dojo_tipo_no_soportado">Este tipo de ejercicio todavía no se puede resolver en el celular.</string>
 </resources>

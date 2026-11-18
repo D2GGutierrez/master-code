@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -48,6 +49,15 @@ public class DojoController {
             List<SesionDojoRepository.TemaFallado> temasMasFallados, SesionDojoServicio.CinturonActual cinturon) {
     }
 
+    // HU55-T2: dónde va una sesión, para ofrecer continuarla. aciertos y respondidos son los del servidor (los que cuentan
+    // de verdad); ejercicioActual es el que el estudiante dejó sin responder, o null si no hay (la app pide el siguiente).
+    // Una sesión que ya terminó sale con abierta en false y sin ejercicio.
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    record EstadoDeSesion(long id, String lenguaje, String nivel, boolean abierta, int aciertos, int respondidos,
+            ProblemasController.ProblemaDetalle ejercicioActual) {
+    }
+
     private final SesionDojoRepository sesiones;
     private final SesionDojoServicio sesionesServicio;
     private final SiguienteEjercicioServicio siguiente;
@@ -71,6 +81,33 @@ public class DojoController {
         Nivel nivel = sesionesServicio.nivelInicial(estudiante.getId(), lenguaje);
         long id = sesiones.crear(estudiante.getId(), lenguaje, nivel);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SesionIniciada(id, lenguaje, nivel.valor()));
+    }
+
+    // HU55-T2 (CA-55.2): el estado de una sesión del estudiante, para retomarla. Una sesión ajena o inexistente da 404.
+    // No entrega ni apunta nada: pedirla las veces que sea no cambia la sesión.
+    @GetMapping("/api/dojo/sesiones/{sesionId}")
+    public ResponseEntity<?> estado(@PathVariable long sesionId, @RequestAttribute("estudiante") Estudiante estudiante) {
+        Optional<SesionDojoRepository.Sesion> buscada = sesiones.buscar(sesionId, estudiante.getId());
+        if (buscada.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Detalle("Sesión no encontrada."));
+        }
+        SesionDojoRepository.Sesion sesion = buscada.get();
+        ProblemasController.ProblemaDetalle ejercicio = null;
+        if (sesion.abierta()) {
+            Optional<ProblemaDto> pendiente;
+            try {
+                pendiente = siguiente.pendiente(sesion);
+            } catch (AdminNoDisponibleException e) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(new Detalle("No se pudo cargar el ejercicio en este momento. Intenta de nuevo."));
+            }
+            if (pendiente.isPresent()) {
+                ejercicio = ProblemasController.detalleDe(pendiente.get(),
+                        ProblemasController.intentosRestantes(pendiente.get(), estudiante.getId(), envios));
+            }
+        }
+        return ResponseEntity.ok(new EstadoDeSesion(sesion.id(), sesion.lenguaje(), sesion.nivel(), sesion.abierta(),
+                sesiones.aciertos(sesion.id()), sesiones.respondidos(sesion.id()), ejercicio));
     }
 
     // Entrega el siguiente ejercicio de la sesión (CA-53.2) y lo apunta como entregado, así no vuelve a salir en ella

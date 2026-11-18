@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +41,7 @@ fun MisCursosScreen(
     alAbrirCurso: (Long) -> Unit,
     alAbrirDojo: () -> Unit,
     alVencerSesion: () -> Unit,
+    alAbrirAvisos: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -64,6 +66,11 @@ fun MisCursosScreen(
             onClick = alAbrirDojo,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
         ) { Text(stringResource(R.string.mis_cursos_dojo)) }
+        // HU52-T3: los avisos de práctica (activarlos y elegir la hora).
+        TextButton(
+            onClick = alAbrirAvisos,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
+        ) { Text(stringResource(R.string.mis_cursos_avisos)) }
         when (val contenido = uiState.contenido) {
             ContenidoMisCursos.Cargando, ContenidoMisCursos.SesionVencida -> Centrado {
                 val descripcion = stringResource(R.string.mis_cursos_cargando)

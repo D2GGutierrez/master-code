@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +35,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mastercode.app.R
+import com.mastercode.app.data.dojo.ResumenDeSesion
 import com.mastercode.app.data.problemas.ProblemaDelEjercicio
 import com.mastercode.app.data.problemas.ProblemaRepository
 import com.mastercode.app.data.respuestas.EnviadorDeRespuestas
@@ -48,6 +51,8 @@ import com.mastercode.app.ui.ejercicios.TIPO_PREDICCION_SALIDA
 // HU53-T3 (CA-53.1, CA-53.4): la pantalla del Dojo. Primero se elige el lenguaje, lo que abre la sesión; luego va un
 // ejercicio tras otro, con el contador de aciertos arriba y «Siguiente ejercicio» cuando el actual ya tiene respuesta.
 // HU55-T1 (CA-55.1, CA-55.5): al salir de la pantalla (atrás, otra app o pantalla apagada) se guarda el estado.
+// HU55-T2 (CA-55.2): si quedó una sesión guardada, se ofrece continuarla. HU55-T3 (CA-55.3, CA-55.4): «Terminar sesión»
+// con confirmación y un resumen mínimo al cerrar.
 @Composable
 fun DojoScreen(
     viewModel: DojoViewModel,
@@ -84,10 +89,25 @@ fun DojoScreen(
                 )
             }
         }
+        if (puedeTerminar(uiState)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
+                TextButton(
+                    onClick = viewModel::pedirTerminar,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.dojo_terminar)) }
+            }
+        }
+        uiState.errorAlTerminar?.let {
+            Text(
+                stringResource(it),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 16.dp).semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (val fase = uiState.fase) {
                 FaseDelDojo.Eligiendo -> ElegirLenguaje(viewModel::elegirLenguaje)
-                FaseDelDojo.Iniciando, FaseDelDojo.CargandoEjercicio, FaseDelDojo.SesionVencida -> Centrado {
+                FaseDelDojo.Iniciando, FaseDelDojo.CargandoEjercicio, FaseDelDojo.SesionVencida, FaseDelDojo.Terminando -> Centrado {
                     val descripcion = stringResource(R.string.dojo_iniciando)
                     CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = descripcion })
                 }
@@ -104,6 +124,28 @@ fun DojoScreen(
                     Text(stringResource(R.string.dojo_sin_mas), textAlign = TextAlign.Center)
                     Button(onClick = alVolver) { Text(stringResource(R.string.dojo_volver)) }
                 }
+                is FaseDelDojo.OfreciendoReanudar -> Centrado {
+                    Text(stringResource(R.string.dojo_reanudar_titulo), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(
+                            R.string.dojo_reanudar_texto,
+                            stringResource(nombreDelLenguaje(fase.estado.lenguaje)),
+                            fase.estado.aciertos,
+                            fase.estado.respondidos,
+                        ),
+                        textAlign = TextAlign.Center,
+                    )
+                    fase.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center) }
+                    Button(
+                        onClick = viewModel::reanudar,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.dojo_reanudar_continuar)) }
+                    TextButton(
+                        onClick = viewModel::empezarDeNuevo,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.dojo_reanudar_nueva)) }
+                }
+                is FaseDelDojo.Terminada -> ResumenDeLaSesion(fase.resumen, alVolver)
                 is FaseDelDojo.Error -> Centrado {
                     Text(stringResource(fase.mensaje), textAlign = TextAlign.Center)
                     Button(onClick = viewModel::alReintentar) { Text(stringResource(R.string.dojo_reintentar)) }
@@ -117,6 +159,41 @@ fun DojoScreen(
             ) { Text(stringResource(R.string.dojo_siguiente)) }
         }
     }
+
+    if (uiState.confirmandoTermino) {
+        AlertDialog(
+            onDismissRequest = viewModel::cancelarTerminar,
+            title = { Text(stringResource(R.string.dojo_terminar_titulo)) },
+            text = { Text(stringResource(R.string.dojo_terminar_texto)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmarTerminar) { Text(stringResource(R.string.dojo_terminar_confirmar)) }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::cancelarTerminar) { Text(stringResource(R.string.dojo_terminar_cancelar)) }
+            },
+        )
+    }
+}
+
+// «Terminar sesión» solo con la sesión quieta: con ejercicio, sin más ejercicios o tras un error.
+private fun puedeTerminar(estado: DojoUiState): Boolean =
+    estado.sesionId != null &&
+        (estado.fase is FaseDelDojo.Ejercicio || estado.fase == FaseDelDojo.SinMasEjercicios || estado.fase is FaseDelDojo.Error)
+
+// HU55-T3 (CA-55.4): un resumen mínimo (aciertos, respondidos y puntos). El resumen completo es de HU56-T2.
+@Composable
+private fun ResumenDeLaSesion(resumen: ResumenDeSesion, alVolver: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = alVolver,
+        title = { Text(stringResource(R.string.dojo_resumen_titulo)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.dojo_resumen_aciertos, resumen.aciertos, resumen.respondidos))
+                Text(stringResource(R.string.dojo_resumen_puntos, resumen.puntosSumados))
+            }
+        },
+        confirmButton = { TextButton(onClick = alVolver) { Text(stringResource(R.string.dojo_volver)) } },
+    )
 }
 
 @Composable

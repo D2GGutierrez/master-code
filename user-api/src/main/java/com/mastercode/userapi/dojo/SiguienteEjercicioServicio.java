@@ -70,6 +70,21 @@ public class SiguienteEjercicioServicio {
         return Optional.empty();
     }
 
+    // HU55-T2: el ejercicio donde el estudiante se quedó (el último entregado sin respuesta), para retomarlo sin entregar
+    // otro. Vacío si no hay ninguno o si dejó de ser visible; en ese caso la app pide el siguiente. Lanza
+    // AdminNoDisponibleException si admin-api no responde.
+    public Optional<ProblemaDto> pendiente(SesionDojoRepository.Sesion sesion) {
+        Optional<Long> problemaId = sesiones.ejercicioPendiente(sesion.id());
+        if (problemaId.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(admin.problema(problemaId.get()));
+        } catch (ProblemaNoVisibleException e) {
+            return Optional.empty();
+        }
+    }
+
     // Los candidatos agrupados por su nivel de dificultad; uno con una dificultad desconocida no se ofrece.
     private Map<Nivel, Set<Long>> candidatos(SesionDojoRepository.Sesion sesion) {
         Set<Long> yaEntregados = sesiones.entregados(sesion.id());

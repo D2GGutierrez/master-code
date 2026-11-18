@@ -24,6 +24,24 @@ sealed interface ResultadoSiguiente {
     data object ErrorInesperado : ResultadoSiguiente
 }
 
+sealed interface ResultadoEstadoDeSesion {
+    data class Exito(val estado: EstadoDeSesionServidor) : ResultadoEstadoDeSesion
+    // 404: la sesión no existe o no es del estudiante.
+    data object NoExiste : ResultadoEstadoDeSesion
+    data object SesionVencida : ResultadoEstadoDeSesion
+    data object SinConexion : ResultadoEstadoDeSesion
+    data object ErrorInesperado : ResultadoEstadoDeSesion
+}
+
+sealed interface ResultadoTerminar {
+    data class Exito(val resumen: ResumenDeSesion) : ResultadoTerminar
+    // 404 o 409: la sesión no existe, no es del estudiante o ya estaba terminada.
+    data object YaTerminada : ResultadoTerminar
+    data object SesionVencida : ResultadoTerminar
+    data object SinConexion : ResultadoTerminar
+    data object ErrorInesperado : ResultadoTerminar
+}
+
 // El token sale de AuthRepository, como en los demás repositorios.
 class DojoRepository(private val api: DojoApi, private val auth: AuthRepository) {
 
@@ -56,6 +74,44 @@ class DojoRepository(private val api: DojoApi, private val auth: AuthRepository)
             }
         } catch (e: IOException) {
             ResultadoSiguiente.SinConexion
+        }
+    }
+
+    // HU55-T2: cómo va una sesión guardada, para ofrecer continuarla.
+    suspend fun estado(sesionId: Long): ResultadoEstadoDeSesion = auth.conAccess(
+        vencida = ResultadoEstadoDeSesion.SesionVencida,
+        sinConexion = ResultadoEstadoDeSesion.SinConexion,
+        inesperado = ResultadoEstadoDeSesion.ErrorInesperado,
+    ) { access ->
+        try {
+            ResultadoEstadoDeSesion.Exito(api.sesion(access, sesionId))
+        } catch (e: ErrorHttp) {
+            when (e.codigo) {
+                401 -> null
+                404 -> ResultadoEstadoDeSesion.NoExiste
+                else -> ResultadoEstadoDeSesion.ErrorInesperado
+            }
+        } catch (e: IOException) {
+            ResultadoEstadoDeSesion.SinConexion
+        }
+    }
+
+    // HU55-T3: termina la sesión y trae su resumen.
+    suspend fun terminar(sesionId: Long): ResultadoTerminar = auth.conAccess(
+        vencida = ResultadoTerminar.SesionVencida,
+        sinConexion = ResultadoTerminar.SinConexion,
+        inesperado = ResultadoTerminar.ErrorInesperado,
+    ) { access ->
+        try {
+            ResultadoTerminar.Exito(api.terminar(access, sesionId))
+        } catch (e: ErrorHttp) {
+            when (e.codigo) {
+                401 -> null
+                404, 409 -> ResultadoTerminar.YaTerminada
+                else -> ResultadoTerminar.ErrorInesperado
+            }
+        } catch (e: IOException) {
+            ResultadoTerminar.SinConexion
         }
     }
 }

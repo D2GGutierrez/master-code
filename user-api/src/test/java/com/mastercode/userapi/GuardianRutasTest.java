@@ -86,6 +86,10 @@ class GuardianRutasTest extends PruebaDeApi {
             // nombre); no entrega problemas. La sesión de otro estudiante da 404. Lo comprueba DojoDificultadApiTest
             // (HU54-T3, HU56).
             "POST /api/dojo/sesiones/{sesionId}/terminar",
+            // OK: el ejercicio pendiente sale de /internal/problemas/{id}/ de admin-api (uno que dejó de ser visible no se
+            // retoma), sin respuesta esperada ni marca de la alternativa correcta; solo lee y la sesión de otro estudiante
+            // da 404. Lo comprueba DojoReanudarApiTest (HU55-T2).
+            "GET /api/dojo/sesiones/{sesionId}",
             // NO APLICA: la usa admin-api con X-Internal-Key; solo cuenta envíos por problema (intentos y correctos), sin
             // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
             "GET /internal/envios/resumen",

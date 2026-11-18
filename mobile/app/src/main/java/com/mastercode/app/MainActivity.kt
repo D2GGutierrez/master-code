@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mastercode.app.ui.avisos.AvisosScreen
+import com.mastercode.app.ui.avisos.AvisosViewModel
 import com.mastercode.app.ui.cursos.MisCursosScreen
 import com.mastercode.app.ui.cursos.MisCursosViewModel
 import com.mastercode.app.ui.dojo.DojoScreen
@@ -33,10 +35,17 @@ class MainActivity : ComponentActivity() {
                 // El Dojo (HU53-T3) se abre desde «Mis cursos». Cada visita usa un ViewModel nuevo: se empieza una sesión limpia.
                 var enDojo by rememberSaveable { mutableStateOf(false) }
                 var visitaAlDojo by rememberSaveable { mutableIntStateOf(0) }
+                // HU52-T3: los avisos de práctica se ajustan desde «Mis cursos».
+                var enAvisos by rememberSaveable { mutableStateOf(false) }
                 // H6: con la sesión iniciada se le dice a user-api la zona horaria del teléfono (también al volver a iniciar
                 // sesión). Si falla, no se avisa: se reintenta la próxima vez que se abra la app.
                 LaunchedEffect(conSesion) {
                     if (conSesion) app.zonaHorariaRepository.enviar()
+                }
+                // HU52-T1: con la sesión iniciada se registra en user-api el token de Firebase del teléfono (sin Firebase
+                // todavía no hay token y no se manda nada). Un fallo se reintenta la próxima vez.
+                LaunchedEffect(conSesion) {
+                    if (conSesion) app.dispositivoRepository.registrarElDelTelefono()
                 }
                 if (conSesion && enDojo) {
                     DojoScreen(
@@ -52,6 +61,11 @@ class MainActivity : ComponentActivity() {
                             enDojo = false
                             conSesion = false
                         },
+                    )
+                } else if (conSesion && enAvisos) {
+                    AvisosScreen(
+                        viewModel = viewModel(key = "avisos", factory = AvisosViewModel.factory(app.almacenDeAvisos)),
+                        alVolver = { enAvisos = false },
                     )
                 } else if (conSesion) {
                     MisCursosScreen(
@@ -69,6 +83,7 @@ class MainActivity : ComponentActivity() {
                             sesion++
                             conSesion = false
                         },
+                        alAbrirAvisos = { enAvisos = true },
                     )
                 } else {
                     LoginScreen(
