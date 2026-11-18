@@ -22,11 +22,8 @@ Fecha de la guía: 22 de noviembre de 2026. Criterios: `docs/historias-criterios
 
 ## 2. Qué se puede recorrer hoy y qué no
 
-La app de hoy tiene: inicio de sesión, «Mis cursos», el Dojo (con las tres pantallas de ejercicio, continuar la sesión, «Terminar sesión» y un resumen mínimo) y «Avisos de práctica». **No tiene pantalla** (así que esos criterios no se pueden recorrer en el celular todavía, y la entrega debe decir que no se cumplen):
+La app de hoy tiene: inicio de sesión, «Mis cursos», la racha arriba de «Mis cursos», «Mi perfil» (cinturón por lenguaje con su imagen, barra de avance y mensaje del negro), el Dojo (con las tres pantallas de ejercicio, continuar la sesión, «Terminar sesión» y la pantalla de resumen) y «Avisos de práctica». **No tiene pantalla** (así que esos criterios no se pueden recorrer en el celular todavía, y la entrega debe decir que no se cumplen):
 
-- Racha en la pantalla principal (CA-49.3, HU49-T3).
-- Cinturón con su imagen en el perfil, barra de avance y mensaje del negro (CA-50.4, CA-51.2, CA-51.3, CA-51.4; HU50-T3, HU51-T2, HU51-T3). Los puntos y el cálculo sí existen en el servidor.
-- Resumen completo de la sesión con los temas más fallados (CA-56.2; HU56-T2). Hoy el Dojo muestra solo aciertos, respondidos y puntos.
 - Todo lo de duelos (CA-57.1 a CA-59.5; HU57 a HU59): en el servidor solo existe la tabla de partidas (V18).
 - Avisos push que de verdad lleguen (CA-52.1, CA-52.2): falta el proyecto de Firebase (H5), las dependencias y HU52-T2 (el aviso diario desde el servidor). Ver `docs/notificaciones-push.md`.
 - Un ejercicio fuera del Dojo (abrir un curso y entrar a uno): «Mis cursos» todavía no abre el curso (HU29). Por eso **todos los ejercicios se recorren dentro del Dojo.**
@@ -65,12 +62,12 @@ Entrar con una cuenta de estudiante → «Mis cursos» → **Practicar en el Doj
 | :--- | :--- | :--- | :--- | :--- |
 | CA-49.1 | Con `jorge.salas.demo`, acertar un ejercicio en el Dojo y pedir `GET /api/yo/racha` | `racha_actual` pasa a 1 y `practico_hoy` es verdadero | `RachaApiTest`, `DojoRachasApiTest` | |
 | CA-49.2 | Con el teléfono en otra zona horaria, abrir la app y acertar a una hora cercana a medianoche | El día que cuenta es el del estudiante, no el del servidor | `ZonaHorariaApiTest`, pruebas de `racha/` | |
-| CA-49.3 | — | **Sin pantalla (HU49-T3)** | — | |
+| CA-49.3 | Abrir «Mis cursos» con `ana.torres.demo` (racha viva) y con `jorge.salas.demo` (sin racha) | Ana: tarjeta «Racha: N días» con el aviso de practicar hoy o de que ya practicó; Jorge: invitación a empezar una racha. Si no hay conexión, la tarjeta no aparece y no se muestra ningún error | `RachaApiTest`, `RachaRepositoryTest`, `RachaViewModelTest` (la pantalla en sí no tiene prueba automática) | |
 | CA-49.4 | Con `luis.ramirez.demo` (racha viva), esperar un día sin acertar o ajustar la fecha del dato de prueba y pedir `GET /api/yo/racha` | Con un día completo sin acierto, la racha actual es 0 | pruebas de `racha/` | |
 | CA-50.1 a CA-50.3 | Acertar ejercicios de cada tipo y pedir `GET /api/yo/cinturones` | Suman 30 puntos (código) o 10 (los otros tres); el nivel sube justo en cada umbral; repetir un ejercicio no suma | `CinturonServicioTest`, `CinturonSubidaDeNivelTest`, `PuntosCinturonDocTest` | |
-| CA-50.4 | — | **Sin pantalla (HU50-T3):** las imágenes de los siete cinturones existen pero ninguna pantalla las muestra | — | |
+| CA-50.4 | «Mis cursos» → «Mi perfil» con `ana.torres.demo` | Cada lenguaje muestra la imagen de su cinturón | `NombreDeCinturonTest` (el nombre por nivel); la imagen se comprueba a ojo | |
 | CA-51.1 | `GET /api/yo/cinturones` con `ana.torres.demo` y con `jorge.salas.demo` | Ana: cinturón, `puntos_faltantes` y `siguiente`; Jorge: lista vacía | `CinturonesApiTest`, `CinturonesPorNivelApiTest` (cada nivel y a un punto de cada umbral) | |
-| CA-51.2 a CA-51.4 | — | **Sin pantalla (HU51-T2, HU51-T3)** | `CinturonesPorNivelApiTest` cubre el negro (`siguiente` y `puntos_faltantes` en `null`) | |
+| CA-51.2 a CA-51.4 | «Mi perfil» con `ana.torres.demo`; para el negro, subir los puntos del dato de prueba hasta 2 000 y volver a abrirlo | CA-51.2: un cinturón por lenguaje. CA-51.3: la barra llena la proporción de puntos sobre los que pide el siguiente cinturón, con «X de Y puntos» y «Te faltan N puntos». CA-51.4: con el negro no hay barra, hay un mensaje especial | `CinturonDelLenguajeTest` (la barra en cada nivel, el negro sin barra), `PerfilViewModelTest`, `CinturonesApiTest`, `CinturonesPorNivelApiTest` | |
 | CA-52.1 | — | **Falta HU52-T2** (aviso diario desde el servidor) | — | |
 | CA-52.2 | Instalar con Firebase y pedir un mensaje de prueba (`docs/notificaciones-push.md`) | Llega la notificación | `DispositivoApiTest`, `DispositivoRepositoryTest` (solo el registro del token; **no** la llegada) | |
 | CA-52.3 | «Mis cursos» → **Avisos de práctica** → apagar el interruptor | Se apaga, y al salir y volver sigue apagado. Desaparece la hora | `AvisosViewModelTest` | |
@@ -97,10 +94,10 @@ Hay que recordar que los ajustes de avisos viven **solo en el teléfono** (ADR-1
 | CA-55.4 | Tocar **Terminar sesión** | Pregunta «¿Terminar la sesión?» con **Terminar** y **Seguir practicando**; «Seguir practicando» no cambia nada | `DojoReanudarViewModelTest` | |
 | CA-55.5 | **Cerrar la app a media sesión (HU55-T4):** ver §8 | Al abrirla de nuevo se ofrece continuar donde se quedó | `DojoReanudarViewModelTest` (cerrar y reabrir) | |
 | CA-56.1 | Terminar la sesión | El resumen muestra los aciertos de los respondidos | `DojoResumenApiTest`, `DojoReanudarViewModelTest` | |
-| CA-56.2 | — | **Sin pantalla (HU56-T2):** los temas más fallados los trae el servidor pero la app aún no los muestra | `DojoResumenApiTest` | |
+| CA-56.2 | Terminar una sesión en la que se falló algo | La pantalla de resumen lista «Temas para repasar» (hasta tres, del que más falló al que menos) | `DojoResumenApiTest`, `TipoDeResumenTest` | |
 | CA-56.3 | Terminar una sesión con aciertos | El resumen dice los puntos sumados; `GET /api/yo/cinturones` los refleja | `DojoResumenApiTest`, `CinturonServicioTest` | |
-| CA-56.4 | Una sesión en la que se acierta todo | Resumen con todos los aciertos y sin temas a repasar | `DojoResumenApiTest` (sesión perfecta) | |
-| CA-56.5 | Una sesión en la que se falla todo | Resumen con 0 aciertos y 0 puntos, sin cinturón nuevo | `DojoResumenApiTest` (sesión sin aciertos) | |
+| CA-56.4 | Una sesión en la que se acierta todo | Resumen con todos los aciertos, un mensaje de felicitación y sin temas a repasar | `DojoResumenApiTest` (sesión perfecta), `TipoDeResumenTest` | |
+| CA-56.5 | Una sesión en la que se falla todo | Resumen con 0 aciertos y 0 puntos, sin cinturón nuevo, con un mensaje de ánimo y los temas a repasar | `DojoResumenApiTest` (sesión sin aciertos), `TipoDeResumenTest` | |
 
 ## 7. Duelos (HU57 a HU59)
 

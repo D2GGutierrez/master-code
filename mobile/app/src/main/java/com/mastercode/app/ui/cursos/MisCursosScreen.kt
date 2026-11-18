@@ -42,6 +42,9 @@ fun MisCursosScreen(
     alAbrirDojo: () -> Unit,
     alVencerSesion: () -> Unit,
     alAbrirAvisos: () -> Unit = {},
+    alAbrirPerfil: () -> Unit = {},
+    // HU49-T3: lo que va bajo el título (la racha). Se pasa desde fuera para que esta pantalla no conozca la racha.
+    encabezado: @Composable () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -61,11 +64,17 @@ fun MisCursosScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(vertical = 16.dp),
         )
+        encabezado()
         // HU53-T3: la puerta al Dojo.
         Button(
             onClick = alAbrirDojo,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
         ) { Text(stringResource(R.string.mis_cursos_dojo)) }
+        // HU51-T2: el perfil con el cinturón y su barra de avance.
+        TextButton(
+            onClick = alAbrirPerfil,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
+        ) { Text(stringResource(R.string.mis_cursos_perfil)) }
         // HU52-T3: los avisos de práctica (activarlos y elegir la hora).
         TextButton(
             onClick = alAbrirAvisos,

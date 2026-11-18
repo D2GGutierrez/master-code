@@ -3,12 +3,15 @@ package com.mastercode.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mastercode.app.ui.avisos.AvisosScreen
 import com.mastercode.app.ui.avisos.AvisosViewModel
@@ -18,6 +21,10 @@ import com.mastercode.app.ui.dojo.DojoScreen
 import com.mastercode.app.ui.dojo.DojoViewModel
 import com.mastercode.app.ui.login.LoginScreen
 import com.mastercode.app.ui.login.LoginViewModel
+import com.mastercode.app.ui.perfil.PerfilScreen
+import com.mastercode.app.ui.perfil.PerfilViewModel
+import com.mastercode.app.ui.racha.RachaBanner
+import com.mastercode.app.ui.racha.RachaViewModel
 import com.mastercode.app.ui.theme.MasterCodeTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +44,9 @@ class MainActivity : ComponentActivity() {
                 var visitaAlDojo by rememberSaveable { mutableIntStateOf(0) }
                 // HU52-T3: los avisos de práctica se ajustan desde «Mis cursos».
                 var enAvisos by rememberSaveable { mutableStateOf(false) }
+                // HU51-T2: el perfil con el cinturón. Cada visita, como las del Dojo, usa un ViewModel nuevo y carga datos frescos.
+                var enPerfil by rememberSaveable { mutableStateOf(false) }
+                var visitaAlPerfil by rememberSaveable { mutableIntStateOf(0) }
                 // H6: con la sesión iniciada se le dice a user-api la zona horaria del teléfono (también al volver a iniciar
                 // sesión). Si falla, no se avisa: se reintenta la próxima vez que se abra la app.
                 LaunchedEffect(conSesion) {
@@ -62,6 +72,19 @@ class MainActivity : ComponentActivity() {
                             conSesion = false
                         },
                     )
+                } else if (conSesion && enPerfil) {
+                    PerfilScreen(
+                        viewModel = viewModel(
+                            key = "perfil-$sesion-$visitaAlPerfil",
+                            factory = PerfilViewModel.factory(app.cinturonesRepository),
+                        ),
+                        alVolver = { enPerfil = false },
+                        alVencerSesion = {
+                            sesion++
+                            enPerfil = false
+                            conSesion = false
+                        },
+                    )
                 } else if (conSesion && enAvisos) {
                     AvisosScreen(
                         viewModel = viewModel(key = "avisos", factory = AvisosViewModel.factory(app.almacenDeAvisos)),
@@ -84,6 +107,21 @@ class MainActivity : ComponentActivity() {
                             conSesion = false
                         },
                         alAbrirAvisos = { enAvisos = true },
+                        alAbrirPerfil = {
+                            visitaAlPerfil++
+                            enPerfil = true
+                        },
+                        // HU49-T3: la racha. La clave cambia al volver del Dojo para que se vuelva a pedir y cuente lo practicado.
+                        encabezado = {
+                            RachaBanner(
+                                viewModel = viewModel(
+                                    key = "racha-$sesion-$visitaAlDojo",
+                                    factory = RachaViewModel.factory(app.rachaRepository),
+                                ),
+                                // El espacio va en la tarjeta: si no hay racha que mostrar, no queda un hueco.
+                                modifier = Modifier.padding(bottom = 12.dp),
+                            )
+                        },
                     )
                 } else {
                     LoginScreen(

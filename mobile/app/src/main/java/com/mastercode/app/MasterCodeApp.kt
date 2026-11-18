@@ -4,6 +4,8 @@ import android.app.Application
 import com.mastercode.app.data.auth.AuthRepository
 import com.mastercode.app.data.auth.HttpAuthApi
 import com.mastercode.app.data.auth.KeystoreTokenStorage
+import com.mastercode.app.data.cinturon.CinturonesRepository
+import com.mastercode.app.data.cinturon.HttpCinturonesApi
 import com.mastercode.app.data.cursos.HttpMisCursosApi
 import com.mastercode.app.data.cursos.MisCursosRepository
 import com.mastercode.app.data.dispositivo.DispositivoRepository
@@ -17,6 +19,8 @@ import com.mastercode.app.data.perfil.HttpZonaHorariaApi
 import com.mastercode.app.data.perfil.ZonaHorariaRepository
 import com.mastercode.app.data.problemas.HttpProblemaApi
 import com.mastercode.app.data.problemas.ProblemaRepository
+import com.mastercode.app.data.racha.HttpRachaApi
+import com.mastercode.app.data.racha.RachaRepository
 import com.mastercode.app.data.red.MonitorDeRed
 import com.mastercode.app.data.respuestas.EnviadorDeRespuestas
 import com.mastercode.app.data.respuestas.PreferenciasDeSesion
@@ -57,6 +61,10 @@ class MasterCodeApp : Application() {
     val dispositivoRepository by lazy {
         DispositivoRepository(HttpDispositivoApi(BuildConfig.USER_API_URL), authRepository, SinFirebase, PreferenciasDeToken(this))
     }
+    // HU49-T3: la racha de la pantalla principal.
+    val rachaRepository by lazy { RachaRepository(HttpRachaApi(BuildConfig.USER_API_URL), authRepository) }
+    // HU51-T2 y HU51-T3: los cinturones del perfil.
+    val cinturonesRepository by lazy { CinturonesRepository(HttpCinturonesApi(BuildConfig.USER_API_URL), authRepository) }
     // HU52-T3: los avisos de práctica (activados y hora), solo en el teléfono.
     val almacenDeAvisos by lazy { PreferenciasDeAvisos(this) }
 
