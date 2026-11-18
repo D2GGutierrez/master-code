@@ -94,7 +94,41 @@ class GuardianRutasTest extends PruebaDeApi {
             // estudiantes, código ni casos. Lo comprueba ResumenEnviosInternoTest (HU44-T1).
             "GET /internal/envios/resumen",
             // NO APLICA: la usa admin-api con X-Internal-Key; correos de inscritos, sin problemas.
-            "GET /internal/cursos/{cursoId}/inscritos");
+            "GET /internal/cursos/{cursoId}/inscritos",
+            // NO APLICA: los compañeros inscritos del curso (id y alias, nunca el correo) para elegir a quién retar; solo
+            // para un inscrito (403 si no). Sin problemas. Lo comprueba PartidaRetosApiTest (HU57-T3).
+            "GET /api/cursos/{cursoId}/companeros",
+            // OK: la secuencia sale de /internal/cursos/{id}/problemas/?plataforma=movil de admin-api
+            // (visibles_para_estudiante()), sin los de código; solo se guardan los ids y la respuesta trae únicamente
+            // cuántos ejercicios tiene la partida. Lo comprueba PartidaRetosApiTest (HU57-T2, HU58-T1).
+            "POST /api/partidas",
+            // NO APLICA: los retos pendientes del propio estudiante (alias del retador y fechas); sin problemas. Lo
+            // comprueba PartidaRetosApiTest (H7).
+            "GET /api/partidas/invitaciones",
+            // NO APLICA: cambia el estado de la partida del propio estudiante invitado (un tercero da 404) y devuelve el
+            // marcador; no entrega problemas. Lo comprueba PartidaRetosApiTest (H7).
+            "POST /api/partidas/{partidaId}/aceptar",
+            "POST /api/partidas/{partidaId}/rechazar",
+            // OK: el ejercicio sale de /internal/problemas/{id}/ de admin-api (visibles_para_estudiante()); uno que dejó de
+            // ser visible da 409 y no se entrega. Sin respuesta esperada ni marca de la alternativa correcta, y la partida
+            // de otros da 404. Lo comprueba PartidaJuegoApiTest (HU58-T2).
+            "GET /api/partidas/{partidaId}/ejercicio",
+            // OK: el problema sale de /internal/problemas/{id}/ y la respuesta esperada de /internal/problemas/{id}/respuesta/
+            // de admin-api; uno no visible da 409 y no se corrige nada. Solo devuelve si acertó, y la respuesta correcta
+            // únicamente si falló; la partida de otros da 404. Lo comprueba PartidaJuegoApiTest (HU58-T3, H9).
+            "POST /api/partidas/{partidaId}/respuesta",
+            // NO APLICA: puntajes, progreso y estado de la partida del propio estudiante (alias, nunca el correo del rival);
+            // sin problemas, enunciados ni casos. Lo comprueba PartidaMarcadorApiTest (HU59-T2).
+            "GET /api/partidas/{partidaId}/marcador",
+            // NO APLICA: las partidas del propio estudiante con resultado y puntajes; sin problemas. Lo comprueba
+            // PartidaHistorialRankingApiTest (HU60-T1).
+            "GET /api/partidas",
+            // NO APLICA: la tabla de partidas ganadas de un curso donde el estudiante está inscrito (403 si no), solo con
+            // alias; sin problemas. Lo comprueba PartidaHistorialRankingApiTest (HU60-T2).
+            "GET /api/cursos/{cursoId}/ranking",
+            // NO APLICA: guarda los ajustes de aviso del propio estudiante (el del token de sesión); no devuelve nada ni
+            // toca problemas. Lo comprueba AvisoRachaApiTest (HU52-T2).
+            "PUT /api/yo/avisos");
 
     @Autowired
     @Qualifier("requestMappingHandlerMapping")

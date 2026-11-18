@@ -1,5 +1,7 @@
 package com.mastercode.userapi.notificacion;
 
+import java.util.List;
+
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -26,5 +28,13 @@ public class DispositivoRepository {
                 .param("estudiante", estudianteId)
                 .param("token", token)
                 .update();
+    }
+
+    // HU52-T2: los tokens de todos los teléfonos del estudiante, a donde llegan los avisos.
+    public List<String> tokensDe(long estudianteId) {
+        return jdbc.sql("SELECT token FROM app_schema.app_dispositivo WHERE estudiante_id = ? ORDER BY id")
+                .param(estudianteId)
+                .query(String.class)
+                .list();
     }
 }

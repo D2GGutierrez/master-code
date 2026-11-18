@@ -57,3 +57,21 @@ spring:
     properties:
       hibernate:
         default_schema: app_schema
+
+# Partidas (ADR-10 D20, ADR-13 D23, ADR-15 D26). Los plazos van aquí y no en el código para poder probarlos y ajustarlos.
+partida:
+  # HU57-T4: horas que el rival tiene para aceptar un reto antes de que caduque.
+  caducidad-reto-horas: ${PARTIDA_CADUCIDAD_RETO_HORAS:24}
+  # HU58-T1: cuántos ejercicios tiene la secuencia (menos si el curso no tiene tantos).
+  ejercicios-por-partida: ${PARTIDA_EJERCICIOS:5}
+  # H9: puntos que vale cada acierto dentro de la partida.
+  puntos-por-acierto: ${PARTIDA_PUNTOS_POR_ACIERTO:10}
+  # D20: segundos sin señal para que el rival vea «se desconectó», y para perder la partida por abandono.
+  segundos-rival-desconectado: ${PARTIDA_SEGUNDOS_DESCONECTADO:10}
+  segundos-para-volver: ${PARTIDA_SEGUNDOS_PARA_VOLVER:30}
+
+# HU52-T2 (ADR-15 D26): el aviso diario de racha. La tarea queda apagada hasta que exista un enviador real (Firebase, H5).
+avisos:
+  tarea-activa: ${AVISOS_TAREA_ACTIVA:false}
+  # Cada cuánto se revisa quién debe recibir el aviso (formato ISO 8601).
+  intervalo: ${AVISOS_INTERVALO:PT15M}
