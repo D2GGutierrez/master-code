@@ -7,6 +7,9 @@ data class AjustesDeAvisos(
     val hora: Int = HORA_POR_DEFECTO,
     val minuto: Int = MINUTO_POR_DEFECTO,
 ) {
+    // «HH:mm», el formato que user-api espera (PUT /api/yo/avisos).
+    fun horaComoTexto() = "%02d:%02d".format(hora, minuto)
+
     companion object {
         const val HORA_POR_DEFECTO = 20
         const val MINUTO_POR_DEFECTO = 0

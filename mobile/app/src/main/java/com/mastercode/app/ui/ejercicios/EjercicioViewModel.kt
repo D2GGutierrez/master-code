@@ -91,9 +91,9 @@ class EjercicioViewModel(
     private val sesionId: Long? = null,
     precargado: ProblemaDelEjercicio? = null,
     private val nuevoIntentoId: () -> String = { UUID.randomUUID().toString() },
-) : ViewModel() {
+) : ViewModel(), ControlDeEjercicio {
     private val _uiState = MutableStateFlow(EjercicioUiState(enSesion = sesionId != null))
-    val uiState: StateFlow<EjercicioUiState> = _uiState.asStateFlow()
+    override val uiState: StateFlow<EjercicioUiState> = _uiState.asStateFlow()
 
     // El identificador del intento en curso: se reusa si el envío se repite, y se cambia al recibir la corrección.
     private var intentoActual: String? = null
@@ -121,7 +121,7 @@ class EjercicioViewModel(
     }
 
     // También es la acción de «Reintentar».
-    fun cargar() {
+    override fun cargar() {
         _uiState.update { it.copy(contenido = ContenidoEjercicio.Cargando) }
         viewModelScope.launch {
             val contenido = when (val resultado = repository.problema(problemaId)) {
@@ -142,17 +142,17 @@ class EjercicioViewModel(
             ContenidoEjercicio.Error(R.string.ejercicio_error_tipo)
         }
 
-    fun alCambiarRespuesta(texto: String) {
+    override fun alCambiarRespuesta(texto: String) {
         if (_uiState.value.editable) _uiState.update { it.copy(respuesta = texto) }
     }
 
-    fun alElegirOpcion(opcionId: Long) {
+    override fun alElegirOpcion(opcionId: Long) {
         if (_uiState.value.editable) _uiState.update { it.copy(opcionElegida = opcionId) }
     }
 
     // HU45-T3, HU48-T2: manda lo contestado. Con conexión, la pantalla muestra al instante si acertó; sin ella, queda
     // guardado en el teléfono (HU48-T3).
-    fun enviar() {
+    override fun enviar() {
         val estado = _uiState.value
         if (!estado.puedeEnviar) return
         val intentoId = intentoActual ?: nuevoIntentoId().also { intentoActual = it }
@@ -181,7 +181,7 @@ class EjercicioViewModel(
     }
 
     // Tras fallar con intentos por gastar: deja el ejercicio listo para otra respuesta, con otro identificador de intento.
-    fun intentarDeNuevo() {
+    override fun intentarDeNuevo() {
         if (!_uiState.value.puedeIntentarDeNuevo) return
         intentoActual = null
         _uiState.update { it.copy(respuesta = "", opcionElegida = null, envio = EstadoDeEnvio.SinEnviar) }

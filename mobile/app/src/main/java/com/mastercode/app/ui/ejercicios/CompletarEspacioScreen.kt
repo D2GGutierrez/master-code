@@ -22,7 +22,7 @@ import com.mastercode.app.R
 // HU47-T3 (CA-47.1, CA-47.2): el fragmento de código con el campo de texto en el lugar del hueco. El envío, el resultado
 // y los intentos los pone MarcoDeEjercicio (HU48-T2); se llega a ella desde el Dojo (HU53-T3).
 @Composable
-fun CompletarEspacioScreen(viewModel: EjercicioViewModel, alVencerSesion: () -> Unit) {
+fun CompletarEspacioScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MarcoDeEjercicio(

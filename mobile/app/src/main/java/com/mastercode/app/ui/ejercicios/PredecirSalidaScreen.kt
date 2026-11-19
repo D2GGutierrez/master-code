@@ -13,7 +13,7 @@ import com.mastercode.app.R
 // HU45-T2 (CA-45.1, CA-45.2): el fragmento de código y un campo para escribir lo que imprimiría. El envío, el resultado
 // y los intentos los pone MarcoDeEjercicio (HU45-T3, HU48-T2); se llega a ella desde el Dojo (HU53-T3).
 @Composable
-fun PredecirSalidaScreen(viewModel: EjercicioViewModel, alVencerSesion: () -> Unit) {
+fun PredecirSalidaScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MarcoDeEjercicio(

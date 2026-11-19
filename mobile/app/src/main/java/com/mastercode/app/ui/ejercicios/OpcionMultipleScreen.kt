@@ -21,7 +21,7 @@ import com.mastercode.app.R
 // una para elegirla (queda marcada) y se envía con el botón de MarcoDeEjercicio. user-api no manda cuál es la correcta
 // antes de responder (CA-46.4): después, MarcoDeEjercicio muestra la correcta si falló.
 @Composable
-fun OpcionMultipleScreen(viewModel: EjercicioViewModel, alVencerSesion: () -> Unit) {
+fun OpcionMultipleScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MarcoDeEjercicio(

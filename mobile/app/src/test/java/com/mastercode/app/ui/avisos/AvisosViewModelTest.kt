@@ -105,4 +105,20 @@ class AvisosViewModelTest {
         assertFalse(AjustesDeAvisos.horaValida(24, 0))
         assertFalse(AjustesDeAvisos.horaValida(0, 60))
     }
+
+    // HU52-T4: cada cambio también se manda a user-api (en la app, MasterCodeApp.enviarAvisos).
+    @Test
+    fun cadaCambioSeAvisaParaMandarloAlServidor() {
+        val enviados = mutableListOf<AjustesDeAvisos>()
+        val viewModel = AvisosViewModel(almacen) { enviados += it }
+
+        viewModel.activar(false)
+        viewModel.elegirHora(7, 30)
+        viewModel.elegirHora(99, 0)
+
+        assertEquals(
+            listOf(AjustesDeAvisos(activados = false), AjustesDeAvisos(activados = false, hora = 7, minuto = 30)),
+            enviados,
+        )
+    }
 }

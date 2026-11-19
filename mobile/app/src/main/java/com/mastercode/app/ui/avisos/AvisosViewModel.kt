@@ -10,8 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 // HU52-T3: activar o desactivar los avisos de práctica y elegir a qué hora llegan. Cada cambio queda guardado en el
-// teléfono al instante.
-class AvisosViewModel(private val almacen: AlmacenDeAvisos) : ViewModel() {
+// teléfono al instante y, además, se avisa con alCambiar para mandarlo a user-api (HU52-T4).
+class AvisosViewModel(
+    private val almacen: AlmacenDeAvisos,
+    private val alCambiar: (AjustesDeAvisos) -> Unit = {},
+) : ViewModel() {
     private val _ajustes = MutableStateFlow(almacen.leer())
     val ajustes: StateFlow<AjustesDeAvisos> = _ajustes.asStateFlow()
 
@@ -25,11 +28,12 @@ class AvisosViewModel(private val almacen: AlmacenDeAvisos) : ViewModel() {
     private fun cambiar(nuevos: AjustesDeAvisos) {
         _ajustes.value = nuevos
         almacen.guardar(nuevos)
+        alCambiar(nuevos)
     }
 
     companion object {
-        fun factory(almacen: AlmacenDeAvisos) = viewModelFactory {
-            initializer { AvisosViewModel(almacen) }
+        fun factory(almacen: AlmacenDeAvisos, alCambiar: (AjustesDeAvisos) -> Unit = {}) = viewModelFactory {
+            initializer { AvisosViewModel(almacen, alCambiar) }
         }
     }
 }

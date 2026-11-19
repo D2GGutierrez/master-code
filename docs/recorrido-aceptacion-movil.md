@@ -22,10 +22,9 @@ Fecha de la guía: 22 de noviembre de 2026. Criterios: `docs/historias-criterios
 
 ## 2. Qué se puede recorrer hoy y qué no
 
-La app de hoy tiene: inicio de sesión, «Mis cursos», la racha arriba de «Mis cursos», «Mi perfil» (cinturón por lenguaje con su imagen, barra de avance y mensaje del negro), el Dojo (con las tres pantallas de ejercicio, continuar la sesión, «Terminar sesión» y la pantalla de resumen) y «Avisos de práctica». **No tiene pantalla** (así que esos criterios no se pueden recorrer en el celular todavía, y la entrega debe decir que no se cumplen):
+La app de hoy tiene: inicio de sesión, «Mis cursos», la racha arriba de «Mis cursos», «Mi perfil» (cinturón por lenguaje con su imagen, barra de avance y mensaje del negro), el Dojo (con las tres pantallas de ejercicio, continuar la sesión, «Terminar sesión» y la pantalla de resumen) «Avisos de práctica» y «Duelos con compañeros» (retar, invitaciones, la partida con marcador en vivo, historial y ranking). **No tiene pantalla** (así que esos criterios no se pueden recorrer en el celular todavía, y la entrega debe decir que no se cumplen):
 
-- Todo lo de duelos (CA-57.1 a CA-59.5; HU57 a HU59): en el servidor solo existe la tabla de partidas (V18).
-- Avisos push que de verdad lleguen (CA-52.1, CA-52.2): falta el proyecto de Firebase (H5), las dependencias y HU52-T2 (el aviso diario desde el servidor). Ver `docs/notificaciones-push.md`.
+- Avisos push que de verdad lleguen (CA-52.1, CA-52.2): falta el proyecto de Firebase (H5), las dependencias y un enviador real en el servidor (el aviso diario ya está decidido en `user-api`, HU52-T2, pero `EnviadorSinFirebase` no envía nada). Ver `docs/notificaciones-push.md`.
 - Un ejercicio fuera del Dojo (abrir un curso y entrar a uno): «Mis cursos» todavía no abre el curso (HU29). Por eso **todos los ejercicios se recorren dentro del Dojo.**
 
 Para lo que existe en el servidor pero no tiene pantalla, se puede comprobar con la API (con el token de un estudiante, en `$TOKEN`): `GET /api/yo/racha`, `GET /api/yo/cinturones`.
@@ -68,13 +67,13 @@ Entrar con una cuenta de estudiante → «Mis cursos» → **Practicar en el Doj
 | CA-50.4 | «Mis cursos» → «Mi perfil» con `ana.torres.demo` | Cada lenguaje muestra la imagen de su cinturón | `NombreDeCinturonTest` (el nombre por nivel); la imagen se comprueba a ojo | |
 | CA-51.1 | `GET /api/yo/cinturones` con `ana.torres.demo` y con `jorge.salas.demo` | Ana: cinturón, `puntos_faltantes` y `siguiente`; Jorge: lista vacía | `CinturonesApiTest`, `CinturonesPorNivelApiTest` (cada nivel y a un punto de cada umbral) | |
 | CA-51.2 a CA-51.4 | «Mi perfil» con `ana.torres.demo`; para el negro, subir los puntos del dato de prueba hasta 2 000 y volver a abrirlo | CA-51.2: un cinturón por lenguaje. CA-51.3: la barra llena la proporción de puntos sobre los que pide el siguiente cinturón, con «X de Y puntos» y «Te faltan N puntos». CA-51.4: con el negro no hay barra, hay un mensaje especial | `CinturonDelLenguajeTest` (la barra en cada nivel, el negro sin barra), `PerfilViewModelTest`, `CinturonesApiTest`, `CinturonesPorNivelApiTest` | |
-| CA-52.1 | — | **Falta HU52-T2** (aviso diario desde el servidor) | — | |
-| CA-52.2 | Instalar con Firebase y pedir un mensaje de prueba (`docs/notificaciones-push.md`) | Llega la notificación | `DispositivoApiTest`, `DispositivoRepositoryTest` (solo el registro del token; **no** la llegada) | |
-| CA-52.3 | «Mis cursos» → **Avisos de práctica** → apagar el interruptor | Se apaga, y al salir y volver sigue apagado. Desaparece la hora | `AvisosViewModelTest` | |
-| CA-52.4 | Mismo lugar → **Cambiar la hora** → elegir 07:30 | Se ve «Te avisamos a las 07:30» y se conserva al cerrar y abrir la app. Por defecto es 20:00 | `AvisosViewModelTest` | |
+| CA-52.1 | Con un enviador real y `AVISOS_TAREA_ACTIVA=true`, dejar la racha en peligro (`docs/notificaciones-push.md`, HU52-T4 parte B) | Llega el aviso una sola vez por día | `AvisoRachaApiTest`, `DecisionDeAvisoTest` (quién debe recibirlo y cuándo); **no** la llegada | |
+| CA-52.2 | Instalar con Firebase y pedir un mensaje de prueba (`docs/notificaciones-push.md`) | Llega la notificación | `DispositivoApiTest`, `DispositivoRepositoryTest` (solo el registro del token; **no** la llegada). Prueba manual: HU52-T4 en `docs/notificaciones-push.md` | |
+| CA-52.3 | «Mis cursos» → **Avisos de práctica** → apagar el interruptor | Se apaga, y al salir y volver sigue apagado. Desaparece la hora. El ajuste llega al servidor (`app_aviso_ajuste.activados = false`) | `AvisosViewModelTest`, `AvisosApiTest` | |
+| CA-52.4 | Mismo lugar → **Cambiar la hora** → elegir 07:30 | Se ve «Te avisamos a las 07:30» y se conserva al cerrar y abrir la app. Por defecto es 20:00. El servidor recibe la hora (`app_aviso_ajuste.hora = 07:30`) | `AvisosViewModelTest`, `AvisosApiTest` | |
 | Permiso (Android 13 o más) | Primera vez que se abre «Avisos de práctica», o al volver a activar el interruptor | El sistema pide el permiso de notificaciones; si se niega, los avisos quedan apagados | — (solo en el celular) | |
 
-Hay que recordar que los ajustes de avisos viven **solo en el teléfono** (ADR-14): apagarlos no detiene un aviso que mande el servidor hasta que HU52-T2 los lea.
+Los ajustes de avisos se guardan en el teléfono (ADR-14) y la app también los manda a `user-api` (`PUT /api/yo/avisos`, HU52-T4): apagarlos detiene el aviso del servidor en cuanto llega el envío, que se hace al cambiarlos y al abrir la app con sesión.
 
 ## 6. Dojo (HU53 a HU56)
 
@@ -99,9 +98,22 @@ Hay que recordar que los ajustes de avisos viven **solo en el teléfono** (ADR-1
 | CA-56.4 | Una sesión en la que se acierta todo | Resumen con todos los aciertos, un mensaje de felicitación y sin temas a repasar | `DojoResumenApiTest` (sesión perfecta), `TipoDeResumenTest` | |
 | CA-56.5 | Una sesión en la que se falla todo | Resumen con 0 aciertos y 0 puntos, sin cinturón nuevo, con un mensaje de ánimo y los temas a repasar | `DojoResumenApiTest` (sesión sin aciertos), `TipoDeResumenTest` | |
 
-## 7. Duelos (HU57 a HU59)
+## 7. Duelos (HU57 a HU60)
 
-No hay pantalla ni rutas (solo la tabla de partidas, V18). Todos los criterios CA-57.1 a CA-59.5 se anotan como **—: sin implementar**.
+Se abren desde «Mis cursos» → **Duelos con compañeros** (pestañas Retar, Invitaciones, Historial y Ranking). Hacen falta **dos dispositivos con dos cuentas del mismo curso**; los pasos completos, las variantes y la conexión limitada están en `docs/prueba-duelos-movil.md`. Las pantallas Compose de duelos (`ui/duelos/`) **no tienen prueba automática**: se comprueban aquí.
+
+| Criterio | Pasos | Resultado esperado | Ya cubierto por pruebas | Resultado |
+| :--- | :--- | :--- | :--- | :--- |
+| CA-57.1, CA-57.3 | Duelos → **Retar**, elegir el curso | La lista muestra solo a los compañeros inscritos en ese curso (con su alias), nunca a uno mismo | `PartidaRetosApiTest`, `DuelosApiTest`, `DuelosListasViewModelTest` | |
+| CA-57.2 | Tocar **Retar a …** | Se crea el reto y se abre la partida con «Esperando a que … acepte tu reto…»; en la otra cuenta aparece en **Invitaciones** | `PartidaRetosApiTest`, `PartidaDosCuentasApiTest` | |
+| CA-57.4 | Dejar un reto sin aceptar 24 h (o bajar `PARTIDA_CADUCIDAD_RETO_HORAS`) | El retador ve «El reto caducó…»; el rival, al aceptar, «Ese reto ya caducó o ya fue respondido.» | `PartidaRetosApiTest`, `PartidaViewModelTest` | |
+| CA-58.1 a CA-58.4 | Partida entre dos dispositivos (guía, parte A) | Los dos reciben los mismos ejercicios en el mismo orden y ninguno se salta un turno | `PartidaJuegoApiTest`, `PartidaDosCuentasApiTest`, `PartidaViewModelTest` | |
+| CA-59.1, CA-59.2 | Mismo recorrido, mirando el marcador de arriba | Se ve el marcador (puntajes, respondidos, rival conectado) y se actualiza solo, cada 2 s | `PartidaMarcadorApiTest`, `PartidaViewModelTest`, `PartidaConexionLentaTest` | |
+| CA-59.3, CA-59.4 | Un jugador cierra la app o pierde la señal (guía, variantes) | El rival lo ve sin señal a los ~10 s; si no vuelve en 30 s, pierde por abandono | `PartidaMarcadorApiTest`, `PartidaViewModelTest` | |
+| CA-59.5 | Red lenta y sin señal (guía, parte B) | El marcador sigue funcionando más despacio, la pantalla no se congela y avisa «Conexión lenta o sin señal» | `PartidaConexionLentaTest`, `DuelosApiTest`, `PartidaViewModelTest` | |
+| CA-60.1 | Duelos → **Historial** | Las partidas jugadas, con el rival, el resultado, el marcador y la fecha; la más reciente primero | `PartidaHistorialRankingApiTest`, `DuelosListasViewModelTest`, `EtiquetasDeDueloTest` | |
+| CA-60.2, CA-60.3 | Duelos → **Ranking** | Orden por ganadas, porcentaje y puntos; la fila propia resaltada y, si su página no está cargada, **«Tu puesto»** fijo bajo la lista | `PartidaHistorialRankingApiTest`, `PartidaDosCuentasApiTest`, `DuelosListasViewModelTest` | |
+| CA-60.4 | `GET /api/cursos/<id>/ranking` con una cuenta no inscrita | 403 | `PartidaDosCuentasApiTest`, `PartidaHistorialRankingApiTest` | |
 
 ## 8. Las dos pruebas que no se pueden hacer sin teléfono
 
@@ -125,6 +137,14 @@ Lo que ya prueba `ModoAvionRespuestasTest` (con el cliente HTTP de verdad y un s
 5. Repetir cerrando la app **justo después de responder**: al continuar, aparece un ejercicio nuevo.
 6. Repetir cerrando la app con **sesión sin conexión**: la oferta aparece igual, y «Continuar» avisa que no hay conexión y se puede reintentar al volver la señal.
 7. Probar «Terminar sesión» → **Terminar** y reabrir la app: **no** se ofrece nada.
+
+### HU58-T4 y HU59-T5: dos celulares y conexión limitada
+
+Pasos en `docs/prueba-duelos-movil.md` (partes A, B y C). Lo que ya prueba el código: la partida completa entre dos cuentas (`PartidaDosCuentasApiTest`) y el marcador con red lenta o cortada con la pila real de la app (`PartidaConexionLentaTest`); en el celular se confirma lo que se ve.
+
+### HU52-T4: el aviso en un teléfono real
+
+Pasos en `docs/notificaciones-push.md` (sección «HU52-T4»). La parte A (los ajustes llegan al servidor) se puede hacer hoy; la parte B (que el aviso llegue) necesita Firebase y un enviador real.
 
 ## 9. Hoja de resultados
 

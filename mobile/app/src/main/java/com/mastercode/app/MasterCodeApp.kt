@@ -2,6 +2,9 @@ package com.mastercode.app
 
 import android.app.Application
 import com.mastercode.app.data.auth.AuthRepository
+import com.mastercode.app.data.avisos.AjustesDeAvisos
+import com.mastercode.app.data.avisos.AvisosRepository
+import com.mastercode.app.data.avisos.HttpAvisosApi
 import com.mastercode.app.data.auth.HttpAuthApi
 import com.mastercode.app.data.auth.KeystoreTokenStorage
 import com.mastercode.app.data.cinturon.CinturonesRepository
@@ -14,6 +17,8 @@ import com.mastercode.app.data.dispositivo.PreferenciasDeAvisos
 import com.mastercode.app.data.dispositivo.PreferenciasDeToken
 import com.mastercode.app.data.dispositivo.SinFirebase
 import com.mastercode.app.data.dojo.DojoRepository
+import com.mastercode.app.data.duelos.DuelosRepository
+import com.mastercode.app.data.duelos.HttpDuelosApi
 import com.mastercode.app.data.dojo.HttpDojoApi
 import com.mastercode.app.data.perfil.HttpZonaHorariaApi
 import com.mastercode.app.data.perfil.ZonaHorariaRepository
@@ -67,6 +72,10 @@ class MasterCodeApp : Application() {
     val cinturonesRepository by lazy { CinturonesRepository(HttpCinturonesApi(BuildConfig.USER_API_URL), authRepository) }
     // HU52-T3: los avisos de práctica (activados y hora), solo en el teléfono.
     val almacenDeAvisos by lazy { PreferenciasDeAvisos(this) }
+    // HU52-T4: los mismos ajustes se mandan a user-api para que el servidor avise a la hora elegida.
+    val avisosRepository by lazy { AvisosRepository(HttpAvisosApi(BuildConfig.USER_API_URL), authRepository) }
+    // HU57-T3, H8, HU59-T3 y HU60-T3: los duelos (retar, jugar la partida, historial y ranking).
+    val duelosRepository by lazy { DuelosRepository(HttpDuelosApi(BuildConfig.USER_API_URL), authRepository) }
 
     // Los reenvíos viven con la app, no con una pantalla: si el estudiante sale, el reenvío sigue.
     private val ambito = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -76,6 +85,11 @@ class MasterCodeApp : Application() {
         // HU48-T3 (CA-48.4): se reenvía lo guardado al abrir la app y cada vez que vuelve la señal.
         reenviarRespuestasPendientes()
         MonitorDeRed(this, ::reenviarRespuestasPendientes).iniciar()
+    }
+
+    // HU52-T4: manda los ajustes de avisos a user-api. Vive con la app: si el estudiante sale de la pantalla, el envío sigue.
+    fun enviarAvisos(ajustes: AjustesDeAvisos) {
+        ambito.launch { avisosRepository.enviar(ajustes) }
     }
 
     private fun reenviarRespuestasPendientes() {

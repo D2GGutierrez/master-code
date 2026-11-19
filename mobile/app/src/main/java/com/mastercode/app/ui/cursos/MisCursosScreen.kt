@@ -43,6 +43,8 @@ fun MisCursosScreen(
     alVencerSesion: () -> Unit,
     alAbrirAvisos: () -> Unit = {},
     alAbrirPerfil: () -> Unit = {},
+    // HU57-T3: la puerta a los duelos con compañeros.
+    alAbrirDuelos: () -> Unit = {},
     // HU49-T3: lo que va bajo el título (la racha). Se pasa desde fuera para que esta pantalla no conozca la racha.
     encabezado: @Composable () -> Unit = {},
 ) {
@@ -70,6 +72,11 @@ fun MisCursosScreen(
             onClick = alAbrirDojo,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
         ) { Text(stringResource(R.string.mis_cursos_dojo)) }
+        // HU57-T3: retar a un compañero, invitaciones, historial y ranking.
+        Button(
+            onClick = alAbrirDuelos,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 12.dp),
+        ) { Text(stringResource(R.string.mis_cursos_duelos)) }
         // HU51-T2: el perfil con el cinturón y su barra de avance.
         TextButton(
             onClick = alAbrirPerfil,

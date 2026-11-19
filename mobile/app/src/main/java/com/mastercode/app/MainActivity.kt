@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -19,6 +20,9 @@ import com.mastercode.app.ui.cursos.MisCursosScreen
 import com.mastercode.app.ui.cursos.MisCursosViewModel
 import com.mastercode.app.ui.dojo.DojoScreen
 import com.mastercode.app.ui.dojo.DojoViewModel
+import com.mastercode.app.ui.duelos.DuelosScreen
+import com.mastercode.app.ui.duelos.PartidaScreen
+import com.mastercode.app.ui.duelos.PartidaViewModel
 import com.mastercode.app.ui.login.LoginScreen
 import com.mastercode.app.ui.login.LoginViewModel
 import com.mastercode.app.ui.perfil.PerfilScreen
@@ -44,6 +48,14 @@ class MainActivity : ComponentActivity() {
                 var visitaAlDojo by rememberSaveable { mutableIntStateOf(0) }
                 // HU52-T3: los avisos de práctica se ajustan desde «Mis cursos».
                 var enAvisos by rememberSaveable { mutableStateOf(false) }
+                // HU57-T3, H8 y HU60-T3: la sección Duelos se abre desde «Mis cursos» y desde ella se abre una partida
+                // (partidaAbierta es su id, o -1 si no hay ninguna). Al volver de la partida se renuevan las pestañas
+                // (visitaADuelos), porque una partida terminada cambia el historial, el ranking y las invitaciones.
+                var enDuelos by rememberSaveable { mutableStateOf(false) }
+                var visitaADuelos by rememberSaveable { mutableIntStateOf(0) }
+                var partidaAbierta by rememberSaveable { mutableLongStateOf(-1L) }
+                // Cada vez que se abre una partida (aunque sea la misma) empieza con un ViewModel nuevo y su propio sondeo.
+                var visitaALaPartida by rememberSaveable { mutableIntStateOf(0) }
                 // HU51-T2: el perfil con el cinturón. Cada visita, como las del Dojo, usa un ViewModel nuevo y carga datos frescos.
                 var enPerfil by rememberSaveable { mutableStateOf(false) }
                 var visitaAlPerfil by rememberSaveable { mutableIntStateOf(0) }
@@ -57,7 +69,45 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(conSesion) {
                     if (conSesion) app.dispositivoRepository.registrarElDelTelefono()
                 }
-                if (conSesion && enDojo) {
+                // HU52-T4: y los ajustes de avisos, para que el servidor mande el push a la hora elegida. Si un cambio no llegó
+                // por falta de señal, llega aquí la próxima vez.
+                LaunchedEffect(conSesion) {
+                    if (conSesion) app.enviarAvisos(app.almacenDeAvisos.leer())
+                }
+                if (conSesion && partidaAbierta >= 0) {
+                    PartidaScreen(
+                        viewModel = viewModel(
+                            key = "partida-$sesion-$partidaAbierta-$visitaALaPartida",
+                            factory = PartidaViewModel.factory(app.duelosRepository, partidaAbierta),
+                        ),
+                        alVolver = {
+                            partidaAbierta = -1L
+                            visitaADuelos++
+                        },
+                        alVencerSesion = {
+                            sesion++
+                            partidaAbierta = -1L
+                            enDuelos = false
+                            conSesion = false
+                        },
+                    )
+                } else if (conSesion && enDuelos) {
+                    DuelosScreen(
+                        misCursos = app.misCursosRepository,
+                        duelos = app.duelosRepository,
+                        visita = "$sesion-$visitaADuelos",
+                        alAbrirPartida = {
+                            visitaALaPartida++
+                            partidaAbierta = it
+                        },
+                        alVolver = { enDuelos = false },
+                        alVencerSesion = {
+                            sesion++
+                            enDuelos = false
+                            conSesion = false
+                        },
+                    )
+                } else if (conSesion && enDojo) {
                     DojoScreen(
                         viewModel = viewModel(
                             key = "dojo-$sesion-$visitaAlDojo",
@@ -87,7 +137,7 @@ class MainActivity : ComponentActivity() {
                     )
                 } else if (conSesion && enAvisos) {
                     AvisosScreen(
-                        viewModel = viewModel(key = "avisos", factory = AvisosViewModel.factory(app.almacenDeAvisos)),
+                        viewModel = viewModel(key = "avisos", factory = AvisosViewModel.factory(app.almacenDeAvisos, app::enviarAvisos)),
                         alVolver = { enAvisos = false },
                     )
                 } else if (conSesion) {
@@ -107,6 +157,10 @@ class MainActivity : ComponentActivity() {
                             conSesion = false
                         },
                         alAbrirAvisos = { enAvisos = true },
+                        alAbrirDuelos = {
+                            visitaADuelos++
+                            enDuelos = true
+                        },
                         alAbrirPerfil = {
                             visitaAlPerfil++
                             enPerfil = true

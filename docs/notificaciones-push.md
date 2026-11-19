@@ -1,6 +1,6 @@
-# Notificaciones push en la app móvil (HU52-T1 y HU52-T3)
+# Notificaciones push en la app móvil (HU52-T1, HU52-T3 y HU52-T4)
 
-Guía para quien haga la parte de la app (Gael). `user-api` ya tiene el lado del servidor: guarda el token de cada teléfono (ADR-9, D16). La app ya tiene **todo lo que no necesita Firebase** (registro del token, permiso de notificaciones, reintento y ajustes de avisos). Falta el SDK de Firebase, y eso **no** se agrega sin confirmarlo con el equipo: las dependencias y el proyecto de Firebase (H5) se aprueban antes.
+Guía para quien haga la parte de la app (Gael). `user-api` ya tiene el lado del servidor: guarda el token de cada teléfono (ADR-9, D16). La app ya tiene **todo lo que no necesita Firebase** (registro del token, permiso de notificaciones, reintento, ajustes de avisos y su envío a `user-api`). Falta el SDK de Firebase, y eso **no** se agrega sin confirmarlo con el equipo: las dependencias y el proyecto de Firebase (H5) se aprueban antes.
 
 ## Qué ya existe en `user-api`
 
@@ -19,14 +19,15 @@ Guía para quien haga la parte de la app (Gael). `user-api` ya tiene el lado del
 | `AlmacenDeToken` / `PreferenciasDeToken` | `data/dispositivo/` | El token que no pudo enviarse (sin conexión, sesión vencida o error 5xx) queda guardado y se manda en la próxima apertura. Un 400 (token rechazado) se descarta: reintentarlo siempre fallaría. |
 | `POST_NOTIFICATIONS` | `AndroidManifest.xml` y `AvisosScreen` | El permiso se declara y, desde Android 13, se pide al abrir «Avisos de práctica» o al activar el interruptor. Si el estudiante lo niega, los avisos quedan desactivados. |
 | Ajustes de avisos (HU52-T3) | `ui/avisos/` y `data/avisos/` | Interruptor para desactivar los avisos (CA-52.3) y selector de hora (CA-52.4). Se abre desde «Mis cursos» → «Avisos de práctica». |
+| Envío de los ajustes (HU52-T4) | `data/avisos/AvisosApi.kt` | `HttpAvisosApi` hace `PUT /api/yo/avisos` con `{"activados": ..., "hora": "HH:mm"}` (solo el 204 es éxito). `AvisosRepository.enviar()` usa `conAccess`. Se llama en cada cambio de «Avisos de práctica» (`MasterCodeApp.enviarAvisos`, que sigue aunque el estudiante salga de la pantalla) y al abrir la app con sesión (`MainActivity`), así lo que no llegó por falta de señal llega después. Un fallo no se muestra al estudiante. |
 
-Las pruebas (`DispositivoApiTest`, `DispositivoRepositoryTest`, `AvisosViewModelTest`) corren en la JVM, sin Firebase ni teléfono.
+Las pruebas (`DispositivoApiTest`, `DispositivoRepositoryTest`, `AvisosViewModelTest`, `AvisosApiTest`) corren en la JVM, sin Firebase ni teléfono.
 
 ## Dónde se guardan los ajustes de avisos (HU52-T3)
 
 **Solo en el teléfono**, en `SharedPreferences` (archivo `master_code_local`, claves `avisos_activados`, `avisos_hora` y `avisos_minuto`). Por defecto: avisos **activados** y hora **20:00**.
 
-> **El servidor ya tiene la ruta (HU52-T2, ADR-15 D26):** `PUT /api/yo/avisos` con `{"activados": true, "hora": "20:00"}` (`hora` es `HH:mm`, en la hora local del teléfono; si no se manda, queda la que ya tenía). Responde 204, y 400 si `activados` falta o la hora no tiene ese formato. **La app todavía no la llama**: hay que agregar la llamada cada vez que el estudiante cambia los ajustes en «Avisos de práctica» (y al abrir sesión, por si los ajustes se guardaron sin conexión). Mientras no la llame, el servidor usa los valores por defecto (avisos activados, 20:00): desactivarlos en la app **no** detiene un aviso del servidor. El servidor decide el aviso con el día local del estudiante (H6): avisa una vez al día a quien practicó ayer y todavía no hoy. Hoy no sale ninguno porque no hay Firebase (`EnviadorSinFirebase`) y la tarea está apagada (`AVISOS_TAREA_ACTIVA=false`).
+> **El servidor ya tiene la ruta (HU52-T2, ADR-15 D26) y la app ya la llama (HU52-T4, ADR-15 D27):** `PUT /api/yo/avisos` con `{"activados": true, "hora": "20:00"}` (`hora` es `HH:mm`, en la hora local del teléfono; si no se manda, queda la que ya tenía). Responde 204, y 400 si `activados` falta o la hora no tiene ese formato. La app la llama cada vez que el estudiante cambia los ajustes en «Avisos de práctica» y al abrir sesión, por si los ajustes se cambiaron sin conexión; un envío que falla se reintenta la próxima vez que se abra la app con sesión. Con eso, desactivar los avisos en la app **sí** detiene el aviso del servidor en cuanto el envío llega (antes de eso el servidor usa los valores por defecto: activados, 20:00). El servidor decide el aviso con el día local del estudiante (H6): avisa una vez al día a quien practicó ayer y todavía no hoy. Hoy no sale ninguno porque no hay Firebase (`EnviadorSinFirebase`) y la tarea está apagada (`AVISOS_TAREA_ACTIVA=false`).
 
 ## Qué falta para tener push de verdad
 
@@ -100,7 +101,34 @@ Las pruebas (`DispositivoApiTest`, `DispositivoRepositoryTest`, `AvisosViewModel
 3. En la consola de Firebase: *Engage > Messaging > Nueva campaña > Mensaje de prueba*, pegar el token y enviar.
 4. La notificación debe aparecer en el teléfono (con la app en segundo plano).
 
-Esta prueba en un teléfono real es **HU52-T4** y no se puede hacer hasta que existan el proyecto de Firebase y las dependencias.
+Esta prueba en un teléfono real es **HU52-T4**; está descrita paso a paso en la sección siguiente y no se puede completar hasta que existan el proyecto de Firebase y las dependencias.
+
+## HU52-T4: el aviso llega a un teléfono real
+
+**Estado: lista para probar, todavía no probada.** La app ya manda los ajustes al servidor y el servidor ya decide a quién avisar, pero faltan dos cosas que no dependen de este código: el proyecto de Firebase con sus dependencias (H5, las aprueba el equipo) y un enviador real en `user-api` (hoy `EnviadorSinFirebase` no envía nada y `AVISOS_TAREA_ACTIVA=false`). Por eso la prueba se divide: la parte A se puede hacer hoy; la parte B necesita Firebase y un teléfono Android físico con Google Play Services.
+
+### Parte A. Los ajustes llegan al servidor (hoy, en emulador o teléfono)
+
+1. Iniciar sesión con una cuenta de prueba (por ejemplo `ana.torres.demo`). Al abrir la app con sesión se manda el ajuste guardado (por defecto: activados, 20:00).
+2. En la base de `user-api`: `SELECT activados, hora FROM app_schema.app_aviso_ajuste WHERE estudiante_id = (SELECT id FROM app_schema.app_estudiante WHERE email = '<correo de la cuenta>');`. **Esperado:** una fila con `true` y `20:00:00`.
+3. «Mis cursos» → **Avisos de práctica** → **Cambiar la hora** → 07:30. Repetir la consulta. **Esperado:** `07:30:00`.
+4. Apagar el interruptor y repetir la consulta. **Esperado:** `activados = false` y la hora no cambia.
+5. Poner el modo avión, cambiar la hora a 08:15 y salir de la pantalla. Quitar el modo avión, **cerrar la app de verdad** y abrirla con la sesión iniciada. **Esperado:** la consulta da `08:15:00` (el envío se reintenta al abrir).
+6. En todos los pasos, aunque el envío falle, la app **no** muestra ningún error.
+
+### Parte B. El aviso llega (necesita Firebase)
+
+Requisitos: teléfono físico con la app de depuración conectada al servidor de la PC (ver `docs/recorrido-aceptacion-movil.md` §1 punto 3) y el permiso de notificaciones concedido (Android 13 o más: se pide al abrir «Avisos de práctica»).
+
+1. Iniciar sesión y comprobar que el token se registró: `SELECT count(*) FROM app_schema.app_dispositivo WHERE estudiante_id = <id>;` da 1 o más (CA-52.2).
+2. En la consola de Firebase, enviar un mensaje de prueba a ese token con la app en segundo plano. **Esperado:** la notificación aparece (comprueba Firebase → teléfono, sin pasar por `user-api`).
+3. **El aviso real.** Con el enviador real puesto y `AVISOS_TAREA_ACTIVA=true` (para la prueba, `AVISOS_INTERVALO=PT1M`): dejar a la cuenta con la racha viva —un acierto **ayer** y ninguno hoy, ajustando la fecha del dato de prueba como en CA-49.4 del recorrido— y poner en la app la hora de aviso 2 minutos más adelante. **Esperado:** pasada esa hora llega el aviso con los días de racha en peligro (CA-52.1).
+4. Esperar otros minutos. **Esperado:** el aviso **no** llega dos veces el mismo día.
+5. Apagar los avisos en la app, esperar a que el envío llegue (se ve en la base, como en la parte A) y repetir el paso 3 con la hora 2 minutos adelante. **Esperado:** **no** llega (CA-52.3).
+6. Repetir el paso 3 con la app **cerrada de verdad**. **Esperado:** llega igual.
+7. Con la misma cuenta en dos teléfonos, **Esperado:** llega a los dos.
+
+Anotar: modelo y versión de Android, hora configurada contra hora real de llegada, y una captura de cada aviso. Si algo no llega, revisar primero el permiso de notificaciones, el ahorro de batería del fabricante y que el token del paso 1 siga en `app_dispositivo`.
 
 ## Fuera de esta tarea
 
