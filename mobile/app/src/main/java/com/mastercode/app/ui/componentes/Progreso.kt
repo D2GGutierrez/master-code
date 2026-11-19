@@ -37,8 +37,8 @@ fun BarraDeProgreso(
     descripcion: String? = null,
     alto: Dp = 8.dp,
     colorDeLaPista: Color = MC.colores.borde,
+    colorDelRelleno: Color = MC.colores.acento,
 ) {
-    val c = MC.colores
     val valor by animateFloatAsState(targetValue = progreso.coerceIn(0f, 1f), animationSpec = tween(durationMillis = 700), label = "progreso")
     Box(
         modifier = modifier
@@ -56,7 +56,7 @@ fun BarraDeProgreso(
                 .fillMaxHeight()
                 .fillMaxWidth(valor)
                 .clip(CircleShape)
-                .background(c.exito),
+                .background(colorDelRelleno),
         )
     }
 }

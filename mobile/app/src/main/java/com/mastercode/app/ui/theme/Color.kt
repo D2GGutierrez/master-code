@@ -3,9 +3,8 @@ package com.mastercode.app.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
-// El lenguaje visual de GitHub, igual que el diseno.css de la web (docs/diseno-movil.md): lienzo gris claro u oscuro, tarjetas con
-// borde fino, texto casi negro, el azul de los enlaces como acento y un botón principal verde. En los dos temas hay una barra y un
-// «hero» oscuros con un brillo violeta que anclan cada pantalla.
+// El lenguaje visual de la app móvil, inspirado en Consoly (docs/diseno-movil.md): fondo azul marino casi negro, tarjetas con borde
+// fino, azul de acento y un botón principal azul grande. La app es oscura siempre; ColoresClaros se conserva solo por compatibilidad.
 @Immutable
 class ColoresMC(
     val esOscuro: Boolean,
@@ -48,37 +47,57 @@ internal val ColoresClaros = ColoresMC(
 
 internal val ColoresOscuros = ColoresMC(
     esOscuro = true,
-    lienzo = Color(0xFF0D1117),
-    fondo = Color(0xFF151B23),
-    fondoSuave = Color(0xFF1C232D),
-    texto = Color(0xFFF0F6FC),
-    textoSuave = Color(0xFF9198A1),
-    borde = Color(0xFF3D444D),
-    bordeFuerte = Color(0xFF656C76),
-    acento = Color(0xFF4493F8),
-    acentoSuave = Color(0x264493F8),
-    sobreAcento = Color(0xFF0D1117),
-    exito = Color(0xFF3FB950),
+    lienzo = Color(0xFF0B0F17),
+    fondo = Color(0xFF151B27),
+    fondoSuave = Color(0xFF1B2333),
+    texto = Color(0xFFF2F5FA),
+    textoSuave = Color(0xFF8B95A7),
+    borde = Color(0xFF263044),
+    bordeFuerte = Color(0xFF34405A),
+    acento = Color(0xFF2B90E8),
+    acentoSuave = Color(0x262B90E8),
+    sobreAcento = Color(0xFFFFFFFF),
+    exito = Color(0xFF4CC15F),
     error = Color(0xFFF85149),
-    resalte = Color(0x33BB8009),
-    primario = Color(0xFF238636),
+    resalte = Color(0x33F5A524),
+    primario = Color(0xFF0078D4),
     sobrePrimario = Color(0xFFFFFFFF),
 )
 
-// La barra y el hero son oscuros en los dos temas (como en la web), así que sus colores no cambian.
-val HeroA = Color(0xFF010409)
-val HeroB = Color(0xFF1A1245)
-val HeroC = Color(0xFF5B3BB5)
-val HeroBrillo = Color(0xFF8957E5)
-val Barra = Color(0xFF25292E)
-val BarraOscura = Color(0xFF010409)
-val SobreHero = Color(0xFFF0F6FC)
-val SobreHeroSuave = Color(0xFFB1BAC4)
-val CristalSobreHero = Color(0x1AFFFFFF)
-val BordeSobreHero = Color(0x26FFFFFF)
-val ExitoSobreHero = Color(0xFF3FB950)
-val ErrorSobreHero = Color(0xFFFFA198)
+// Los colores que la app comparte en todas las pantallas (antes eran los del «hero» oscuro; ahora siguen el estilo de Consoly:
+// azul marino casi negro, tarjetas con borde fino y azul de acento). Se conservan los nombres para no tocar cada pantalla.
+val HeroA = Color(0xFF0B0F17)
+val HeroB = Color(0xFF151B27)
+val HeroC = Color(0xFF1B2333)
+val HeroBrillo = Color(0xFF2B90E8)
+val Barra = Color(0xFF0F1521)
+val BarraOscura = Color(0xFF0B0F17)
+val SobreHero = Color(0xFFF2F5FA)
+val SobreHeroSuave = Color(0xFF8B95A7)
+val CristalSobreHero = Color(0xFF151B27)
+val BordeSobreHero = Color(0xFF263044)
+val ExitoSobreHero = Color(0xFF4CC15F)
+val ErrorSobreHero = Color(0xFFFF7B72)
 val FuegoDeRacha = Color(0xFFFFB020)
+
+// Los detalles de Consoly: el oro del desglose de puntos, el anillo naranja del botón de Batallas y el banner violeta.
+val Dorado = Color(0xFFF5A524)
+val DoradoFondoA = Color(0xFF3B2609)
+val DoradoFondoB = Color(0xFF1C1307)
+val NaranjaDeBatalla = Color(0xFFFF8A3D)
+val FondoDeBatalla = Color(0xFF2B1810)
+val BannerAzul = Color(0xFF123A6B)
+val BannerVioleta = Color(0xFF5B2FC4)
+
+// El código con colores, como un editor oscuro.
+val CodigoNormal = Color(0xFFE6EDF7)
+val CodigoPalabra = Color(0xFFC792EA)
+val CodigoTexto = Color(0xFFC3E88D)
+val CodigoNumero = Color(0xFFF78C6C)
+val CodigoComentario = Color(0xFF637085)
+val CodigoLlamada = Color(0xFF82AAFF)
+val CodigoSigno = Color(0xFF89DDFF)
+val CodigoNumeroDeLinea = Color(0xFF5B667A)
 
 // Medallas del ranking.
 val Oro = Color(0xFFF5B301)
@@ -104,3 +123,13 @@ fun paletaDe(lenguaje: String): PaletaDeLenguaje {
         else -> PaletaOtro
     }
 }
+
+// Las luces del fondo «aurora» (Efectos.kt): se dibujan muy transparentes sobre el lienzo.
+val AuroraAzul = Color(0xFF1E6FD9)
+val AuroraVioleta = Color(0xFF7B3FE4)
+val AuroraCian = Color(0xFF00B3C7)
+
+// Los tres puntos de la barra de una ventana de editor (cerrar, minimizar, ampliar). Solo decoran.
+val VentanaRojo = Color(0xFFFF5F57)
+val VentanaAmarillo = Color(0xFFFEBC2E)
+val VentanaVerde = Color(0xFF28C840)

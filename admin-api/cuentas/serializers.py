@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from cuentas.models import Docente
 from cuentas.validators import validar_dominio_institucional
+from cuentas.verificacion import requiere_verificacion
 
 
 # Campos y validaciones comunes al registro de docentes y de estudiantes.
@@ -16,9 +17,19 @@ class RegistroSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         email = value.lower()
-        if User.objects.filter(username__iexact=email).exists():
+        existente = User.objects.filter(username__iexact=email).first()
+        # Una cuenta que nadie verificó no bloquea el correo: si no, cualquiera podría registrar el correo de otra persona
+        # y dejarla sin poder crear su cuenta. Se reemplaza al crear la nueva (ver liberar_correo).
+        if existente is not None and not requiere_verificacion(existente):
             raise serializers.ValidationError("Ya existe una cuenta con este correo.")
         return email
+
+    @staticmethod
+    def liberar_correo(email):
+        # Borra la cuenta sin verificar de ese correo. Nunca pudo iniciar sesión, así que no tiene datos.
+        for user in User.objects.filter(username__iexact=email):
+            if requiere_verificacion(user):
+                user.delete()
 
     def validate_password(self, value):
         validate_password(value)
@@ -30,6 +41,7 @@ class RegistroDocenteSerializer(RegistroSerializer):
     @transaction.atomic
     def create(self, validated_data):
         email = validated_data["email"]
+        self.liberar_correo(email)
         # Inactiva hasta que el Product Owner la active desde el admin de Django.
         user = User(username=email, email=email, is_active=False)
         user.set_password(validated_data["password"])
@@ -47,7 +59,9 @@ class RegistroEstudianteSerializer(RegistroSerializer):
     @transaction.atomic
     def create(self, validated_data):
         email = validated_data["email"]
-        # Activa desde el registro: los estudiantes no esperan aprobación.
+        self.liberar_correo(email)
+        # Activa desde el registro: los estudiantes no esperan aprobación. Igual no pueden iniciar sesión hasta verificar
+        # el correo con el código (ver cuentas/verificacion.py).
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -74,6 +88,21 @@ class GoogleLoginSerializer(serializers.Serializer):
     # El token de identidad que entrega Google al iniciar sesión (JWT firmado por Google).
     id_token = serializers.CharField(max_length=4096)
     cliente = serializers.ChoiceField(choices=["admin-web", "user-web", "mobile"])
+
+
+class VerificarCorreoSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    codigo = serializers.CharField(max_length=10)
+
+    def validate_email(self, value):
+        return value.lower()
+
+
+class ReenviarCodigoSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.lower()
 
 
 class RefreshSerializer(serializers.Serializer):

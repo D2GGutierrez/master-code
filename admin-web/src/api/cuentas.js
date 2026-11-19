@@ -27,6 +27,28 @@ export async function iniciarSesion(datos) {
   return { ok: respuesta.ok, cuerpo }
 }
 
+// Confirma el correo con el código de 6 dígitos que admin-api envió al registrarse.
+export async function verificarCorreo(email, codigo) {
+  const respuesta = await fetch(`${API_URL}/verificar-correo/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, codigo }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// Pide otro código (admin-api deja uno por minuto).
+export async function reenviarCodigo(email) {
+  const respuesta = await fetch(`${API_URL}/reenviar-codigo/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
 // Entrar con la cuenta institucional de Google: admin-api verifica el token con Google y solo deja pasar a los docentes autorizados.
 export async function iniciarSesionConGoogle(credencial) {
   const respuesta = await fetch(`${API_URL}/google/`, {

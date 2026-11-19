@@ -46,7 +46,7 @@ fun OpcionMultipleScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> Un
         val partes = separarCodigo(problema.enunciado)
         if (partes.pregunta.isNotEmpty()) Text(partes.pregunta, style = MaterialTheme.typography.bodyLarge)
         if (partes.codigo.isNotEmpty()) {
-            BloqueDeCodigo(modifier = Modifier.fillMaxWidth()) { TextoDeCodigo(partes.codigo) }
+            PanelDeCodigo(partes.codigo, modifier = Modifier.fillMaxWidth())
         }
         val marcada = stringResource(R.string.opcion_marcada)
         problema.opciones.forEachIndexed { indice, opcion ->
@@ -73,7 +73,7 @@ private fun OpcionDeRespuesta(
     alTocar: () -> Unit,
 ) {
     val c = MC.colores
-    val forma = RoundedCornerShape(8.dp)
+    val forma = RoundedCornerShape(14.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()

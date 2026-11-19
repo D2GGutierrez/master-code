@@ -52,6 +52,11 @@ import com.mastercode.app.ui.componentes.TarjetaMC
 import com.mastercode.app.ui.theme.MC
 import com.mastercode.app.ui.theme.SobreHero
 import com.mastercode.app.ui.theme.SobreHeroSuave
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import com.mastercode.app.ui.componentes.TextoQueSeEscribe
+import com.mastercode.app.ui.componentes.flotar
+import com.mastercode.app.ui.componentes.resplandor
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel, alIniciarSesion: () -> Unit) {
@@ -66,23 +71,33 @@ fun LoginScreen(viewModel: LoginViewModel, alIniciarSesion: () -> Unit) {
 
     PantallaMC(
         cabecera = {
-            HeroMC {
+            HeroMC(transparente = true) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    LogoMC(tamano = 68.dp)
+                    // El logo flota despacio dentro de un halo azul que respira.
+                    Box(
+                        modifier = Modifier.size(96.dp).flotar().resplandor(MC.colores.acento, 48.dp, intensidad = 0.8f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        LogoMC(tamano = 72.dp)
+                    }
                     Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = SobreHero)
-                    Text(
-                        stringResource(R.string.marca_lema),
-                        style = MaterialTheme.typography.bodyMedium,
+                    // El lema se escribe letra por letra, como en una terminal.
+                    TextoQueSeEscribe(
+                        texto = stringResource(R.string.marca_lema),
+                        estilo = MaterialTheme.typography.bodyMedium,
                         color = SobreHeroSuave,
-                        textAlign = TextAlign.Center,
+                        alineacion = TextAlign.Center,
+                        retrasoMs = 400,
+                        prefijo = "$ ",
                     )
                 }
             }
         },
+        conAurora = true,
     ) {
         // Como el inicio de sesión de GitHub: una tarjeta con borde fino sobre el lienzo gris.
         Column(
@@ -131,6 +146,7 @@ fun LoginScreen(viewModel: LoginViewModel, alIniciarSesion: () -> Unit) {
                         alTocar = viewModel::alIniciarSesion,
                         habilitado = uiState.puedeEnviar,
                         cargando = uiState.cargando,
+                        destacado = true,
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     )
                     // Sin ID de cliente (google.client.id en local.properties) el botón no se muestra: la contraseña sigue sirviendo.

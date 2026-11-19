@@ -49,24 +49,30 @@ import com.mastercode.app.ui.theme.MC
 import com.mastercode.app.ui.theme.SobreHero
 import com.mastercode.app.ui.theme.SobreHeroSuave
 
-// El «hero»: la barra oscura y plana que abre cada pantalla, como la cabecera de GitHub: un solo color y una línea fina abajo.
-// Es oscura en los dos temas, así que los íconos de la barra de estado son siempre claros. Se pinta bajo la barra de estado y
-// deja su alto libre.
+// La cabecera de cada pantalla: una franja plana del color del fondo con una línea fina abajo, como en Consoly. Se pinta bajo la
+// barra de estado y deja su alto libre.
 @Composable
 fun HeroMC(
     modifier: Modifier = Modifier,
+    // Transparente: sin fondo ni línea, para que se vea la aurora de la pantalla (Diario, inicio de sesión).
+    transparente: Boolean = false,
     contenido: @Composable ColumnScope.() -> Unit,
 ) {
-    val fondo = if (MC.colores.esOscuro) BarraOscura else Barra
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(fondo)
+    val fondo = if (transparente) {
+        Modifier
+    } else {
+        Modifier
+            .background(BarraOscura)
             .drawBehind {
                 drawLine(BordeSobreHero, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
             }
+    }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(fondo)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         content = contenido,
     )
 }
@@ -86,11 +92,11 @@ fun CabeceraMC(
             if (alVolver != null) BotonDeIconoSobreHero(alVolver)
             Column(modifier = Modifier.weight(1f)) {
                 if (sobretitulo != null) {
-                    Text(sobretitulo.uppercase(), style = MaterialTheme.typography.labelSmall, color = SobreHeroSuave)
+                    EtiquetaMC(sobretitulo, color = SobreHeroSuave)
                 }
                 Text(
                     titulo,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = SobreHero,
                     modifier = Modifier.semantics { heading() },
                 )
@@ -128,23 +134,41 @@ fun BotonDeTextoSobreHero(texto: String, alTocar: () -> Unit, modifier: Modifier
     ) { Text(texto, style = MaterialTheme.typography.labelLarge) }
 }
 
-// Una pantalla con cabecera oscura arriba y el lienzo del tema debajo. El cuerpo se aparta de la barra de navegación, de los
-// bordes y del teclado, y avisa de que la barra de estado ya la cubrió la cabecera.
+// Una pantalla con cabecera arriba y el lienzo debajo. El cuerpo se aparta de la barra de navegación, de los bordes y del teclado,
+// y avisa de que la barra de estado ya la cubrió la cabecera. Con pie (la barra de navegación inferior) el pie se aparta de la
+// barra del sistema y del teclado, y el cuerpo ya no.
 @Composable
 fun PantallaMC(
     cabecera: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    pie: (@Composable () -> Unit)? = null,
+    // Con aurora, el fondo es el de luces en movimiento (Efectos.kt) en lugar del lienzo liso.
+    conAurora: Boolean = false,
     contenido: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxSize().background(MC.colores.lienzo)) {
+    val ladosDelCuerpo = if (pie == null) {
+        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+    } else {
+        WindowInsetsSides.Horizontal
+    }
+    val fondo = if (conAurora) Modifier.fondoAurora() else Modifier.background(MC.colores.lienzo)
+    Column(modifier = modifier.fillMaxSize().then(fondo)) {
         cabecera()
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(ladosDelCuerpo)),
             content = contenido,
         )
+        if (pie != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MC.colores.lienzo)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+            ) { pie() }
+        }
     }
 }

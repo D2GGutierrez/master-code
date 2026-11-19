@@ -17,6 +17,8 @@ export type CuerpoSesion = {
   access?: string
   refresh?: string
   detail?: string
+  // true si la cuenta existe pero falta confirmar el correo con el código.
+  verificar_correo?: boolean
   email?: string[]
   password?: string[]
 }
@@ -29,6 +31,28 @@ export async function iniciarSesion(datos: Record<string, string>) {
     body: JSON.stringify({ ...datos, cliente: 'user-web' }),
   })
   const cuerpo: CuerpoSesion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// Confirma el correo con el código de 6 dígitos que admin-api envió al registrarse.
+export async function verificarCorreo(email: string, codigo: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/verificar-correo/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, codigo }),
+  })
+  const cuerpo: { detail?: string } = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
+// Pide otro código (admin-api deja uno por minuto).
+export async function reenviarCodigo(email: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/reenviar-codigo/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  const cuerpo: { detail?: string } = await respuesta.json().catch(() => ({}))
   return { ok: respuesta.ok, cuerpo }
 }
 

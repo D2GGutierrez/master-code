@@ -13,6 +13,7 @@ import NuevoProblema from './pages/NuevoProblema.jsx'
 import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
 import RevisarProblema from './pages/RevisarProblema.jsx'
+import VerificarCorreo from './pages/VerificarCorreo.jsx'
 
 // Sin enrutador todavía: la pantalla se elige por la ruta de la URL.
 function pantalla(ruta) {
@@ -62,6 +63,9 @@ function pantalla(ruta) {
   }
   if (ruta === '/login') {
     return <InicioSesion />
+  }
+  if (ruta === '/verificar-correo') {
+    return <VerificarCorreo />
   }
   return <RegistroDocente />
 }

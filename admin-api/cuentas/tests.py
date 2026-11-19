@@ -16,6 +16,7 @@ from rest_framework_simplejwt.utils import aware_utcnow
 from cuentas.models import Docente
 from cuentas.recuperacion import generar_uid_token
 from cuentas.tokens import crear_tokens
+from cuentas.verificacion import confirmar_correo
 
 REGISTRO_URL = "/api/auth/registro/docente/"
 REGISTRO_ESTUDIANTE_URL = "/api/auth/registro/estudiante/"
@@ -63,6 +64,8 @@ class RegistroDocenteTests(TestCase):
 
     def test_registro_con_correo_repetido_se_rechaza_sin_duplicar(self):
         self.client.post(REGISTRO_URL, self.datos, format="json")
+        # Con el correo sin verificar, registrar otra vez lo reemplaza (ver test_verificacion). Ya verificado, se rechaza.
+        confirmar_correo(User.objects.get(username=self.datos["email"]))
 
         response = self.client.post(REGISTRO_URL, self.datos, format="json")
 
@@ -73,6 +76,7 @@ class RegistroDocenteTests(TestCase):
 
     def test_login_con_cuenta_inactiva_falla_con_mensaje_de_activacion(self):
         self.client.post(REGISTRO_URL, self.datos, format="json")
+        confirmar_correo(User.objects.get(username=self.datos["email"]))
 
         response = self.client.post(
             LOGIN_URL,
@@ -114,6 +118,7 @@ class RegistroEstudianteTests(TestCase):
 
     def test_registro_con_correo_repetido_se_rechaza_sin_duplicar(self):
         self.client.post(REGISTRO_ESTUDIANTE_URL, self.datos, format="json")
+        confirmar_correo(User.objects.get(username=self.email))
 
         response = self.client.post(REGISTRO_ESTUDIANTE_URL, self.datos, format="json")
 

@@ -48,7 +48,7 @@ private val PESTANAS = listOf(
     R.string.duelos_tab_ranking,
 )
 
-// HU57-T3, H7 y HU60-T3: la sección Duelos, a la que se entra desde «Mis cursos». Cuatro pestañas: retar a un compañero,
+// HU57-T3, H7 y HU60-T3: la sección Duelos, que es la pestaña «Batallas» de la barra inferior. Cuatro pestañas: retar a un compañero,
 // las invitaciones recibidas, el historial de partidas y el ranking de un curso. Retar y aceptar una invitación abren la
 // partida (alAbrirPartida). Cada pestaña tiene su ViewModel, que se conserva al cambiar de pestaña.
 @Composable
@@ -60,6 +60,8 @@ fun DuelosScreen(
     alAbrirPartida: (partidaId: Long) -> Unit,
     alVolver: () -> Unit,
     alVencerSesion: () -> Unit,
+    // La barra de navegación inferior: Batallas es una de sus pestañas.
+    barra: @Composable () -> Unit = {},
 ) {
     var pestana by rememberSaveable { mutableIntStateOf(0) }
 
@@ -70,7 +72,6 @@ fun DuelosScreen(
             CabeceraMC(
                 titulo = stringResource(R.string.duelos_titulo),
                 sobretitulo = stringResource(R.string.duelos_sobretitulo),
-                alVolver = alVolver,
                 extra = {
                     // Los dos contrincantes: pura decoración, el título ya dice de qué va la pantalla.
                     Image(
@@ -82,6 +83,7 @@ fun DuelosScreen(
                 },
             )
         },
+        pie = barra,
     ) {
         // Una fila de píldoras que se desliza si no cabe: «Invitaciones» es larga en pantallas pequeñas.
         val nombres = PESTANAS.map { stringResource(it) }

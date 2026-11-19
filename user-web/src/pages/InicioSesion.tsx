@@ -32,10 +32,13 @@ function erroresDelServidor(cuerpo: CuerpoSesion) {
 function InicioSesion() {
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState<Record<string, string>>({})
+  // Correo de una cuenta que existe pero falta confirmar con el código.
+  const [sinVerificar, setSinVerificar] = useState('')
 
   async function entrar(valores: Record<string, string>) {
     setEnviando(true)
     setErrores({})
+    setSinVerificar('')
     try {
       const { ok, cuerpo } = await iniciarSesion(valores)
       if (ok && cuerpo.access && cuerpo.refresh) {
@@ -45,6 +48,9 @@ function InicioSesion() {
         return
       } else {
         setErrores(erroresDelServidor(cuerpo))
+        if (cuerpo.verificar_correo) {
+          setSinVerificar(valores.email.trim().toLowerCase())
+        }
       }
     } catch {
       // fetch solo lanza error cuando no hay conexión con el servidor.
@@ -84,6 +90,11 @@ function InicioSesion() {
         errores={errores}
         onEnviar={entrar}
       />
+      {sinVerificar && (
+        <p>
+          <a href={`/verificar-correo?email=${encodeURIComponent(sinVerificar)}`}>Escribir el código de mi correo</a>
+        </p>
+      )}
       <BotonGoogle
         alCredencial={entrarConGoogle}
         alFallar={() => setErrores({ general: 'No se pudo cargar el inicio con Google. Revisa tu conexión.' })}

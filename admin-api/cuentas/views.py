@@ -7,13 +7,13 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import IntegrityError, transaction
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from cuentas import verificacion
 from cuentas.google import GoogleNoDisponible, GoogleNoValido, verificar_token_google
 from cuentas.models import Docente
 from cuentas.recuperacion import generar_uid_token, usuario_del_token
@@ -22,9 +22,11 @@ from cuentas.serializers import (
     LoginSerializer,
     NuevaContrasenaSerializer,
     RecuperarSerializer,
+    ReenviarCodigoSerializer,
     RefreshSerializer,
     RegistroDocenteSerializer,
     RegistroEstudianteSerializer,
+    VerificarCorreoSerializer,
 )
 from cuentas.tokens import crear_tokens, jwk_publico
 
@@ -36,11 +38,29 @@ ENLACE_ENVIADO = {"detail": "Si el correo está registrado, te enviamos un enlac
 ENLACE_INVALIDO = {"detail": "El enlace no es válido o ya venció."}
 
 
-class RegistroDocenteView(CreateAPIView):
-    serializer_class = RegistroDocenteSerializer
-    permission_classes = [AllowAny]
+def respuesta_de_registro(user):
+    # Tras registrarse, la cuenta queda pendiente de verificar: se envía el código al correo y los clientes lo piden.
+    enviado = verificacion.iniciar_verificacion(user)
+    detalle = (
+        "Te enviamos un código de 6 dígitos a tu correo. Escríbelo para confirmar tu cuenta."
+        if enviado
+        else "Tu cuenta se creó, pero no pudimos enviar el código. Pídelo de nuevo en la pantalla de verificación."
+    )
+    return Response(
+        {"detail": detalle, "email": user.email, "codigo_enviado": enviado}, status=status.HTTP_201_CREATED
+    )
+
+
+class RegistroDocenteView(APIView):
     # Sin autenticación: quien se registra todavía no tiene cuenta.
+    permission_classes = [AllowAny]
     authentication_classes = []
+
+    def post(self, request):
+        serializer = RegistroDocenteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        docente = serializer.save()
+        return respuesta_de_registro(docente.user)
 
 
 class RegistroEstudianteView(APIView):
@@ -50,10 +70,66 @@ class RegistroEstudianteView(APIView):
     def post(self, request):
         serializer = RegistroEstudianteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(
-            {"detail": "Registro exitoso. Ya puedes iniciar sesión."}, status=status.HTTP_201_CREATED
-        )
+        user = serializer.save()
+        return respuesta_de_registro(user)
+
+
+CODIGO_INVALIDO = {"detail": "El código no es válido o ya venció. Pide uno nuevo."}
+MENSAJES_DE_CODIGO = {
+    verificacion.INCORRECTO: "El código no es correcto.",
+    verificacion.VENCIDO: "El código venció. Pide uno nuevo.",
+    verificacion.DEMASIADOS_INTENTOS: "Demasiados intentos. Pide un código nuevo.",
+}
+
+
+class VerificarCorreoView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = VerificarCorreoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datos = serializer.validated_data
+
+        user = User.objects.filter(username=datos["email"]).first()
+        # Misma respuesta si la cuenta no existe o no espera código: no se revela qué correos están registrados.
+        resultado = verificacion.SIN_PENDIENTE if user is None else verificacion.comprobar_codigo(user, datos["codigo"])
+        if resultado == verificacion.SIN_PENDIENTE:
+            return Response(CODIGO_INVALIDO, status=status.HTTP_400_BAD_REQUEST)
+        if resultado != verificacion.CORRECTO:
+            return Response({"detail": MENSAJES_DE_CODIGO[resultado]}, status=status.HTTP_400_BAD_REQUEST)
+
+        if hasattr(user, "docente"):
+            # Un docente de la lista de autorizados queda activo; los demás esperan la aprobación del Product Owner.
+            if user.email in settings.DOCENTES_AUTORIZADOS:
+                user.is_active = True
+                user.save(update_fields=["is_active"])
+                return Response({"detail": "Correo verificado. Ya puedes iniciar sesión."})
+            return Response(
+                {"detail": "Correo verificado. Tu cuenta quedará pendiente hasta que el Product Owner la active."}
+            )
+        return Response({"detail": "Correo verificado. Ya puedes iniciar sesión."})
+
+
+class ReenviarCodigoView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = ReenviarCodigoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.filter(username=serializer.validated_data["email"]).first()
+        pendiente = None if user is None else getattr(user, "verificacion", None)
+        if pendiente is not None and not pendiente.verificado:
+            if not verificacion.puede_reenviar(pendiente):
+                return Response(
+                    {"detail": f"Espera {verificacion.ESPERA_REENVIO} segundos antes de pedir otro código."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+            verificacion.iniciar_verificacion(user)
+        # Misma respuesta exista o no la cuenta: así no se revela qué correos están registrados.
+        return Response({"detail": "Si tu cuenta está pendiente, te enviamos un código nuevo."})
 
 
 class LoginView(APIView):
@@ -73,6 +149,11 @@ class LoginView(APIView):
             User().set_password(datos["password"])
         if user is None or not user.check_password(datos["password"]):
             return Response(CREDENCIALES_INCORRECTAS, status=status.HTTP_401_UNAUTHORIZED)
+        if verificacion.requiere_verificacion(user):
+            return Response(
+                {"detail": "Confirma tu correo con el código que te enviamos.", "verificar_correo": True},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if not user.is_active:
             return Response(
                 {"detail": "Tu cuenta está pendiente de activación por el administrador."},
@@ -120,6 +201,8 @@ class GoogleLoginView(APIView):
         if error is not None:
             return Response({"detail": error}, status=status.HTTP_403_FORBIDDEN)
 
+        # Google ya comprobó que la persona es dueña del correo: si había un código pendiente, ya no hace falta.
+        verificacion.confirmar_correo(user)
         refresh, access = crear_tokens(user, datos["cliente"])
         return Response({"access": access, "refresh": refresh})
 

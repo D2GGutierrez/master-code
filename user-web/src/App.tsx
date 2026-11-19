@@ -14,6 +14,7 @@ import OlvideContrasena from './pages/OlvideContrasena.tsx'
 import ProblemasCurso from './pages/ProblemasCurso.tsx'
 import RegistroEstudiante from './pages/RegistroEstudiante.tsx'
 import VerEnvio from './pages/VerEnvio.tsx'
+import VerificarCorreo from './pages/VerificarCorreo.tsx'
 
 // Se ejecuta una vez al cargar: si quedó una sesión guardada (p. ej. al recargar), se reanuda su renovación.
 programarRenovacion()
@@ -22,6 +23,9 @@ programarRenovacion()
 function pantalla() {
   if (window.location.pathname === '/login') {
     return <InicioSesion />
+  }
+  if (window.location.pathname === '/verificar-correo') {
+    return <VerificarCorreo />
   }
   if (window.location.pathname === '/inicio') {
     return <Inicio />

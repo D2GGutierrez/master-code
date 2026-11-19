@@ -82,6 +82,8 @@ fun DojoScreen(
     enviador: EnviadorDeRespuestas,
     alVolver: () -> Unit,
     alVencerSesion: () -> Unit,
+    // La barra de navegación inferior: se ve solo al elegir lenguaje o al ofrecer reanudar; durante la práctica no hay barra.
+    barra: (@Composable () -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val c = MC.colores
@@ -101,14 +103,20 @@ fun DojoScreen(
         // HU56-T2: el resumen es una pantalla completa con su propio encabezado, sin el del Dojo.
         ResumenDeSesionScreen(faseActual.resumen, alVolver)
     } else {
+        val conBarra = barra != null && (faseActual == FaseDelDojo.Eligiendo || faseActual is FaseDelDojo.OfreciendoReanudar)
         PantallaMC(
+            pie = if (conBarra) barra else null,
             cabecera = {
                 CabeceraMC(
                     titulo = stringResource(R.string.dojo_titulo),
                     sobretitulo = stringResource(R.string.dojo_sobretitulo),
-                    alVolver = {
-                        viewModel.alSalir()
-                        alVolver()
+                    alVolver = if (conBarra) {
+                        null
+                    } else {
+                        {
+                            viewModel.alSalir()
+                            alVolver()
+                        }
                     },
                     extra = {
                         // El contador aparece cuando ya hay sesión y avisa a los lectores de pantalla cada vez que cambia.

@@ -27,6 +27,8 @@ DOMINIO_INSTITUCIONAL = os.environ["DOMINIO_INSTITUCIONAL"]
 # Inicio de sesión con Google. GOOGLE_CLIENT_IDS: los ID de cliente OAuth (el de las webs y el de Android) separados por coma;
 # solo se aceptan tokens emitidos para ellos. Vacío = el inicio con Google queda apagado.
 GOOGLE_CLIENT_IDS = [dato.strip() for dato in os.environ.get("GOOGLE_CLIENT_IDS", "").split(",") if dato.strip()]
+# Minutos que sirve el código de 6 dígitos que se envía al correo al registrarse.
+VERIFICACION_MINUTOS = int(os.environ.get("VERIFICACION_MINUTOS", "15"))
 # Correos que pueden entrar al panel de docentes con Google, separados por coma. Todos los demás entran como estudiantes.
 DOCENTES_AUTORIZADOS = {
     dato.strip().lower() for dato in os.environ.get("DOCENTES_AUTORIZADOS", "").split(",") if dato.strip()

@@ -35,7 +35,6 @@ function erroresDelServidor(cuerpo) {
 function RegistroDocente() {
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState({})
-  const [registrado, setRegistrado] = useState(false)
 
   async function registrar(valores) {
     setEnviando(true)
@@ -43,7 +42,10 @@ function RegistroDocente() {
     try {
       const { ok, cuerpo } = await registrarDocente(valores)
       if (ok) {
-        setRegistrado(true)
+        // admin-api acaba de enviar el código al correo: se pide en la pantalla siguiente.
+        window.location.assign(`/verificar-correo?email=${encodeURIComponent(valores.email.trim().toLowerCase())}`)
+        // El botón sigue deshabilitado mientras el navegador cambia de página.
+        return
       } else {
         setErrores(erroresDelServidor(cuerpo))
       }
@@ -74,28 +76,22 @@ function RegistroDocente() {
   return (
     <Acceso
       lema="Crea problemas en minutos"
-      descripcion="Regístrate con tu correo institucional. Tu cuenta se activa cuando el Product Owner la apruebe."
+      descripcion="Regístrate con tu correo institucional y confírmalo con el código que te enviamos. Tu cuenta se activa cuando el Product Owner la apruebe."
       enlace={{ texto: '¿Ya tienes cuenta?', accion: 'Inicia sesión', href: '/login' }}
     >
       <h1>Crea tu cuenta de docente</h1>
-      {registrado ? (
-        <p>Registro recibido. Tu cuenta quedará pendiente hasta que el Product Owner la active.</p>
-      ) : (
-        <Formulario
-          campos={CAMPOS}
-          textoBoton="Registrarme"
-          enviando={enviando}
-          errores={errores}
-          onEnviar={registrar}
-        />
-      )}
-      {!registrado && (
-        <BotonGoogle
-          texto="signup_with"
-          alCredencial={entrarConGoogle}
-          alFallar={() => setErrores({ general: 'No se pudo cargar el registro con Google. Revisa tu conexión.' })}
-        />
-      )}
+      <Formulario
+        campos={CAMPOS}
+        textoBoton="Registrarme"
+        enviando={enviando}
+        errores={errores}
+        onEnviar={registrar}
+      />
+      <BotonGoogle
+        texto="signup_with"
+        alCredencial={entrarConGoogle}
+        alFallar={() => setErrores({ general: 'No se pudo cargar el registro con Google. Revisa tu conexión.' })}
+      />
     </Acceso>
   )
 }

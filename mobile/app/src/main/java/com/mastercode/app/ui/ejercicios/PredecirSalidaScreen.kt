@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mastercode.app.R
 import com.mastercode.app.ui.componentes.CampoDeTextoMC
+import com.mastercode.app.ui.componentes.EtiquetaMC
 import com.mastercode.app.ui.theme.EstiloDeCodigo
 
 // HU45-T2 (CA-45.1, CA-45.2): el fragmento de código y un campo para escribir lo que imprimiría. El envío, el resultado
@@ -28,13 +29,15 @@ fun PredecirSalidaScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> Un
         val partes = separarCodigo(problema.enunciado)
         if (partes.pregunta.isNotEmpty()) Text(partes.pregunta, style = MaterialTheme.typography.bodyLarge)
         if (partes.codigo.isNotEmpty()) {
-            BloqueDeCodigo(modifier = Modifier.fillMaxWidth()) { TextoDeCodigo(partes.codigo) }
+            PanelDeCodigo(partes.codigo, modifier = Modifier.fillMaxWidth())
         }
+        // Como en Consoly: «¿CUÁL ES LA SALIDA?» arriba y el campo con un texto de ayuda.
+        EtiquetaMC(stringResource(R.string.predecir_pregunta))
         // La salida puede tener varias líneas: el campo crece con lo que se escribe.
         CampoDeTextoMC(
             valor = uiState.respuesta,
             alCambiar = viewModel::alCambiarRespuesta,
-            etiqueta = stringResource(R.string.predecir_campo),
+            placeholder = stringResource(R.string.predecir_placeholder),
             lineasMinimas = 2,
             habilitado = uiState.editable,
             estiloDeTexto = EstiloDeCodigo,

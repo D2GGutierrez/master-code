@@ -1,6 +1,5 @@
 package com.mastercode.app.ui.perfil
 
-import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,17 +44,24 @@ import com.mastercode.app.ui.componentes.LogoLenguaje
 import com.mastercode.app.ui.componentes.MensajeDeError
 import com.mastercode.app.ui.componentes.PantallaMC
 import com.mastercode.app.ui.componentes.TarjetaMC
+import com.mastercode.app.ui.theme.Dorado
 import com.mastercode.app.ui.theme.MC
 import com.mastercode.app.ui.theme.Oro
 import com.mastercode.app.ui.theme.paletaDe
+import com.mastercode.app.ui.componentes.entrada
 
-// HU51-T2 y HU51-T3 (CA-51.2 a CA-51.4): el perfil del estudiante. Un cinturón por lenguaje con su imagen (CA-50.4), la barra
-// de avance hacia el siguiente y, con el negro, un mensaje especial en lugar de la barra.
+// HU51-T2 y HU51-T3 (CA-51.2 a CA-51.4): el perfil del estudiante. Un cinturón por lenguaje con su imagen (CA-50.4), la barra de avance
+// hacia el siguiente y, con el negro, un mensaje especial en lugar de la barra. Es una pestaña de la barra inferior (pie); desde
+// aquí también se llega a los avisos de práctica.
 @Composable
-fun PerfilScreen(viewModel: PerfilViewModel, alVolver: () -> Unit, alVencerSesion: () -> Unit) {
+fun PerfilScreen(
+    viewModel: PerfilViewModel,
+    alAbrirAvisos: () -> Unit,
+    alVencerSesion: () -> Unit,
+    pie: @Composable () -> Unit = {},
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    BackHandler(onBack = alVolver)
     LaunchedEffect(uiState.contenido) {
         if (uiState.contenido == ContenidoPerfil.SesionVencida) alVencerSesion()
     }
@@ -63,44 +71,72 @@ fun PerfilScreen(viewModel: PerfilViewModel, alVolver: () -> Unit, alVencerSesio
             CabeceraMC(
                 titulo = stringResource(R.string.perfil_titulo),
                 sobretitulo = stringResource(R.string.perfil_sobretitulo),
-                alVolver = alVolver,
             )
         },
+        pie = pie,
     ) {
-        when (val contenido = uiState.contenido) {
-            ContenidoPerfil.Cargando, ContenidoPerfil.SesionVencida -> EsqueletoDeTarjetas(
-                descripcion = stringResource(R.string.perfil_cargando),
-                modifier = Modifier.padding(20.dp),
-                cantidad = 2,
-                alto = 150.dp,
-            )
-            ContenidoPerfil.SinCinturones -> EstadoVacio(
-                ilustracion = R.drawable.ilu_mascota,
-                texto = stringResource(R.string.perfil_vacio),
-                modifier = Modifier.padding(20.dp),
-            )
-            is ContenidoPerfil.Error -> Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                MensajeDeError(stringResource(contenido.mensaje))
-                BotonSecundario(
-                    texto = stringResource(R.string.perfil_reintentar),
-                    alTocar = viewModel::cargar,
-                    icono = Icons.Rounded.Refresh,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 24.dp),
+        ) {
+            when (val contenido = uiState.contenido) {
+                ContenidoPerfil.Cargando, ContenidoPerfil.SesionVencida -> item {
+                    EsqueletoDeTarjetas(
+                        descripcion = stringResource(R.string.perfil_cargando),
+                        cantidad = 2,
+                        alto = 150.dp,
+                    )
+                }
+                ContenidoPerfil.SinCinturones -> item {
+                    EstadoVacio(
+                        ilustracion = R.drawable.ilu_mascota,
+                        texto = stringResource(R.string.perfil_vacio),
+                    )
+                }
+                is ContenidoPerfil.Error -> item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        MensajeDeError(stringResource(contenido.mensaje))
+                        BotonSecundario(
+                            texto = stringResource(R.string.perfil_reintentar),
+                            alTocar = viewModel::cargar,
+                            icono = Icons.Rounded.Refresh,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+                is ContenidoPerfil.ConCinturones -> itemsIndexed(contenido.cinturones, key = { _, cinturon -> cinturon.lenguaje }) { indice, cinturon ->
+                    TarjetaDeCinturon(cinturon, if (indice < 6) Modifier.entrada(indice * 70) else Modifier)
+                }
             }
-            is ContenidoPerfil.ConCinturones -> LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 24.dp),
-            ) {
-                items(contenido.cinturones, key = { it.lenguaje }) { TarjetaDeCinturon(it) }
+            item { TarjetaDeAvisos(alAbrirAvisos) }
+        }
+    }
+}
+
+// La puerta a los avisos de práctica, que antes estaba en «Mis cursos».
+@Composable
+private fun TarjetaDeAvisos(alTocar: () -> Unit) {
+    val c = MC.colores
+    TarjetaMC(modifier = Modifier.fillMaxWidth(), alTocar = alTocar) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Icon(Icons.Rounded.Notifications, contentDescription = null, tint = c.acento, modifier = Modifier.size(28.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(stringResource(R.string.perfil_avisos_titulo), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.perfil_avisos_texto), style = MaterialTheme.typography.bodySmall, color = c.textoSuave)
             }
+            Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = c.textoSuave, modifier = Modifier.size(24.dp))
         }
     }
 }
 
 // La imagen de cada cinturón (res/drawable-nodpi/img_cinturon_*.webp, HU50-T3), por nivel.
 @DrawableRes
-private fun imagenDelCinturon(nivel: Int): Int = when (nivel) {
+internal fun imagenDelCinturon(nivel: Int): Int = when (nivel) {
     1 -> R.drawable.img_cinturon_blanco
     2 -> R.drawable.img_cinturon_amarillo
     3 -> R.drawable.img_cinturon_naranja
@@ -115,24 +151,24 @@ private fun nombreLocalizado(nivel: Int, delServidor: String): String =
     nombreDeCinturon(nivel)?.let { stringResource(it) } ?: delServidor
 
 @Composable
-private fun TarjetaDeCinturon(cinturon: CinturonDelLenguaje) {
+private fun TarjetaDeCinturon(cinturon: CinturonDelLenguaje, modifier: Modifier = Modifier) {
     val c = MC.colores
     val paleta = paletaDe(cinturon.lenguaje)
-    TarjetaMC(modifier = Modifier.fillMaxWidth()) {
+    TarjetaMC(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 // El cinturón sobre un cuadro gris con borde fino.
                 Box(
                     modifier = Modifier
-                        .size(76.dp)
-                        .background(MC.colores.fondoSuave, RoundedCornerShape(8.dp))
-                        .border(1.dp, MC.colores.borde, RoundedCornerShape(8.dp)),
+                        .size(84.dp)
+                        .background(MC.colores.lienzo, RoundedCornerShape(16.dp))
+                        .border(1.dp, MC.colores.borde, RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(imagenDelCinturon(cinturon.nivel)),
                         contentDescription = null,
-                        modifier = Modifier.size(64.dp),
+                        modifier = Modifier.size(72.dp),
                     )
                 }
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -146,8 +182,8 @@ private fun TarjetaDeCinturon(cinturon: CinturonDelLenguaje) {
                     }
                     Text(
                         stringResource(R.string.perfil_puntos_totales, cinturon.puntos),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = c.textoSuave,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Dorado,
                     )
                 }
             }

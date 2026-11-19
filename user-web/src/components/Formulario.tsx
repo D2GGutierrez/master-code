@@ -8,6 +8,9 @@ export type Campo = {
   // Una línea de ayuda bajo el campo (qué se espera escribir).
   ayuda?: string
   autoComplete?: string
+  // Para códigos numéricos: teclado de números en el móvil y largo máximo.
+  inputMode?: 'numeric' | 'text'
+  maxLength?: number
 }
 
 type Props = {
@@ -45,6 +48,8 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar }: Props) 
             value={valores[campo.nombre] ?? ''}
             onChange={manejarCambio}
             autoComplete={campo.autoComplete}
+            inputMode={campo.inputMode}
+            maxLength={campo.maxLength}
             aria-describedby={campo.ayuda ? `${campo.nombre}-ayuda` : undefined}
             required
           />

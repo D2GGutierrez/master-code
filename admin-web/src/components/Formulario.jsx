@@ -87,6 +87,8 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
                 value={valores[campo.nombre] ?? ''}
                 onChange={manejarCambio}
                 autoComplete={campo.autoComplete}
+                inputMode={campo.inputMode}
+                maxLength={campo.maxLength}
                 required
                 aria-invalid={error ? 'true' : undefined}
                 aria-describedby={[campo.ayuda ? `${campo.nombre}-ayuda-campo` : '', error ? idError : ''].filter(Boolean).join(' ') || undefined}

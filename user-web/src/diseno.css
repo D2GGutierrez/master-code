@@ -1933,6 +1933,26 @@ main.acceso {
   color-scheme: light;
 }
 
+/* Un botón con el aspecto de un enlace (por ejemplo «Pedir otro código»). */
+.acceso-formulario button.enlace {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--acento);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.acceso-formulario button.enlace:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.acceso-formulario button.enlace:disabled {
+  color: var(--texto-suave);
+  cursor: default;
+}
+
 /* En pantallas angostas el panel es una franja con el lema; los beneficios y la ilustración solo aparecen en las anchas. */
 .acceso-lateral {
   position: relative;
