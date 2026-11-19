@@ -138,7 +138,7 @@ function HistorialEnvios({ id }: { id: number }) {
         <h1>{problema.titulo}</h1>
       </Hero>
       {envios.length === 0 ? (
-        <EstadoVacio>
+        <EstadoVacio ilustracion="vacio-historial">
           <p>Aún no has enviado ninguna solución a este problema.</p>
           {problema.tipo_ejercicio === TIPO_CON_EDITOR && (
             <a href={`/problemas/${id}/editor`}>Ir al editor de código</a>

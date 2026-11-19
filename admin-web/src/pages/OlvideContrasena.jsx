@@ -31,7 +31,7 @@ function OlvideContrasena() {
 
   return (
     <Acceso lema="Recupera tu acceso" descripcion="Te enviamos un enlace al correo para que elijas una contraseña nueva.">
-      <h1>MASTER CODE · Olvidé mi contraseña</h1>
+      <h1>¿Olvidaste tu contraseña?</h1>
       {enviado ? (
         // Mensaje genérico: no revela si el correo está registrado.
         <p>Si el correo está registrado, te enviamos un enlace para cambiar tu contraseña.</p>

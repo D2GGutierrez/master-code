@@ -6,12 +6,12 @@ import Alternativas from '../components/Alternativas.jsx'
 import CasosPrueba from '../components/CasosPrueba.jsx'
 import EditorEnunciado from '../components/EditorEnunciado.jsx'
 import Formulario from '../components/Formulario.jsx'
-import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
+import { Dibujo, EstadoVacio, Hero } from '../components/Pantalla.jsx'
 import { RespuestaHueco, RespuestaSalida } from '../components/RespuestaEsperada.jsx'
 import { faltanteDelEjercicio } from '../completitud.js'
 
 // Valores de las listas fijas que acepta admin-api; la etiqueta es solo para mostrar.
-const LENGUAJES = [
+export const LENGUAJES = [
   { valor: 'python', etiqueta: 'Python' },
   { valor: 'java', etiqueta: 'Java' },
   { valor: 'javascript', etiqueta: 'JavaScript' },
@@ -37,7 +37,7 @@ export const TIPOS_EJERCICIO = [
 const TEMA_MAX = 60
 
 // H4 (D13): el tema es una etiqueta corta y opcional, por eso no usa el input de Formulario, que siempre es obligatorio.
-function CampoTema({ id, valor, error, onCambio }) {
+export function CampoTema({ id, valor, error, onCambio }) {
   const idAyuda = `${id}-ayuda`
   return (
     <>
@@ -62,7 +62,7 @@ function CampoTema({ id, valor, error, onCambio }) {
 
 // HU34-T2: el código base se escribe como código (monoespaciado, sin ajuste de línea ni correcciones del navegador)
 // y es opcional, por eso no usa el input de Formulario, que siempre es obligatorio.
-function CampoCodigoBase({ id, valor, error, onCambio }) {
+export function CampoCodigoBase({ id, valor, error, onCambio }) {
   const idAyuda = `${id}-ayuda`
   return (
     <>
@@ -90,7 +90,7 @@ function CampoCodigoBase({ id, valor, error, onCambio }) {
 
 // admin-api responde los errores como { campo: ['mensaje', ...] }; en casos_prueba puede ser
 // una lista con un objeto de errores por caso, que se deja tal cual para CasosPrueba.
-function erroresDelServidor(campos, cuerpo) {
+export function erroresDelServidor(campos, cuerpo) {
   const errores = {}
   for (const campo of campos) {
     const mensajes = cuerpo[campo.nombre]
@@ -104,50 +104,20 @@ function erroresDelServidor(campos, cuerpo) {
   return errores
 }
 
-function NuevoProblema() {
-  // null mientras cargan los cursos del docente.
-  const [cursos, setCursos] = useState(null)
-  const [errorCarga, setErrorCarga] = useState(false)
-  const [enviando, setEnviando] = useState(false)
-  const [errores, setErrores] = useState({})
-  // Título del problema creado, tal como lo guardó el servidor; vacío mientras no se crea.
-  const [creado, setCreado] = useState('')
-
-  useEffect(() => {
-    // Si se sale de la pantalla antes de la respuesta, no se actualiza un componente desmontado.
-    let activo = true
-
-    async function cargar() {
-      try {
-        const { ok, cuerpo } = await listarCursos()
-        if (!activo) {
-          return
-        }
-        if (ok) {
-          setCursos(cuerpo)
-        } else {
-          setErrorCarga(true)
-        }
-      } catch {
-        if (activo) {
-          setErrorCarga(true)
-        }
-      }
-    }
-
-    cargar()
-    return () => {
-      activo = false
-    }
-  }, [])
-
-  const campos = [
-    {
-      nombre: 'curso',
-      etiqueta: 'Curso',
-      tipo: 'select',
-      opciones: (cursos ?? []).map((curso) => ({ valor: String(curso.id), etiqueta: curso.nombre })),
-    },
+// Los campos del formulario de un problema. Con «cursos» se pide elegir el curso (crear); con null no aparece
+// (revisar: el curso de un problema no cambia).
+export function camposDelProblema(cursos) {
+  return [
+    ...(cursos
+      ? [
+          {
+            nombre: 'curso',
+            etiqueta: 'Curso',
+            tipo: 'select',
+            opciones: cursos.map((curso) => ({ valor: String(curso.id), etiqueta: curso.nombre })),
+          },
+        ]
+      : []),
     { nombre: 'titulo', etiqueta: 'Título', tipo: 'text' },
     { nombre: 'enunciado', etiqueta: 'Enunciado', componente: EditorEnunciado },
     { nombre: 'lenguaje', etiqueta: 'Lenguaje de programación', tipo: 'select', opciones: LENGUAJES },
@@ -189,6 +159,46 @@ function NuevoProblema() {
     },
     { nombre: 'tema', etiqueta: 'Tema (opcional)', componente: CampoTema },
   ]
+}
+
+function NuevoProblema() {
+  // null mientras cargan los cursos del docente.
+  const [cursos, setCursos] = useState(null)
+  const [errorCarga, setErrorCarga] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [errores, setErrores] = useState({})
+  // Título del problema creado, tal como lo guardó el servidor; vacío mientras no se crea.
+  const [creado, setCreado] = useState('')
+
+  useEffect(() => {
+    // Si se sale de la pantalla antes de la respuesta, no se actualiza un componente desmontado.
+    let activo = true
+
+    async function cargar() {
+      try {
+        const { ok, cuerpo } = await listarCursos()
+        if (!activo) {
+          return
+        }
+        if (ok) {
+          setCursos(cuerpo)
+        } else {
+          setErrorCarga(true)
+        }
+      } catch {
+        if (activo) {
+          setErrorCarga(true)
+        }
+      }
+    }
+
+    cargar()
+    return () => {
+      activo = false
+    }
+  }, [])
+
+  const campos = camposDelProblema(cursos ?? [])
 
   async function crear(valores) {
     // El curso va en la URL, no en el cuerpo.
@@ -249,7 +259,7 @@ function NuevoProblema() {
   let contenido
   if (creado) {
     contenido = (
-      <EstadoVacio ilustracion="exito">
+      <EstadoVacio ilustracion="exito" dibujo="celebracion">
         <p>Problema creado: {creado}.</p>
         <p>
           <a href="/problemas/nuevo">Crear otro problema</a> · <a href="/cursos">Ver mis cursos</a>
@@ -290,12 +300,38 @@ function NuevoProblema() {
 
   return (
     <main>
-      <Hero clase="hero-compacto">
+      <Hero clase="hero-compacto" ilustracion="docente">
         <p className="hero-sobretitulo">Panel docente</p>
         <h1>Nuevo problema</h1>
         <p>Escribe el enunciado y lo que sirve para corregirlo (casos de prueba, alternativas o respuesta esperada) para uno de tus cursos.</p>
       </Hero>
-      {creado ? contenido : <div className="panel-formulario panel-formulario-ancho">{contenido}</div>}
+      {creado ? (
+        contenido
+      ) : (
+        <div className="problema-pagina">
+          <div className="panel-formulario panel-formulario-ancho">{contenido}</div>
+          <aside className="problema-consejos" aria-labelledby="consejos-titulo">
+            <Dibujo nombre="equipo" className="problema-consejos-dibujo" />
+            <h2 id="consejos-titulo">Antes de crear el problema</h2>
+            <ul>
+              <li>
+                <strong>Enunciado.</strong> Di qué debe hacer el estudiante y, si aplica, qué recibe y qué debe devolver.
+              </li>
+              <li>
+                <strong>Corrección.</strong> Según el tipo de ejercicio, añade casos de prueba, alternativas o la respuesta
+                esperada; sin eso el problema no se puede corregir.
+              </li>
+              <li>
+                <strong>Tema.</strong> Una etiqueta corta, como «bucles», agrupa el problema en el resumen de sesión del
+                estudiante.
+              </li>
+              <li>
+                <strong>Plataforma.</strong> Elige si lo verán en la web, en el móvil o en ambas.
+              </li>
+            </ul>
+          </aside>
+        </div>
+      )}
     </main>
   )
 }

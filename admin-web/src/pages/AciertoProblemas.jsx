@@ -135,7 +135,7 @@ function AciertoProblemas({ id }) {
 
   return (
     <main>
-      <Hero clase="hero-compacto">
+      <Hero clase="hero-compacto" ilustracion="escalera">
         <p className="hero-volver">
           <a href="/cursos">
             <Icono nombre="atras" />

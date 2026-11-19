@@ -12,6 +12,7 @@ import NuevoCurso from './pages/NuevoCurso.jsx'
 import NuevoProblema from './pages/NuevoProblema.jsx'
 import OlvideContrasena from './pages/OlvideContrasena.jsx'
 import RegistroDocente from './pages/RegistroDocente.jsx'
+import RevisarProblema from './pages/RevisarProblema.jsx'
 
 // Sin enrutador todavía: la pantalla se elige por la ruta de la URL.
 function pantalla(ruta) {
@@ -51,6 +52,10 @@ function pantalla(ruta) {
   }
   if (ruta === '/revision') {
     return <BandejaRevision />
+  }
+  const revisar = ruta.match(/^\/problemas\/(\d+)\/revisar$/)
+  if (revisar) {
+    return <RevisarProblema id={Number(revisar[1])} />
   }
   if (ruta === '/problemas/nuevo') {
     return <NuevoProblema />

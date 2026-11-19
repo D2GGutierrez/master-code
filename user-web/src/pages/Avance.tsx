@@ -3,7 +3,7 @@ import { obtenerAvance, type Avance as DatosAvance } from '../api/avance.ts'
 import { misCursos, type MiCurso } from '../api/cursos.ts'
 import type { ProblemaDeLista } from '../api/problemas.ts'
 import Icono from '../components/Icono.tsx'
-import { EstadoVacio, Hero } from '../components/Pantalla.tsx'
+import { Dibujo, EstadoVacio, Hero } from '../components/Pantalla.tsx'
 import { Portada } from '../components/Portada.tsx'
 import { AnilloProgreso, BarraProgreso } from '../components/Progreso.tsx'
 import { etiquetaEstado } from '../etiquetas.ts'
@@ -63,7 +63,7 @@ function Avance() {
 
   return (
     <main className="avance">
-      <Hero clase="hero-con-anillo" lateral={avance && avance.total_envios > 0 ? anillo : undefined}>
+      <Hero clase="hero-con-anillo" ilustracion="escalera" lateral={avance && avance.total_envios > 0 ? anillo : undefined}>
         <p className="hero-sobretitulo">Tu progreso</p>
         <h1>Mi avance</h1>
         <p>Lo que has enviado desde la web y desde el móvil, en un solo lugar.</p>
@@ -76,8 +76,11 @@ function Avance() {
       ) : !avance ? (
         <p role="status">Cargando tu avance…</p>
       ) : avance.total_envios === 0 ? (
-        <EstadoVacio>
+        <EstadoVacio dibujo="cohete">
           <p>Aún no has resuelto ejercicios. Cuando lo hagas, desde la web o desde el móvil, tu avance aparecerá aquí.</p>
+          <a className="boton-hero" href="/inicio">
+            Ir a mis cursos
+          </a>
         </EstadoVacio>
       ) : (
         <>
@@ -115,6 +118,41 @@ function Avance() {
               </div>
             </li>
           </ul>
+
+          {hayTotales && (
+            <aside className="avance-aviso anima" aria-labelledby="avance-aviso">
+              {todos.resueltos >= todos.total ? (
+                <>
+                  <div className="avance-aviso-texto">
+                    <h2 id="avance-aviso">¡Resolviste todos tus problemas!</h2>
+                    <p>
+                      {todos.total} de {todos.total} {plural(todos.total, 'problema resuelto', 'problemas resueltos')}. Cuando tu docente
+                      publique más ejercicios, aparecerán en tus cursos.
+                    </p>
+                    <a className="boton-hero" href="/inicio">
+                      Ver mis cursos
+                    </a>
+                  </div>
+                  <Dibujo nombre="celebracion" className="avance-aviso-dibujo" />
+                </>
+              ) : (
+                <>
+                  <div className="avance-aviso-texto">
+                    <h2 id="avance-aviso">Sigue avanzando</h2>
+                    <p>
+                      Te {plural(todos.total - todos.resueltos, 'falta', 'faltan')} {todos.total - todos.resueltos}{' '}
+                      {plural(todos.total - todos.resueltos, 'problema', 'problemas')} para terminar tus cursos. Elige uno y continúa
+                      donde lo dejaste.
+                    </p>
+                    <a className="boton-hero" href="/inicio">
+                      Continuar practicando
+                    </a>
+                  </div>
+                  <Dibujo nombre="codigo" className="avance-aviso-dibujo" />
+                </>
+              )}
+            </aside>
+          )}
 
           {cursos && cursos.length > 0 && progreso.listo && todos.total > 0 && (
             <section aria-labelledby="avance-cursos">

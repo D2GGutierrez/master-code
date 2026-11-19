@@ -8,3 +8,11 @@
 .tabla-revision table {
   min-width: 52rem;
 }
+
+.tabla-revision td a {
+  text-decoration: none;
+}
+
+.tabla-revision td a:not(.boton-enlace):hover {
+  text-decoration: underline;
+}

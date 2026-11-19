@@ -17,9 +17,9 @@ const TRAZOS = {
   media: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 2v20',
 }
 
-function Icono({ nombre }: { nombre: keyof typeof TRAZOS }) {
+function Icono({ nombre, className }: { nombre: keyof typeof TRAZOS; className?: string }) {
   return (
-    <svg className="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg className={className ? `icono ${className}` : 'icono'} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d={TRAZOS[nombre]} />
     </svg>
   )

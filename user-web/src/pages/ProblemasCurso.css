@@ -13,7 +13,7 @@
 
 .hero-anillo p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--texto-suave);
   font-size: 0.875rem;
 }
 
@@ -38,30 +38,19 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: 16px;
-  box-shadow: var(--sombra-suave);
+  padding: 0.875rem 1rem;
+  border-radius: var(--radio-tarjeta);
   /* Un título largo y sin espacios se parte en vez de ensanchar la página. */
   overflow-wrap: anywhere;
 }
 
 .problema:hover,
 .problema:focus-within {
-  border-color: color-mix(in srgb, var(--acento) 45%, var(--borde));
-  box-shadow: var(--sombra-alta);
-  transform: translateX(4px);
+  border-color: var(--borde-fuerte);
 }
 
 .problema > .icono {
   color: var(--texto-suave);
-  transition:
-    color 0.2s,
-    transform 0.2s;
-}
-
-.problema:hover > .icono {
-  color: var(--acento);
-  transform: translateX(3px);
 }
 
 .problema-titulo {

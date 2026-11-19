@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { resumenAvance, type AvanceNumeros, type EstadoCurso } from '../progreso.ts'
 import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
+import { LogoLenguaje } from './LogoLenguaje.tsx'
 import Icono from './Icono.tsx'
 import { Portada } from './Portada.tsx'
 import { BarraProgreso } from './Progreso.tsx'
@@ -41,12 +42,15 @@ export function TarjetaCurso({
     <>
       <Portada lenguaje={curso.lenguaje} variante={curso.curso_id} />
       <div className="tarjeta-cuerpo">
-        <p className="tarjeta-etiquetas">
-          <span className={`chip-leng leng-${claveLenguaje(curso.lenguaje)}`}>{etiquetaLenguaje(curso.lenguaje)}</span>
-          {estado && <span className={estado.clase}>{estado.texto}</span>}
-        </p>
         <h3>{curso.nombre}</h3>
         <p>{detalle ? `${curso.institucion} · ${detalle}` : curso.institucion}</p>
+        <p className="tarjeta-etiquetas">
+          <span className={`chip-leng leng-${claveLenguaje(curso.lenguaje)}`}>
+            <LogoLenguaje lenguaje={curso.lenguaje} />
+            {etiquetaLenguaje(curso.lenguaje)}
+          </span>
+          {estado && <span className={estado.clase}>{estado.texto}</span>}
+        </p>
         {resumen && resumen.total > 0 && (
           <BarraProgreso
             valor={resumen.porcentaje / 100}

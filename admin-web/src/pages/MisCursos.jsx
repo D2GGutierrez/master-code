@@ -6,6 +6,7 @@ import Icono from '../components/Icono.jsx'
 import Paginacion from '../components/Paginacion.jsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
 import { Portada } from '../components/Portada.jsx'
+import { LogoLenguaje } from '../components/LogoLenguaje.jsx'
 import { claveLenguaje } from '../lenguajes.js'
 import { CAMPOS as CAMPOS_CURSO } from './NuevoCurso.jsx'
 import './MisCursos.css'
@@ -150,7 +151,7 @@ function MisCursos() {
     contenido = <p>No se encontraron cursos que coincidan con “{busqueda}”.</p>
   } else if (cursos.length === 0) {
     contenido = (
-      <EstadoVacio>
+      <EstadoVacio dibujo="diseno">
         <p>
           Aún no tienes cursos. Crea tu primer curso para empezar.{' '}
           <a href="/cursos/nuevo">Crear mi primer curso</a>
@@ -190,6 +191,7 @@ function MisCursos() {
                   </td>
                   <td>
                     <span className={`chip-leng leng-${claveLenguaje(curso.lenguaje)}`}>
+                      <LogoLenguaje lenguaje={curso.lenguaje} />
                       {etiquetaLenguaje(curso.lenguaje)}
                     </span>
                   </td>
@@ -241,7 +243,7 @@ function MisCursos() {
 
   return (
     <main>
-      <Hero>
+      <Hero ilustracion="libros">
         <p className="hero-sobretitulo">Panel docente</p>
         <h1>Mis cursos</h1>
         <p>Crea cursos, genera problemas con IA y revisa lo que tus estudiantes envían.</p>

@@ -55,3 +55,8 @@
 .celda-curso > span {
   min-width: 9rem;
 }
+
+/* Como en GitHub, la tabla de cursos no lleva miniaturas con degradado: el lenguaje se dice en la columna correspondiente. */
+.celda-curso .portada-mini {
+  display: none;
+}

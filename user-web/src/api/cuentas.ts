@@ -32,6 +32,17 @@ export async function iniciarSesion(datos: Record<string, string>) {
   return { ok: respuesta.ok, cuerpo }
 }
 
+// Entrar con la cuenta institucional de Google: se manda el token de identidad y admin-api lo verifica con Google.
+export async function iniciarSesionConGoogle(credencial: string) {
+  const respuesta = await fetch(`${API_URL}/api/auth/google/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: credencial, cliente: 'user-web' }),
+  })
+  const cuerpo: CuerpoSesion = await respuesta.json().catch(() => ({}))
+  return { ok: respuesta.ok, cuerpo }
+}
+
 // Lo que puede responder admin-api al recuperar: detail (éxito o enlace inválido) o errores por campo.
 export type CuerpoRecuperacion = {
   detail?: string

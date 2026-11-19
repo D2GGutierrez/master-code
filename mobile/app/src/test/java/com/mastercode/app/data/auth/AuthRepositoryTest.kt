@@ -51,6 +51,43 @@ class AuthRepositoryTest {
     }
 
     @Test
+    fun googleCorrectoEnviaElTokenDeIdentidadYGuardaLaSesion() = runTest {
+        val resultado = repository.loginConGoogle("token-de-google")
+
+        assertEquals(ResultadoLogin.Exito, resultado)
+        assertEquals("token-de-google", api.tokenDeGoogleRecibido)
+        assertEquals("refresh-g", storage.refresh)
+        assertEquals("access-g", repository.accessToken)
+    }
+
+    @Test
+    fun googleRechazadoNoGuardaNada() = runTest {
+        api.respuestaGoogle = { throw ErrorHttp(401) }
+
+        assertEquals(ResultadoLogin.GoogleRechazado, repository.loginConGoogle("token-malo"))
+        assertNull(storage.refresh)
+        assertNull(repository.accessToken)
+    }
+
+    @Test
+    fun googleConCuentaQueNoPuedeEntrarDevuelveCuentaNoPermitida() = runTest {
+        api.respuestaGoogle = { throw ErrorHttp(403) }
+
+        assertEquals(ResultadoLogin.CuentaNoPermitida, repository.loginConGoogle("token"))
+        assertNull(storage.refresh)
+    }
+
+    @Test
+    fun googleSinConexionOConErrorDelServidor() = runTest {
+        api.respuestaGoogle = { throw IOException() }
+        assertEquals(ResultadoLogin.SinConexion, repository.loginConGoogle("token"))
+
+        api.respuestaGoogle = { throw ErrorHttp(503) }
+        assertEquals(ResultadoLogin.ErrorInesperado, repository.loginConGoogle("token"))
+        assertNull(storage.refresh)
+    }
+
+    @Test
     fun renovarReemplazaElRefreshGuardado() = runTest {
         storage.refresh = "refresh-viejo"
 

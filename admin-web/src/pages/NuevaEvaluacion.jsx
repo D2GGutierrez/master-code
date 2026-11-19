@@ -364,7 +364,7 @@ function NuevaEvaluacion({ cursoId }) {
 
   return (
     <main>
-      <Hero clase="hero-compacto">
+      <Hero clase="hero-compacto" ilustracion="certificados">
         <p className="hero-volver">
           <a href="/cursos">
             <Icono nombre="atras" />

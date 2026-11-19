@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { iniciarSesion } from '../api/cuentas.js'
+import { iniciarSesion, iniciarSesionConGoogle } from '../api/cuentas.js'
 import { hayRutaGuardada, tomarRutaGuardada } from '../api/sesion.js'
+import BotonGoogle from '../components/BotonGoogle.jsx'
 import Formulario from '../components/Formulario.jsx'
 import { Acceso } from '../components/Pantalla.jsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS = [
-  { nombre: 'email', etiqueta: 'Correo institucional', tipo: 'email' },
-  { nombre: 'password', etiqueta: 'Contraseña', tipo: 'password' },
+  { nombre: 'email', etiqueta: 'Correo institucional', tipo: 'email', autoComplete: 'username' },
+  { nombre: 'password', etiqueta: 'Contraseña', tipo: 'password', autoComplete: 'current-password' },
 ]
 
 // admin-api responde { detail } (credenciales incorrectas, cuenta inactiva) o { campo: ['mensaje', ...] }.
@@ -49,9 +50,29 @@ function InicioSesion() {
     setEnviando(false)
   }
 
+  async function entrarConGoogle(credencial) {
+    setEnviando(true)
+    setErrores({})
+    try {
+      const { ok, cuerpo } = await iniciarSesionConGoogle(credencial)
+      if (ok) {
+        window.location.assign(tomarRutaGuardada())
+        return
+      }
+      setErrores({ general: cuerpo.detail ?? 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.' })
+    } catch {
+      setErrores({ general: 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.' })
+    }
+    setEnviando(false)
+  }
+
   return (
-    <Acceso lema="Tus cursos, con ayuda de la IA" descripcion="Crea cursos, genera problemas con inteligencia artificial y sigue el avance de tus estudiantes.">
-      <h1>MASTER CODE · Inicio de sesión</h1>
+    <Acceso
+      lema="Tus cursos, con ayuda de la IA"
+      descripcion="Crea cursos, genera problemas con inteligencia artificial y sigue el avance de tus estudiantes."
+      enlace={{ texto: '¿Eres docente nuevo?', accion: 'Crea tu cuenta', href: '/' }}
+    >
+      <h1>Inicia sesión en MASTER CODE</h1>
       {/* Solo hay ruta guardada si se llegó aquí porque la sesión expiró. */}
       {hayRutaGuardada() && <p>Tu sesión expiró. Inicia sesión para continuar.</p>}
       <Formulario
@@ -60,6 +81,10 @@ function InicioSesion() {
         enviando={enviando}
         errores={errores}
         onEnviar={entrar}
+      />
+      <BotonGoogle
+        alCredencial={entrarConGoogle}
+        alFallar={() => setErrores({ general: 'No se pudo cargar el inicio con Google. Revisa tu conexión.' })}
       />
       <p>
         <a href="/olvide-contrasena">¿Olvidaste tu contraseña?</a>

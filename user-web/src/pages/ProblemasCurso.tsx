@@ -5,6 +5,7 @@ import Icono from '../components/Icono.tsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.tsx'
 import { AnilloProgreso } from '../components/Progreso.tsx'
 import { etiquetaDificultad, etiquetaEstado, etiquetaTipoEjercicio } from '../etiquetas.ts'
+import { LogoLenguaje } from '../components/LogoLenguaje.tsx'
 import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import { resumir, type Resumen } from '../progreso.ts'
 import './ProblemasCurso.css'
@@ -291,7 +292,10 @@ function ProblemasCurso({ id }: { id: number }) {
         <h1>{nombreCurso}</h1>
         {datosCurso && (
           <p className="hero-meta">
-            <span className="hero-etiqueta">{etiquetaLenguaje(datosCurso.lenguaje)}</span>
+            <span className="hero-etiqueta">
+              <LogoLenguaje lenguaje={datosCurso.lenguaje} />
+              {etiquetaLenguaje(datosCurso.lenguaje)}
+            </span>
             <span className="hero-etiqueta">{datosCurso.institucion}</span>
           </p>
         )}

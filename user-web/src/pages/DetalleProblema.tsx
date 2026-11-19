@@ -5,6 +5,7 @@ import Enunciado from '../components/Enunciado.tsx'
 import Icono from '../components/Icono.tsx'
 import { Hero } from '../components/Pantalla.tsx'
 import { etiquetaDificultad, etiquetaTipoEjercicio } from '../etiquetas.ts'
+import { LogoLenguaje } from '../components/LogoLenguaje.tsx'
 import { claveLenguaje, etiquetaLenguaje } from '../lenguajes.ts'
 import './DetalleProblema.css'
 
@@ -93,7 +94,10 @@ function DetalleProblema({ id }: { id: number }) {
         <p className="hero-meta">
           <span className="hero-etiqueta">{etiquetaDificultad(problema.dificultad)}</span>
           <span className="hero-etiqueta">{etiquetaTipoEjercicio(problema.tipo_ejercicio)}</span>
-          <span className="hero-etiqueta">{etiquetaLenguaje(problema.lenguaje)}</span>
+          <span className="hero-etiqueta">
+            <LogoLenguaje lenguaje={problema.lenguaje} />
+            {etiquetaLenguaje(problema.lenguaje)}
+          </span>
         </p>
         {problema.plataforma !== 'movil' && problema.tipo_ejercicio === TIPO_CON_EDITOR && (
           <div className="hero-acciones">

@@ -69,7 +69,7 @@ function NuevaContrasena() {
 
   return (
     <Acceso lema="Recupera tu acceso" descripcion="Elige una contraseña nueva para volver a entrar a tus cursos.">
-      <h1>MASTER CODE · Nueva contraseña</h1>
+      <h1>Elige una contraseña nueva</h1>
       {contenido}
     </Acceso>
   )

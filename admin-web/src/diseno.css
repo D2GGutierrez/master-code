@@ -2,83 +2,99 @@
   MASTER CODE · sistema de diseño.
   Es el mismo archivo en user-web y admin-web (src/diseno.css): si cambias uno, cambia el otro.
 
-  Base neutra y limpia con un acento índigo, y piezas visuales con más vida: barra superior oscura, «hero» con
-  degradado, portadas SVG por lenguaje, anillos y barras de progreso, y entradas suaves. Todo es CSS y SVG
-  propios, sin dependencias. Verde y rojo existen solo para decir «pasó» y «falló» en texto. El tema claro u
-  oscuro es automático (prefers-color-scheme) y con «reducir movimiento» no hay animaciones.
-  Las ilustraciones y portadas son SVG dentro de componentes: usan estas mismas variables.
+  Lenguaje visual de GitHub (Primer): lienzo gris claro, tarjetas blancas con borde fino y casi sin sombra,
+  esquinas de 6 px, enlaces azules, botón principal verde y un solo acento azul. La barra superior es oscura en
+  los dos temas, y las pantallas de acceso (inicio de sesión, registro) son un panel oscuro con beneficios e
+  ilustración a un lado y un formulario limpio al otro. Verde y rojo también dicen «pasó» y «falló». El tema
+  claro u oscuro es automático (prefers-color-scheme) y con «reducir movimiento» no hay animaciones.
 */
 
 :root {
   color-scheme: light dark;
 
-  --lienzo: #f6f6fb;
+  /* Lienzo gris muy claro, tarjetas blancas con borde fino, texto casi negro y el azul de los enlaces. */
+  --lienzo: #ffffff;
   --fondo: #ffffff;
-  --fondo-suave: #f8f8fc;
-  --texto: #0b0a1a;
-  --texto-suave: #61607a;
-  --borde: #e6e6f0;
-  --borde-fuerte: #cfcfe0;
-  --acento: #4f46e5;
-  --acento-suave: #eef0ff;
+  --fondo-suave: #f6f8fa;
+  --texto: #1f2328;
+  --texto-suave: #59636e;
+  --borde: #d1d9e0;
+  --borde-fuerte: #afb8c1;
+  --acento: #0969da;
+  --acento-suave: #ddf4ff;
   --sobre-acento: #ffffff;
-  --exito: #15803d;
+  /* La acción principal es verde, como en GitHub. */
+  --primario: #1f883d;
+  --primario-hover: #1a7f37;
+  --sobre-primario: #ffffff;
+  --exito: #1a7f37;
   /* Verde para texto pequeño sobre su propio tinte: un tono más oscuro que --exito, para llegar a 4.5:1. */
-  --exito-texto: #166534;
-  --error: #b42318;
-  --resalte: #fef3c7;
-  --velo: rgba(11, 10, 26, 0.45);
+  --exito-texto: #116329;
+  --error: #d1242f;
+  --resalte: #fff8c5;
+  --velo: rgba(31, 35, 40, 0.5);
+
+  /* Botón neutro. */
+  --boton: #f6f8fa;
+  --boton-hover: #eff2f5;
 
   /* Barra superior y degradados: son oscuros en los dos temas, para que la pantalla tenga un ancla visual. */
-  --barra: #0e0c22;
-  --barra-texto: #f5f5ff;
-  --barra-suave: #b6b4d8;
-  --barra-borde: rgba(255, 255, 255, 0.09);
-  --hero-a: #1b1747;
-  --hero-b: #3730a3;
-  --hero-c: #6d28d9;
-  --hero-brillo: #a78bfa;
+  --barra: #25292e;
+  --barra-texto: #f0f6fc;
+  --barra-suave: #d1d7e0;
+  --barra-borde: rgba(240, 246, 252, 0.12);
+  --hero-a: #010409;
+  --hero-b: #1a1245;
+  --hero-c: #5b3bb5;
+  --hero-brillo: #8957e5;
 
   /* Colores de cada lenguaje (portadas, hero de curso y puntos de los filtros). */
   --p1: #7c3aed;
   --p2: #4338ca;
   --p3: #a5b4fc;
 
-  --sombra-suave: 0 1px 2px rgba(20, 18, 60, 0.05), 0 10px 28px -14px rgba(20, 18, 60, 0.18);
-  --sombra-alta: 0 2px 6px rgba(20, 18, 60, 0.06), 0 28px 48px -22px rgba(67, 56, 202, 0.5);
+  /* Casi sin sombras: GitHub separa con bordes. */
+  --sombra-suave: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --sombra-alta: 0 8px 24px rgba(140, 149, 159, 0.28);
 
-  --fuente: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --fuente-codigo: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --fuente: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --fuente-codigo: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
-  --radio: 8px;
-  --radio-grande: 12px;
-  --radio-tarjeta: 18px;
+  --radio: 6px;
+  --radio-grande: 6px;
+  --radio-tarjeta: 8px;
   --ancho: 1200px;
   --salida: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --lienzo: #08080c;
-    --fondo: #101016;
-    --fondo-suave: #17171f;
-    --texto: #f5f5fa;
-    --texto-suave: #a3a3b8;
-    --borde: rgba(255, 255, 255, 0.09);
-    --borde-fuerte: rgba(255, 255, 255, 0.18);
-    --acento: #818cf8;
-    --acento-suave: rgba(129, 140, 248, 0.16);
-    --sobre-acento: #0b0a1a;
-    --exito: #4ade80;
-    --exito-texto: #4ade80;
-    --error: #f87171;
-    --resalte: rgba(250, 204, 21, 0.18);
-    --velo: rgba(0, 0, 0, 0.65);
+    --lienzo: #0d1117;
+    --fondo: #0d1117;
+    --fondo-suave: #1c232d;
+    --texto: #f0f6fc;
+    --texto-suave: #9198a1;
+    --borde: #3d444d;
+    --borde-fuerte: #656c76;
+    --acento: #4493f8;
+    --acento-suave: rgba(56, 139, 253, 0.15);
+    --sobre-acento: #0d1117;
+    --primario: #238636;
+    --primario-hover: #2ea043;
+    --exito: #3fb950;
+    --exito-texto: #3fb950;
+    --error: #f85149;
+    --resalte: rgba(187, 128, 9, 0.2);
+    --velo: rgba(1, 4, 9, 0.7);
 
-    --barra: #0a0916;
+    --boton: #212830;
+    --boton-hover: #262c36;
 
-    --sombra-suave: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
-    --sombra-alta: 0 2px 6px rgba(0, 0, 0, 0.4), 0 28px 48px -22px rgba(129, 140, 248, 0.35);
+    --barra: #010409;
+    --barra-borde: #3d444d;
+
+    --sombra-suave: none;
+    --sombra-alta: 0 0 0 1px #3d444d, 0 16px 32px rgba(1, 4, 9, 0.85);
   }
 }
 
@@ -140,8 +156,8 @@ h3 {
 
 h1 {
   margin-bottom: 0.75rem;
-  font-size: 1.75rem;
-  letter-spacing: -0.03em;
+  font-size: 1.625rem;
+  letter-spacing: -0.015em;
 }
 
 h2 {
@@ -156,7 +172,7 @@ h3 {
 
 @media (min-width: 768px) {
   h1 {
-    font-size: 2rem;
+    font-size: 1.875rem;
   }
 }
 
@@ -183,6 +199,16 @@ a:hover {
   text-decoration-color: currentColor;
 }
 
+/* Los enlaces de texto son azules y sin subrayado hasta pasar el cursor; los que tienen clase propia conservan su estilo. */
+a:not([class]) {
+  color: var(--acento);
+  text-decoration: none;
+}
+
+a:not([class]):hover {
+  text-decoration: underline;
+}
+
 /* El foco siempre se ve: es el único indicador para quien navega con teclado. */
 :focus-visible {
   outline: 2px solid var(--acento);
@@ -191,9 +217,8 @@ a:hover {
 
 /* Sobre fondos oscuros el índigo no alcanza: el foco es un lavanda claro. */
 .cabecera :focus-visible,
-.hero :focus-visible,
 .acceso-lateral :focus-visible {
-  outline-color: #c7d2fe;
+  outline-color: #79c0ff;
 }
 
 ::selection {
@@ -250,8 +275,7 @@ a:hover {
 /* Entrada escalonada: cada elemento lleva su posición en --i. «backwards» solo actúa antes de empezar, así que
    al terminar el elemento vuelve a sus estilos normales (y el hover sigue funcionando). */
 .anima {
-  animation: subir 0.6s var(--salida) backwards;
-  animation-delay: min(calc(var(--i, 0) * 70ms), 560ms);
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -331,8 +355,8 @@ main {
 }
 
 .cabecera nav a {
-  padding: 0.375rem 0.875rem;
-  border-radius: 999px;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radio);
   color: var(--barra-suave);
   text-decoration: none;
   white-space: nowrap;
@@ -380,9 +404,10 @@ main {
   align-items: center;
   gap: 0.375rem;
   border-color: transparent;
-  border-radius: 999px;
+  border-radius: var(--radio);
   background: transparent;
   color: var(--barra-suave);
+  box-shadow: none;
 }
 
 .cabecera button:hover:not(:disabled) {
@@ -399,7 +424,7 @@ main {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6, #38bdf8);
+  background: #6e7781;
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -426,10 +451,10 @@ main {
 button,
 .boton-primario {
   display: inline-block;
-  padding: 0.5rem 0.875rem;
-  border: 1px solid var(--borde-fuerte);
+  padding: 0.3125rem 1rem;
+  border: 1px solid var(--borde);
   border-radius: var(--radio);
-  background: var(--fondo);
+  background: var(--boton);
   color: var(--texto);
   font: inherit;
   font-size: 0.875rem;
@@ -437,79 +462,132 @@ button,
   line-height: 1.25rem;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: var(--sombra-suave);
   transition:
-    background-color 0.15s,
-    border-color 0.15s,
-    box-shadow 0.2s,
-    transform 0.2s,
+    background-color 0.1s,
+    border-color 0.1s,
     opacity 0.15s;
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--texto-suave);
-  background: var(--fondo-suave);
+  border-color: var(--borde-fuerte);
+  background: var(--boton-hover);
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* La acción principal de cada pantalla: sólida y con un destello de color al pasar el cursor. */
+/* La acción principal de cada pantalla: verde sólido, igual que «Create account» o «Commit changes» en GitHub. */
 button[type='submit'],
 .boton-primario {
-  border-color: var(--acento);
-  background: var(--acento);
-  color: var(--sobre-acento);
+  border-color: rgba(31, 35, 40, 0.15);
+  background: var(--primario);
+  color: var(--sobre-primario);
   font-weight: 600;
 }
 
 button[type='submit']:hover:not(:disabled),
 .boton-primario:hover:not(:disabled) {
-  border-color: var(--acento);
-  background: var(--acento);
-  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--acento) 80%, transparent);
-  transform: translateY(-1px);
+  border-color: rgba(31, 35, 40, 0.15);
+  background: var(--primario-hover);
 }
 
-/* Botones sobre el hero: blancos, redondos y grandes. */
+/* Dos botones de envío en un formulario (p. ej. «Guardar cambios» y «Guardar y aprobar»): el secundario es neutro. */
+.formulario-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+button[type='submit'].boton-secundario {
+  border-color: var(--borde);
+  background: var(--boton);
+  color: var(--texto);
+  font-weight: 500;
+}
+
+button[type='submit'].boton-secundario:hover:not(:disabled) {
+  border-color: var(--borde-fuerte);
+  background: var(--boton-hover);
+}
+
+/* Un enlace con el aspecto de un botón (la acción «Revisar» de una fila). */
+.boton-enlace {
+  display: inline-block;
+  padding: 0.3125rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--boton);
+  color: var(--texto);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-decoration: none;
+}
+
+.boton-enlace:hover {
+  border-color: var(--borde-fuerte);
+  background: var(--boton-hover);
+}
+
+.boton-enlace-primario {
+  border-color: rgba(31, 35, 40, 0.15);
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font-weight: 600;
+}
+
+.boton-enlace-primario:hover {
+  border-color: rgba(31, 35, 40, 0.15);
+  background: var(--primario-hover);
+}
+
+.acciones-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Botones del encabezado de página: el principal es verde y el de apoyo, neutro; los dos rectangulares, como en GitHub. */
 .boton-hero,
 .boton-hero-fantasma {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.7rem 1.25rem;
-  border-radius: 999px;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  padding: 0.3125rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.25rem;
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
+    background-color 0.1s,
+    border-color 0.1s;
 }
 
 .boton-hero {
-  border: 1px solid #fff;
-  background: #fff;
-  color: #1b1747;
+  border-color: rgba(31, 35, 40, 0.15);
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font-weight: 600;
 }
 
 .boton-hero:hover {
-  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.6);
-  transform: translateY(-2px);
+  background: var(--primario-hover);
 }
 
 .boton-hero-fantasma {
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--boton);
+  color: var(--texto);
 }
 
 .boton-hero-fantasma:hover {
-  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--borde-fuerte);
+  background: var(--boton-hover);
 }
 
 /* ---------- Formularios ---------- */
@@ -544,7 +622,7 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid transparent;
   border-color: var(--acento);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 18%, transparent);
+  box-shadow: inset 0 0 0 1px var(--acento);
 }
 
 input:disabled,
@@ -650,15 +728,36 @@ hr {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.0625rem 0.625rem 0.0625rem 0.5rem;
-  border: 1px solid var(--borde);
-  border-radius: 999px;
-  background: var(--fondo);
-  color: var(--texto);
+  padding: 0;
+  color: var(--texto-suave);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.25rem;
   white-space: nowrap;
+}
+
+.chip-leng:has(.logo-leng)::before {
+  display: none;
+}
+
+/* El logo oficial del lenguaje, a la izquierda de su nombre. */
+.logo-leng {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
+  vertical-align: -0.2em;
+}
+
+.chip .logo-leng {
+  margin-right: 0.25rem;
+}
+
+.hero-etiqueta:has(.logo-leng),
+.etiqueta-lenguaje:has(.logo-leng) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .chip-leng::before {
@@ -666,7 +765,7 @@ hr {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--p1), var(--p3));
+  background: var(--p1);
 }
 
 /* Tarjetas: contorno fino y nada más. */
@@ -690,7 +789,6 @@ hr {
   border: 1px solid var(--borde);
   border-radius: var(--radio-tarjeta);
   background: var(--fondo);
-  box-shadow: var(--sombra-suave);
 }
 
 table {
@@ -754,7 +852,6 @@ dialog {
 
 dialog::backdrop {
   background: var(--velo);
-  backdrop-filter: blur(3px);
 }
 
 dialog h2 {
@@ -763,178 +860,42 @@ dialog h2 {
 
 /* ---------- Ilustraciones ---------- */
 
-/* Los SVG usan clases y no colores fijos: así siguen el tema claro u oscuro. */
+/* Imágenes WebP con fondo transparente; la sombra suave de acento las separa del fondo en el tema claro y en el oscuro. */
 .ilustracion {
   display: block;
   width: 100%;
   height: auto;
+  object-fit: contain;
+  
 }
 
-.ilu-fondo {
-  fill: var(--acento-suave);
-}
-
-.ilu-halo {
-  fill: var(--fondo);
-  opacity: 0.6;
-}
-
-.ilu-panel {
-  fill: var(--fondo);
-  stroke: var(--texto);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.ilu-panel-suave {
-  fill: var(--fondo-suave);
-  stroke: var(--borde-fuerte);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-
-.ilu-linea {
-  fill: none;
-  stroke: var(--texto);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.ilu-barra {
-  fill: var(--borde-fuerte);
-}
-
-.ilu-acento {
-  fill: var(--acento);
-}
-
-.ilu-brillo {
-  fill: var(--acento);
-}
-
-.ilu-acento-suave {
-  fill: var(--acento-suave);
-  stroke: var(--acento);
-  stroke-width: 1.5;
-}
-
-.ilu-trazo-acento {
-  fill: none;
-  stroke: var(--acento);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.ilu-trazo-claro {
-  fill: none;
-  stroke: var(--sobre-acento);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Sobre un fondo oscuro (el panel de acceso) la ilustración usa siempre su paleta clara. */
-.ilu-oscuro .ilu-halo {
-  fill: #fff;
-  opacity: 0.1;
-}
-
-.ilu-oscuro .ilu-panel {
-  fill: #fff;
-  stroke: #1b1747;
-}
-
-.ilu-oscuro .ilu-linea {
-  stroke: #1b1747;
-}
-
-.ilu-oscuro .ilu-barra {
-  fill: #c7d2fe;
-}
-
-.ilu-oscuro .ilu-acento {
-  fill: #6366f1;
-}
-
-.ilu-oscuro .ilu-brillo {
-  fill: #c7d2fe;
-}
-
-.ilu-oscuro .ilu-acento-suave {
-  fill: #e0e7ff;
-  stroke: #c7d2fe;
-}
-
-.ilu-oscuro .ilu-trazo-acento {
-  stroke: #c7d2fe;
-}
-
-.ilu-oscuro .ilu-trazo-claro {
-  stroke: #fff;
-}
-
-/* ---------- Hero: la franja grande de color con la que abre cada pantalla ---------- */
+/* ---------- Encabezado de página: plano, con borde fino, como la cabecera de un repositorio de GitHub ---------- */
+/* (La clase sigue llamándose «hero» para no tocar las pantallas; ya no lleva degradados, brillos ni vidrio.) */
 
 .hero {
   position: relative;
-  isolation: isolate;
   display: grid;
-  /* minmax(0, …): la columna puede encogerse; sin esto, un campo de texto ancho la ensancha y el hero recorta. */
+  /* minmax(0, …): la columna puede encogerse; sin esto, un campo de texto ancho la ensancha y el encabezado recorta. */
   grid-template-columns: minmax(0, 1fr);
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
-  margin: 0 0 2.5rem;
-  padding: clamp(1.5rem, 4vw, 3rem);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  background:
-    radial-gradient(60% 90% at 100% 0%, color-mix(in srgb, var(--hero-brillo) 60%, transparent), transparent 70%),
-    radial-gradient(50% 80% at 0% 100%, rgba(56, 189, 248, 0.28), transparent 70%),
-    linear-gradient(135deg, var(--hero-a), var(--hero-b) 55%, var(--hero-c));
-  color: #fff;
-  box-shadow: var(--sombra-alta);
+  margin: 0 0 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
+  color: var(--texto);
 }
 
-/* Trama de puntos que se desvanece hacia la derecha. */
-.hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.5px);
-  background-size: 22px 22px;
-  mask-image: linear-gradient(110deg, #000 0%, transparent 65%);
-}
-
-/* Un destello que flota despacio. */
-.hero::after {
-  content: '';
-  position: absolute;
-  top: -9rem;
-  right: -6rem;
-  z-index: -1;
-  width: 24rem;
-  height: 24rem;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.22), transparent 68%);
-  animation: flotar 16s ease-in-out infinite alternate;
-}
-
-/* El hero de un curso toma los colores del lenguaje (la clase leng-* va en el mismo elemento). */
+/* Un curso ya no cambia de color el encabezado; el lenguaje se dice con su punto de color, como en GitHub. */
 .hero-curso {
-  --hero-a: color-mix(in srgb, var(--p1) 55%, #0b0a1a);
-  --hero-b: var(--p1);
-  --hero-c: var(--p2);
-  --hero-brillo: var(--p3);
+  --hero-a: var(--fondo);
 }
 
 @media (min-width: 900px) {
   .hero-con-lateral {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: 3rem;
+    gap: 2rem;
   }
 
   /* Cuando lo de la derecha es un anillo, ocupa solo lo que mide y el título tiene todo el ancho posible. */
@@ -943,53 +904,306 @@ dialog h2 {
   }
 }
 
-.hero-curso h1 {
-  font-size: clamp(1.75rem, 3.8vw, 2.625rem);
+/* El dibujo de la página de inicio: a la derecha del texto. Solo aparece cuando hay sitio para él. */
+.hero-ilustracion {
+  display: none;
+  justify-self: center;
+  width: 100%;
+  max-width: 19rem;
+}
+
+/* Los dibujos que vienen recortados por el borde se desvanecen en él en vez de cortarse en seco. */
+.dibujo-borde-esquina {
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent), linear-gradient(to right, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, #000 78%, transparent), linear-gradient(to right, #000 88%, transparent);
+  mask-composite: intersect;
+}
+
+.dibujo-borde-todos {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
+}
+
+.hero-ilustracion img,
+.estado-vacio-dibujo img,
+.avance-aviso-dibujo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 900px) {
+  /* Sin panel «Continúa…»: texto y dibujo. */
+  .hero-con-ilustracion {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+
+  .hero-con-ilustracion .hero-ilustracion {
+    display: block;
+  }
+
+  /* Con panel pero poco ancho, el dibujo se queda fuera para que nada se apriete. */
+  .hero-con-ilustracion.hero-con-lateral {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+
+  .hero-con-ilustracion.hero-con-lateral .hero-ilustracion {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-con-ilustracion.hero-con-lateral {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .hero-con-ilustracion.hero-con-lateral .hero-ilustracion {
+    display: block;
+  }
+}
+
+/* «Mi avance»: con el anillo a la derecha, el dibujo va entre el texto y el anillo. */
+@media (min-width: 900px) {
+  .hero-con-anillo.hero-con-ilustracion.hero-con-lateral {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-con-anillo.hero-con-ilustracion.hero-con-lateral {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 19rem) auto;
+  }
+}
+
+/* Estado vacío con dibujo grande. */
+.estado-vacio-con-dibujo {
+  max-width: 34rem;
+  padding-top: 1.5rem;
+}
+
+.estado-vacio-dibujo {
+  width: min(100%, 17rem);
+  margin-bottom: 0.75rem;
+}
+
+/* Aviso de «Mi avance»: el dibujo y un mensaje según cómo vas. */
+.avance-aviso {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
+}
+
+.avance-aviso-texto {
+  min-width: 0;
+}
+
+.avance-aviso-texto h2 {
+  margin: 0 0 0.375rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.avance-aviso-texto p {
+  margin: 0 0 1rem;
+  color: var(--texto-suave);
+}
+
+.avance-aviso-dibujo {
+  flex: none;
+  width: min(100%, 13rem);
+}
+
+@media (min-width: 640px) {
+  .avance-aviso {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .avance-aviso-dibujo {
+    width: 15rem;
+  }
+}
+
+/* Encabezado compacto con dibujo: el dibujo es más chico para que la franja no crezca. */
+.hero-compacto .hero-ilustracion {
+  max-width: 13rem;
+}
+
+@media (min-width: 900px) {
+  .hero-compacto.hero-con-ilustracion {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .hero-compacto.hero-con-ilustracion .hero-ilustracion {
+    width: 13rem;
+  }
+}
+
+/* «Nuevo curso»: el formulario a un lado y, en pantallas anchas, un dibujo grande al otro. */
+.curso-pagina {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.curso-pagina .panel-formulario {
+  width: 100%;
+}
+
+.curso-pagina-dibujo {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .curso-pagina {
+    grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+    gap: 3rem;
+    padding-top: 0.5rem;
+  }
+
+  .curso-pagina .panel-formulario {
+    margin: 0;
+  }
+
+  .curso-pagina-dibujo {
+    display: block;
+    justify-self: center;
+    width: 100%;
+    max-width: 44rem;
+  }
+
+  .curso-pagina-dibujo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* «Nuevo problema»: el formulario y, en pantallas anchas, un panel de consejos al lado. */
+.problema-pagina {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.problema-pagina .panel-formulario {
+  width: 100%;
+  margin: 0;
+}
+
+.problema-consejos {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .problema-pagina {
+    grid-template-columns: minmax(0, 48rem) minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .problema-consejos {
+    position: sticky;
+    top: 1.5rem;
+    display: block;
+    padding: 1.25rem;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-tarjeta);
+    background: var(--fondo);
+  }
+
+  .problema-consejos-dibujo {
+    display: block;
+    width: min(100%, 15rem);
+    margin: 0 auto 1rem;
+  }
+
+  .problema-consejos-dibujo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .problema-consejos h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .problema-consejos ul {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--texto-suave);
+    font-size: 0.875rem;
+  }
+
+  .problema-consejos strong {
+    color: var(--texto);
+  }
 }
 
 .hero h1 {
-  margin: 0.25rem 0 0.75rem;
-  color: #fff;
-  font-size: clamp(1.875rem, 4.4vw, 3rem);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.04em;
+  margin: 0 0 0.5rem;
+  color: var(--texto);
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.hero-curso h1 {
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
 }
 
 .hero p {
-  max-width: 38rem;
-  color: rgba(255, 255, 255, 0.88);
+  max-width: 44rem;
+  color: var(--texto-suave);
 }
 
 .hero a:not(.boton-hero):not(.boton-hero-fantasma) {
-  color: #fff;
-  text-decoration-color: rgba(255, 255, 255, 0.5);
+  color: var(--acento);
+  text-decoration: none;
 }
 
+.hero a:not(.boton-hero):not(.boton-hero-fantasma):hover {
+  text-decoration: underline;
+}
+
+/* Texto pequeño sobre el título: «Mis cursos», «Curso»… Sin mayúsculas ni espaciado de letras. */
 .hero-sobretitulo {
-  margin: 0 0 0.5rem;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  margin: 0 0 0.25rem;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
-/* El nombre del estudiante, con un degradado. El color de respaldo es claro por si el degradado no se dibuja. */
 .hero-nombre {
-  background: linear-gradient(90deg, #ddd6fe, #7dd3fc);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: #ddd6fe;
-  -webkit-text-fill-color: transparent;
+  color: inherit;
 }
 
 .hero-acciones {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1rem;
-  margin-top: 1.5rem;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .hero-nota {
@@ -997,76 +1211,73 @@ dialog h2 {
   font-size: 0.875rem;
 }
 
-/* El contador de pendientes de un botón del hero: claro sobre el degradado. */
 .hero .distintivo-pendientes {
-  border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border-color: var(--borde);
+  background: var(--fondo-suave);
+  color: var(--texto-suave);
 }
 
-/* Cifras grandes: datos reales del curso o de la cuenta. */
+/* Cifras: pequeñas y sobrias, datos reales del curso o de la cuenta. */
 .hero-cifras {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem 2.5rem;
-  margin: 1.5rem 0 0;
+  gap: 0.75rem 2rem;
+  margin: 1.25rem 0 0;
   padding: 0;
   list-style: none;
 }
 
 .hero-cifras strong {
   display: block;
-  font-size: 1.875rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.04em;
+  color: var(--texto);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
 .hero-cifras span {
-  color: rgba(255, 255, 255, 0.84);
+  color: var(--texto-suave);
   font-size: 0.8125rem;
 }
 
-/* La caja de búsqueda grande de «Buscar cursos». */
+/* La caja de búsqueda de «Buscar cursos»: un campo normal con su botón, como la barra de GitHub. */
 .hero-busqueda {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   max-width: 38rem;
-  margin-top: 1.5rem;
-  padding: 0.375rem;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
-  transition: box-shadow 0.2s;
+  margin-top: 1rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo-suave);
+  transition: border-color 0.1s;
 }
 
 .hero-busqueda:focus-within {
-  box-shadow:
-    0 0 0 3px #c7d2fe,
-    0 18px 40px -18px rgba(0, 0, 0, 0.7);
+  border-color: var(--acento);
+  box-shadow: inset 0 0 0 1px var(--acento);
 }
 
 .hero-busqueda .icono {
-  margin-left: 0.875rem;
-  color: #6b6a86;
-  font-size: 1.125rem;
+  color: var(--texto-suave);
+  font-size: 1rem;
 }
 
 .hero-busqueda input {
   flex: 1 1 0;
   width: 100%;
   min-width: 0;
-  padding: 0.6rem 0.25rem;
+  padding: 0.4rem 0.25rem;
   border: 0;
   background: transparent;
-  color: #0b0a1a;
-  font-size: 1rem;
+  color: var(--texto);
+  font-size: 0.9375rem;
 }
 
 .hero-busqueda input::placeholder {
-  color: #6b6a86;
+  color: var(--texto-suave);
 }
 
 .hero-busqueda input:focus-visible {
@@ -1074,33 +1285,23 @@ dialog h2 {
 }
 
 .hero-busqueda button {
-  border: 0;
-  border-radius: 999px;
-  padding: 0.65rem 1.4rem;
-  background: #4f46e5;
-  color: #fff;
+  padding: 0.3125rem 1rem;
 }
 
-.hero-busqueda button:hover:not(:disabled) {
-  background: #4338ca;
-  box-shadow: none;
-  transform: none;
-}
-
-/* La tarjeta de cristal del hero («Continúa donde lo dejaste»). */
+/* «Continúa donde lo dejaste»: una caja con borde, igual que las del resto de la página. */
 .hero-panel {
   display: grid;
-  gap: 1rem;
-  padding: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.1);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo-suave);
 }
 
 .hero-panel .hero-sobretitulo {
   margin: 0;
+  color: var(--texto);
+  font-weight: 600;
 }
 
 .panel-curso {
@@ -1109,16 +1310,15 @@ dialog h2 {
   gap: 0.875rem;
 }
 
+/* La portada degradada ya no se usa en el panel: el lenguaje se dice con texto. */
 .panel-curso .portada {
-  flex: none;
-  width: 5.5rem;
-  border-radius: 12px;
+  display: none;
 }
 
 .panel-curso h2 {
   margin: 0;
-  color: #fff;
-  font-size: 1.0625rem;
+  color: var(--acento);
+  font-size: 1rem;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -1135,11 +1335,9 @@ dialog h2 {
 
 .panel-siguiente span {
   display: block;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--texto-suave);
   font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 400;
 }
 
 .panel-siguiente strong {
@@ -1151,30 +1349,29 @@ dialog h2 {
   margin-top: 0;
 }
 
-/* Hero bajo: para pantallas de lectura o de una sola tarea (un problema, el editor, inscribirse). */
+/* Encabezado bajo: para pantallas de lectura o de una sola tarea (un problema, el editor, inscribirse). */
 .hero-compacto {
   gap: 1rem;
-  margin-bottom: 1.75rem;
-  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.25rem);
-  border-radius: 24px;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
 }
 
 .hero-compacto h1 {
-  margin-bottom: 0.5rem;
-  font-size: clamp(1.5rem, 3.4vw, 2.25rem);
+  margin-bottom: 0.375rem;
+  font-size: 1.375rem;
 }
 
 .hero-compacto .hero-acciones {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .hero-compacto p:last-child {
   margin-bottom: 0;
 }
 
-/* «Volver a…» en lo alto del hero: discreto, con su flecha. */
+/* «Volver a…» en lo alto del encabezado: discreto, con su flecha. */
 .hero-volver {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   font-size: 0.875rem;
 }
 
@@ -1183,15 +1380,13 @@ dialog h2 {
   align-items: center;
   gap: 0.375rem;
   text-decoration: none;
-  opacity: 0.92;
 }
 
 .hero-volver a:hover {
-  opacity: 1;
   text-decoration: underline;
 }
 
-/* Etiquetas bajo el título del hero (lenguaje, dificultad, institución…). */
+/* Etiquetas bajo el título (lenguaje, dificultad, institución…): como las «Label» de GitHub. */
 .hero-meta {
   display: flex;
   flex-wrap: wrap;
@@ -1200,24 +1395,24 @@ dialog h2 {
 }
 
 .hero-etiqueta {
-  padding: 0.125rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 0 0.5rem;
+  border: 1px solid var(--borde);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  background: transparent;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
 }
 
-/* Un formulario de un solo campo, en una tarjeta angosta y centrada. */
+/* Un formulario de un solo campo, en una caja angosta y centrada. */
 .panel-formulario {
   max-width: 28rem;
   margin: 0 auto 1.5rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border: 1px solid var(--borde);
   border-radius: var(--radio-tarjeta);
   background: var(--fondo);
-  box-shadow: var(--sombra-suave);
 }
 
 .panel-formulario .formulario {
@@ -1256,63 +1451,22 @@ dialog h2 {
   }
 }
 
-/* Tres variantes por lenguaje, según el número del curso: dos cursos de Python no se ven iguales. */
-.portada-v1 {
-  filter: hue-rotate(14deg) saturate(1.05);
-}
-
-.portada-v2 {
-  filter: hue-rotate(-14deg) saturate(1.05);
-}
-
-.portada > svg {
+/* Tres variantes por lenguaje, según el número del curso: la misma imagen normal, reflejada o acercada. */
+.portada > img {
   display: block;
   width: 100%;
   height: 100%;
-  transition: transform 0.7s var(--salida);
+  object-fit: cover;
+  transition: scale 0.7s var(--salida);
 }
 
-.pt-ventana {
-  fill: rgba(255, 255, 255, 0.16);
-  stroke: rgba(255, 255, 255, 0.45);
-  stroke-width: 1.2;
+.portada-v1 > img {
+  transform: scaleX(-1);
 }
 
-.pt-linea {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.3);
-  stroke-width: 1.2;
-}
-
-.pt-claro {
-  fill: rgba(255, 255, 255, 0.92);
-}
-
-.pt-medio {
-  fill: rgba(255, 255, 255, 0.52);
-}
-
-.pt-tenue {
-  fill: rgba(255, 255, 255, 0.22);
-}
-
-.pt-trazo {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.34);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.pt-trazo-tenue {
-  stroke: rgba(255, 255, 255, 0.18);
-}
-
-.pt-glifo {
-  fill: rgba(255, 255, 255, 0.24);
-  font-family: var(--fuente);
-  font-size: 92px;
-  font-weight: 800;
-  letter-spacing: -0.06em;
+.portada-v2 > img {
+  scale: 1.28;
+  transform-origin: 82% 45%;
 }
 
 /* En una tabla, la portada es una miniatura. */
@@ -1328,7 +1482,7 @@ dialog h2 {
   height: 0.5rem;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--borde);
+  background: color-mix(in srgb, var(--texto-suave) 25%, transparent);
 }
 
 .progreso > span {
@@ -1336,8 +1490,7 @@ dialog h2 {
   width: var(--valor);
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--acento), #38bdf8);
-  animation: llenar 1s 0.2s var(--salida) backwards;
+  background: var(--exito);
 }
 
 .progreso-texto {
@@ -1353,19 +1506,6 @@ dialog h2 {
 .progreso-texto strong {
   color: var(--texto);
   font-variant-numeric: tabular-nums;
-}
-
-.hero .progreso {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.hero .progreso > span {
-  background: linear-gradient(90deg, #ddd6fe, #7dd3fc);
-}
-
-.hero .progreso-texto,
-.hero .progreso-texto strong {
-  color: #fff;
 }
 
 .anillo {
@@ -1390,10 +1530,9 @@ dialog h2 {
 
 .anillo-valor {
   fill: none;
-  stroke: var(--acento);
+  stroke: var(--exito);
   stroke-width: 8;
   stroke-linecap: round;
-  animation: anillo 1.1s 0.15s var(--salida) backwards;
 }
 
 .anillo-texto {
@@ -1407,15 +1546,7 @@ dialog h2 {
   font-variant-numeric: tabular-nums;
 }
 
-.hero .anillo-pista {
-  stroke: rgba(255, 255, 255, 0.22);
-}
-
-.hero .anillo-valor {
-  stroke: #fff;
-}
-
-/* ---------- Cursos: secciones, filtros y tarjetas con portada ---------- */
+/* ---------- Cursos: secciones, filtros y tarjetas (como los repositorios fijados de GitHub) ---------- */
 
 .seccion-cabecera {
   display: flex;
@@ -1423,34 +1554,36 @@ dialog h2 {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1.5rem;
-  margin: 0 0 1.25rem;
+  margin: 0 0 1rem;
 }
 
 .seccion-cabecera h2 {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   margin: 0;
-  font-size: 1.375rem;
-  letter-spacing: -0.03em;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
+/* El contador de GitHub: un número en una pastilla gris. */
 .contador {
   display: inline-grid;
   place-items: center;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  padding: 0 0.5rem;
+  min-width: 1.25rem;
+  padding: 0 0.375rem;
   border-radius: 999px;
-  background: var(--acento-suave);
-  color: var(--acento);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  background: color-mix(in srgb, var(--texto-suave) 20%, transparent);
+  color: var(--texto);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
-/* Filtros en forma de píldora: el activo va relleno. */
+/* Filtros: botones rectangulares; el activo lleva el azul suave. */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -1461,18 +1594,18 @@ dialog h2 {
 .boton-filtro {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.375rem 0.875rem;
-  border-radius: 999px;
+  gap: 0.4rem;
+  padding: 0.1875rem 0.75rem;
+  border-radius: var(--radio);
   font-size: 0.8125rem;
 }
 
 .chip::before {
   content: '';
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--p1), var(--p3));
+  background: var(--p1);
 }
 
 .chip-todos::before {
@@ -1490,25 +1623,25 @@ dialog h2 {
 .boton-filtro[aria-pressed='true'],
 .boton-filtro[aria-pressed='true']:hover:not(:disabled) {
   border-color: var(--acento);
-  background: var(--acento);
-  color: var(--sobre-acento);
+  background: var(--acento-suave);
+  color: var(--texto);
   font-weight: 600;
 }
 
 .chip[aria-pressed='true'] small {
-  color: inherit;
-  opacity: 0.8;
+  color: var(--texto);
 }
 
 .rejilla-cursos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1rem;
   margin: 0 0 1rem;
   padding: 0;
   list-style: none;
 }
 
+/* Una caja con borde fino y nada más: sin portada, sin sombra, sin saltos al pasar el cursor. */
 .tarjeta-curso {
   position: relative;
   display: flex;
@@ -1517,24 +1650,18 @@ dialog h2 {
   border: 1px solid var(--borde);
   border-radius: var(--radio-tarjeta);
   background: var(--fondo);
-  box-shadow: var(--sombra-suave);
   /* Un nombre de curso largo y sin espacios se parte en vez de ensanchar la tarjeta. */
   overflow-wrap: anywhere;
-  transition:
-    transform 0.3s var(--salida),
-    box-shadow 0.3s,
-    border-color 0.3s;
+  transition: border-color 0.1s;
 }
 
 .tarjeta-curso:hover,
 .tarjeta-curso:focus-within {
-  border-color: color-mix(in srgb, var(--acento) 50%, var(--borde));
-  box-shadow: var(--sombra-alta);
-  transform: translateY(-5px);
+  border-color: var(--borde-fuerte);
 }
 
-.tarjeta-curso:hover .portada > svg {
-  transform: scale(1.07);
+.tarjeta-curso .portada {
+  display: none;
 }
 
 /* Toda la tarjeta se puede pulsar. */
@@ -1551,7 +1678,7 @@ dialog h2 {
   flex: 1;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem 1.125rem 1.125rem;
+  padding: 1rem;
 }
 
 .tarjeta-etiquetas {
@@ -1562,12 +1689,18 @@ dialog h2 {
   margin: 0;
 }
 
+/* El nombre va arriba, en azul como el de un repositorio. */
 .tarjeta-curso h3 {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 650;
+  color: var(--acento);
+  font-size: 0.9375rem;
+  font-weight: 600;
   line-height: 1.3;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+}
+
+.tarjeta-curso:hover h3 {
+  text-decoration: underline;
 }
 
 .tarjeta-curso p {
@@ -1586,43 +1719,38 @@ dialog h2 {
   border-top: 1px solid var(--borde);
   color: var(--acento);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .tarjeta-pie a {
   color: inherit;
 }
 
-.tarjeta-pie .icono {
-  transition: transform 0.2s;
-}
-
-.tarjeta-curso:hover .tarjeta-pie .icono {
-  transform: translateX(4px);
-}
-
-/* Estado del curso: siempre con texto, nunca solo color. */
+/* Estado del curso: siempre con texto, nunca solo color. Una «Label» de GitHub. */
 .estado-curso {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.0625rem 0.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--acento);
   border-radius: 999px;
-  background: var(--acento-suave);
+  background: transparent;
   color: var(--acento);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.25rem;
   white-space: nowrap;
 }
 
 .estado-curso-completo {
-  background: color-mix(in srgb, var(--exito) 14%, transparent);
+  border-color: var(--exito);
+  background: transparent;
   color: var(--exito-texto);
 }
 
 .estado-curso-nuevo {
-  background: var(--fondo-suave);
+  border-color: var(--borde);
+  background: transparent;
   color: var(--texto-suave);
 }
 
@@ -1675,12 +1803,6 @@ dialog h2 {
   width: 55%;
 }
 
-/* Sobre el hero (degradado oscuro) los marcadores de carga son claros, no los grises del resto de la página. */
-.hero .esqueleto {
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.14) 30%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.14) 70%);
-  background-size: 200% 100%;
-}
-
 /* ---------- Cifras (Mi avance) ---------- */
 
 .kpis {
@@ -1700,18 +1822,15 @@ dialog h2 {
   border: 1px solid var(--borde);
   border-radius: var(--radio-tarjeta);
   background: var(--fondo);
-  box-shadow: var(--sombra-suave);
 }
 
 .kpi-icono {
   display: grid;
   flex: none;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 14px;
-  background: var(--acento-suave);
-  color: var(--acento);
+  width: 2rem;
+  height: 2rem;
+  color: var(--texto-suave);
   font-size: 1.25rem;
 }
 
@@ -1729,92 +1848,219 @@ dialog h2 {
   font-size: 0.8125rem;
 }
 
-/* ---------- Pantallas de acceso: el formulario y, al lado, un panel con color ---------- */
+/* ---------- Pantallas de acceso: panel oscuro con beneficios y, al lado, el formulario (como el registro de GitHub) ---------- */
 
-.acceso {
-  display: grid;
-  align-items: center;
-  gap: 2rem;
+/* La barra superior no aparece aquí: la marca va arriba del panel oscuro. */
+body:has(main.acceso) .cabecera {
+  display: none;
 }
 
-/* En pantallas angostas el panel es una franja con el lema; la ilustración solo aparece en las anchas. */
+/* Ocupan toda la ventana: no llevan el margen ni el ancho máximo de las demás páginas. */
+main.acceso {
+  display: grid;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+}
+
+.acceso-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem 3rem;
+  background: var(--fondo);
+}
+
+/* «¿Ya tienes cuenta? Inicia sesión →», arriba a la derecha. */
+.acceso-enlace-superior {
+  align-self: flex-end;
+  margin: 0 0 1.5rem;
+  font-size: 0.9375rem;
+}
+
+.acceso-enlace-superior a {
+  color: var(--texto);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+.acceso-formulario {
+  width: 100%;
+  max-width: 25rem;
+}
+
+.acceso-formulario h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.acceso-formulario > p {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.acceso-formulario > p a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- «Continuar con Google»: un separador «o» y el botón oficial de Google debajo del formulario ---------- */
+.acceso-separador {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1rem !important;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+}
+
+.acceso-separador::before,
+.acceso-separador::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--borde);
+}
+
+.acceso-google {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  /* El botón de Google es un iframe con fondo propio: en el tema oscuro se le da un marco claro para que no se pierda. */
+  color-scheme: light;
+}
+
+/* En pantallas angostas el panel es una franja con el lema; los beneficios y la ilustración solo aparecen en las anchas. */
 .acceso-lateral {
   position: relative;
   isolation: isolate;
   order: -1;
-  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.25rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 22px;
   background:
-    radial-gradient(70% 90% at 100% 0%, color-mix(in srgb, var(--hero-brillo) 55%, transparent), transparent 70%),
-    linear-gradient(135deg, var(--hero-a), var(--hero-b) 55%, var(--hero-c));
-  color: #fff;
-}
-
-.acceso-lateral .ilustracion {
-  display: none;
+    radial-gradient(90% 120% at 50% 130%, rgba(137, 87, 229, 0.85), rgba(87, 52, 181, 0.4) 45%, transparent 75%),
+    #010409;
+  color: #f0f6fc;
 }
 
 .acceso-lateral h2 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.375rem;
   color: #fff;
   font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .acceso-lateral p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.875rem;
+  color: rgba(240, 246, 252, 0.85);
+  font-size: 0.9375rem;
 }
 
-.acceso-contenido {
-  width: 100%;
-  max-width: 26rem;
+.acceso-marca {
+  margin-bottom: 1.25rem;
+  color: #fff;
+}
+
+.acceso-beneficios,
+.acceso-ilustracion {
+  display: none;
 }
 
 @media (min-width: 900px) {
-  .acceso {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    gap: 4rem;
-    padding-top: 1.5rem;
+  main.acceso {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .acceso-contenido {
+    position: relative;
+    padding: 5rem 3rem 3rem;
+  }
+
+  .acceso-enlace-superior {
+    position: absolute;
+    top: 1.5rem;
+    right: 2.5rem;
+    margin: 0;
   }
 
   .acceso-lateral {
-    padding: 2.5rem 2.5rem 2.25rem;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 28px;
+    justify-content: flex-start;
+    padding: 2rem clamp(2.5rem, 7vw, 8rem) 0;
     background:
-      radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--hero-brillo) 55%, transparent), transparent 70%),
-      radial-gradient(60% 50% at 0% 100%, rgba(56, 189, 248, 0.25), transparent 70%),
-      linear-gradient(135deg, var(--hero-a), var(--hero-b) 55%, var(--hero-c));
-    color: #fff;
-    box-shadow: var(--sombra-alta);
+      radial-gradient(1.5px 1.5px at 12% 62%, #fff, transparent),
+      radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1.5px 1.5px at 42% 55%, #fff, transparent),
+      radial-gradient(1px 1px at 63% 70%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1.5px 1.5px at 78% 58%, #fff, transparent),
+      radial-gradient(1px 1px at 90% 82%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1px 1px at 8% 90%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1.5px 1.5px at 55% 92%, #fff, transparent),
+      radial-gradient(80% 42% at 50% 112%, rgba(137, 87, 229, 0.95), rgba(87, 52, 181, 0.45) 50%, transparent 78%),
+      #010409;
   }
 
-  .acceso-lateral .ilustracion {
-    display: block;
-  }
-
-  .acceso-lateral::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
-    background-size: 22px 22px;
-    mask-image: linear-gradient(160deg, #000 0%, transparent 60%);
+  .acceso-marca {
+    margin-bottom: 4.5rem;
   }
 
   .acceso-lateral h2 {
-    margin: 1.5rem 0 0.5rem;
-    font-size: 1.5rem;
-    letter-spacing: -0.03em;
+    margin: 0 0 1rem;
+    font-size: 2.25rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
-  .acceso-lateral p {
+  .acceso-lateral > p {
+    max-width: 34rem;
+    font-size: 1.0625rem;
+  }
+
+  .acceso-beneficios {
+    display: grid;
+    gap: 1.25rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .acceso-beneficios li {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    max-width: 34rem;
+  }
+
+  .acceso-beneficios .icono {
+    margin-top: 0.2rem;
+    color: #fff;
+  }
+
+  .acceso-beneficios strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  .acceso-beneficios span {
+    display: block;
+    color: rgba(240, 246, 252, 0.8);
     font-size: 0.9375rem;
+  }
+
+  .acceso-ilustracion {
+    display: block;
+    width: auto;
+    max-width: 60%;
+    height: clamp(10rem, 30vh, 20rem);
+    margin: auto auto 1.5rem;
+    padding-top: 2rem;
+    object-fit: contain;
+    object-position: bottom;
+    filter: drop-shadow(0 12px 28px rgba(137, 87, 229, 0.5));
   }
 }
 
@@ -1827,21 +2073,24 @@ dialog h2 {
   max-width: 30rem;
   margin: 2rem auto;
   padding: 2.25rem 1.5rem 1.5rem;
-  border: 1.5px dashed var(--borde-fuerte);
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--fondo) 70%, transparent);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-tarjeta);
+  background: var(--fondo);
   text-align: center;
 }
 
-.estado-vacio .ilustracion {
-  width: 11rem;
+/* Como el «blankslate» de GitHub: un icono gris, no una ilustración. */
+.estado-vacio-icono {
+  width: 2.5rem;
+  height: 2.5rem;
   margin-bottom: 1rem;
+  color: var(--texto-suave);
 }
 
 .estado-vacio p {
   margin: 0 0 0.75rem;
 }
 
-.estado-vacio-exito .ilustracion {
-  width: 8.5rem;
+.estado-vacio-exito .estado-vacio-icono {
+  color: var(--exito);
 }

@@ -23,7 +23,7 @@ function filtrar(problemas, curso) {
   return curso ? problemas.filter((problema) => String(problema.curso) === curso) : problemas
 }
 
-// HU18-T2: solo lectura. Aprobar, descartar y editar son HU19 y HU20; el enunciado no se muestra.
+// HU18-T2: la bandeja. Revisar (editar y aprobar, HU19) abre otra pantalla; descartar (HU20) se confirma aquí.
 function BandejaRevision() {
   // null mientras carga; luego la lista (puede estar vacía).
   const [problemas, setProblemas] = useState(null)
@@ -219,7 +219,7 @@ function BandejaRevision() {
               {problemasDeLaPagina.map((problema) => (
                 <tr key={problema.id}>
                   <td>
-                    {problema.titulo}{' '}
+                    <a href={`/problemas/${problema.id}/revisar`}>{problema.titulo}</a>{' '}
                     {/* La bandeja solo trae problemas generados por IA: el distintivo va en todos. */}
                     <span className="distintivo-ia">Generado por IA</span>
                   </td>
@@ -228,7 +228,14 @@ function BandejaRevision() {
                   <td>{etiqueta(TIPOS_EJERCICIO, problema.tipo_ejercicio)}</td>
                   <td>{etiqueta(PLATAFORMAS, problema.plataforma)}</td>
                   <td>{new Date(problema.fecha_creacion).toLocaleDateString('es-PE')}</td>
-                  <td>
+                  <td className="acciones-fila">
+                    <a
+                      className="boton-enlace boton-enlace-primario"
+                      href={`/problemas/${problema.id}/revisar`}
+                      aria-label={`Revisar “${problema.titulo}”`}
+                    >
+                      Revisar
+                    </a>
                     <button
                       type="button"
                       aria-label={`Descartar “${problema.titulo}”`}

@@ -1,10 +1,11 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.db import IntegrityError, transaction
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny
@@ -13,8 +14,11 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from cuentas.google import GoogleNoDisponible, GoogleNoValido, verificar_token_google
+from cuentas.models import Docente
 from cuentas.recuperacion import generar_uid_token, usuario_del_token
 from cuentas.serializers import (
+    GoogleLoginSerializer,
     LoginSerializer,
     NuevaContrasenaSerializer,
     RecuperarSerializer,
@@ -82,6 +86,74 @@ class LoginView(APIView):
                 {"detail": "Esta cuenta no tiene un rol asignado."}, status=status.HTTP_403_FORBIDDEN
             )
         return Response({"access": access, "refresh": refresh})
+
+
+class GoogleLoginView(APIView):
+    # Entrar con la cuenta institucional de Google. Google certifica el correo; este servidor decide el rol:
+    # admin-web solo deja pasar a los docentes autorizados (DOCENTES_AUTORIZADOS); user-web y la app, a estudiantes.
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = GoogleLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        datos = serializer.validated_data
+
+        try:
+            persona = verificar_token_google(datos["id_token"])
+        except GoogleNoValido as error:
+            return Response({"detail": str(error)}, status=status.HTTP_401_UNAUTHORIZED)
+        except GoogleNoDisponible as error:
+            return Response({"detail": str(error)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        email = persona["email"]
+        nombre = (persona.get("name") or email.split("@")[0])[:150]
+        try:
+            with transaction.atomic():
+                if datos["cliente"] == "admin-web":
+                    user, error = self._docente(email, nombre)
+                else:
+                    user, error = self._estudiante(email, nombre)
+        except IntegrityError:
+            # Dos pestañas entraron a la vez con una cuenta nueva: la otra ya la creó, se vuelve a intentar al entrar.
+            return Response({"detail": "Inténtalo de nuevo."}, status=status.HTTP_409_CONFLICT)
+        if error is not None:
+            return Response({"detail": error}, status=status.HTTP_403_FORBIDDEN)
+
+        refresh, access = crear_tokens(user, datos["cliente"])
+        return Response({"access": access, "refresh": refresh})
+
+    @staticmethod
+    def _docente(email, nombre):
+        user = User.objects.filter(username=email).first()
+        autorizado = email in settings.DOCENTES_AUTORIZADOS
+        if user is not None and not hasattr(user, "docente"):
+            return None, "Esta cuenta no es de docente."
+        # Un docente que el administrador ya activó sigue entrando aunque no esté en la lista.
+        if not autorizado and (user is None or not user.is_active):
+            return None, "Tu correo no está en la lista de docentes autorizados. Pídele al administrador que lo agregue."
+        if user is None:
+            user = User(username=email, email=email)
+            user.set_unusable_password()
+            user.save()
+            Docente.objects.create(user=user, nombre=nombre, email=email, institucion=settings.DOMINIO_INSTITUCIONAL)
+        elif not user.is_active:
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+        return user, None
+
+    @staticmethod
+    def _estudiante(email, nombre):
+        user = User.objects.filter(username=email).first()
+        if user is None:
+            if email in settings.DOCENTES_AUTORIZADOS:
+                return None, "Este correo es de docente: entra por el panel de docentes."
+            user = User.objects.create_user(username=email, email=email, password=None, first_name=nombre[:150])
+            grupo, _ = Group.objects.get_or_create(name="estudiante")
+            user.groups.add(grupo)
+        elif not user.is_active:
+            return None, "Tu cuenta está pendiente de activación por el administrador."
+        return user, None
 
 
 class RefreshView(APIView):

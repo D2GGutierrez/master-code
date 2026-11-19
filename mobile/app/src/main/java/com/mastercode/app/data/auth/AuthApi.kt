@@ -16,6 +16,10 @@ class ErrorHttp(val codigo: Int) : Exception("HTTP $codigo")
 interface AuthApi {
     suspend fun login(email: String, password: String): Tokens
     suspend fun renovar(refresh: String): Tokens
+
+    // Entrar con la cuenta institucional de Google: admin-api verifica el token de identidad con Google.
+    // Con cuerpo por defecto para que las implementaciones que no lo usan (pruebas) no tengan que escribirlo.
+    suspend fun loginConGoogle(idToken: String): Tokens = throw UnsupportedOperationException("Sin inicio con Google")
 }
 
 class HttpAuthApi(private val urlBase: String) : AuthApi {
@@ -25,6 +29,9 @@ class HttpAuthApi(private val urlBase: String) : AuthApi {
         val cuerpo = JSONObject().put("email", email).put("password", password).put("cliente", "mobile")
         return post("api/auth/login/", cuerpo)
     }
+
+    override suspend fun loginConGoogle(idToken: String): Tokens =
+        post("api/auth/google/", JSONObject().put("id_token", idToken).put("cliente", "mobile"))
 
     override suspend fun renovar(refresh: String): Tokens =
         post("api/auth/refresh/", JSONObject().put("refresh", refresh))

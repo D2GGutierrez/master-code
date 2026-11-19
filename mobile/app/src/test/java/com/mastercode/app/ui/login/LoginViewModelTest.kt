@@ -102,4 +102,45 @@ class LoginViewModelTest {
         respuesta.complete(Tokens(access = "a", refresh = "r"))
         assertFalse(viewModel.uiState.value.cargando)
     }
+
+    @Test
+    fun conGoogleSeIniciaSesionYSeGuardaElRefresh() {
+        viewModel.alRecibirTokenDeGoogle("token-de-google")
+
+        val estado = viewModel.uiState.value
+        assertTrue(estado.sesionIniciada)
+        assertFalse(estado.cargando)
+        assertNull(estado.error)
+        assertEquals("token-de-google", api.tokenDeGoogleRecibido)
+        assertEquals("refresh-g", storage.refresh)
+    }
+
+    @Test
+    fun conGoogleRechazadoMuestraElErrorYNoIniciaSesion() {
+        api.respuestaGoogle = { throw ErrorHttp(401) }
+
+        viewModel.alRecibirTokenDeGoogle("token-malo")
+
+        val estado = viewModel.uiState.value
+        assertFalse(estado.sesionIniciada)
+        assertFalse(estado.cargando)
+        assertEquals(R.string.login_error_google_rechazado, estado.error)
+    }
+
+    @Test
+    fun conGoogleUnaCuentaQueNoPuedeEntrarMuestraSuMensaje() {
+        api.respuestaGoogle = { throw ErrorHttp(403) }
+
+        viewModel.alRecibirTokenDeGoogle("token")
+
+        assertEquals(R.string.login_error_google_no_permitida, viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun siGoogleNoSePuedeAbrirSeMuestraElError() {
+        viewModel.alFallarGoogle(R.string.login_error_google_no_disponible)
+
+        assertEquals(R.string.login_error_google_no_disponible, viewModel.uiState.value.error)
+        assertFalse(viewModel.uiState.value.cargando)
+    }
 }

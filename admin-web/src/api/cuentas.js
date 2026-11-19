@@ -27,6 +27,20 @@ export async function iniciarSesion(datos) {
   return { ok: respuesta.ok, cuerpo }
 }
 
+// Entrar con la cuenta institucional de Google: admin-api verifica el token con Google y solo deja pasar a los docentes autorizados.
+export async function iniciarSesionConGoogle(credencial) {
+  const respuesta = await fetch(`${API_URL}/google/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: credencial, cliente: 'admin-web' }),
+  })
+  const cuerpo = await respuesta.json().catch(() => ({}))
+  if (respuesta.ok) {
+    guardarTokens(cuerpo.access, cuerpo.refresh)
+  }
+  return { ok: respuesta.ok, cuerpo }
+}
+
 // Usa fetch y no peticion: con el access vencido, peticion renovaría (rotando este mismo refresh)
 // o, si falla, llevaría al login guardando una ruta, y aquí solo se quiere revocar.
 export async function cerrarSesionEnServidor(refresh) {

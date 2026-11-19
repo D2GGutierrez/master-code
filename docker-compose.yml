@@ -30,6 +30,9 @@ services:
       # emulador de Android (app móvil en debug); sin él el login móvil recibe 400.
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,admin-api,10.0.2.2
       DOMINIO_INSTITUCIONAL: ${DOMINIO_INSTITUCIONAL}
+      # Inicio de sesión con Google: el ID de cliente OAuth y los correos que entran como docentes (ver .env.example).
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_ID:-}
+      DOCENTES_AUTORIZADOS: ${DOCENTES_AUTORIZADOS:-}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       INVITACION_DIAS: ${INVITACION_DIAS:-30}
       # D3: la clave de la API interna la reciben solo admin-api y user-api.
@@ -61,6 +64,8 @@ services:
     environment:
       # El proxy de Vite corre dentro del contenedor: su localhost no es admin-api.
       API_PROXY_TARGET: http://admin-api:8000
+      # Sin ID de cliente, el botón «Continuar con Google» no se muestra.
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
       - "3000:3000"
     depends_on:
@@ -92,6 +97,8 @@ services:
 
   user-web:
     build: ./user-web
+    environment:
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
       - "3001:3001"
     depends_on:

@@ -5,3 +5,5 @@ python-dotenv==1.2.4
 django-cors-headers==4.9.0
 djangorestframework-simplejwt==5.5.1
 cryptography==50.0.2
+google-auth==2.63.1
+requests==2.34.2

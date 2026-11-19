@@ -8,6 +8,7 @@ import IndicadorGuardado from '../components/IndicadorGuardado.tsx'
 import PanelEditor from '../components/PanelEditor.tsx'
 import PanelEnunciado from '../components/PanelEnunciado.tsx'
 import { guardarDivision, leerDivisionGuardada } from '../division.ts'
+import { LogoLenguaje } from '../components/LogoLenguaje.tsx'
 import { etiquetaLenguaje } from '../lenguajes.ts'
 import { useAutoguardado } from '../useAutoguardado.ts'
 import './EditorProblema.css'
@@ -140,7 +141,10 @@ function EditorProblema({ id }: { id: number }) {
           Volver al problema
         </a>
         <h1>{problema.titulo}</h1>
-        <span className="etiqueta-lenguaje">{etiquetaLenguaje(problema.lenguaje)}</span>
+        <span className="etiqueta-lenguaje">
+          <LogoLenguaje lenguaje={problema.lenguaje} />
+          {etiquetaLenguaje(problema.lenguaje)}
+        </span>
         <IndicadorGuardado estado={estado} ultimoGuardado={ultimoGuardado} />
       </div>
       <DosPaneles

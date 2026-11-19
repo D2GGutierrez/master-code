@@ -13,15 +13,13 @@
   gap: 1rem;
   padding: 0.875rem 1.125rem;
   border: 1px solid var(--borde);
-  border-radius: 16px;
+  border-radius: var(--radio-tarjeta);
   background: var(--fondo);
-  box-shadow: var(--sombra-suave);
   overflow-wrap: anywhere;
 }
 
 .curso-fila .portada-mini {
-  width: 5rem;
-  border-radius: 10px;
+  display: none;
 }
 
 .curso-fila-texto {

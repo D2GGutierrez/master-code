@@ -11,6 +11,20 @@
   gap: 0.375rem;
 }
 
+.campo label {
+  font-weight: 600;
+}
+
+/* El asterisco de «obligatorio» es rojo y pequeño, como en los formularios de GitHub. Va en CSS para no cambiar el
+   nombre accesible de la etiqueta (el campo ya lleva «required»). */
+.campo:has(:required) > label::after {
+  content: '*';
+  margin-left: 0.125rem;
+  color: var(--error);
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
 .error {
   margin: 0;
   color: var(--error);
@@ -38,4 +52,18 @@ main:has(> .formulario .editor-barra) {
   margin: 0;
   color: var(--texto-suave);
   font-size: 0.8125rem;
+}
+
+/* En las pantallas de acceso: campos altos con fondo suave y el botón de enviar a todo el ancho, como «Create account». */
+.acceso-formulario .campo input {
+  width: 100%;
+  min-height: 2.5rem;
+  background: var(--fondo-suave);
+}
+
+.acceso-formulario .formulario button[type='submit'] {
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 0.25rem;
+  font-size: 1rem;
 }

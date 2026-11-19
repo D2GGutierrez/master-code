@@ -4,9 +4,16 @@ package com.mastercode.app.data.auth
 class FakeAuthApi : AuthApi {
     var respuestaLogin: suspend () -> Tokens = { Tokens(access = "access-1", refresh = "refresh-1") }
     var respuestaRenovar: suspend () -> Tokens = { Tokens(access = "access-2", refresh = "refresh-2") }
+    var respuestaGoogle: suspend () -> Tokens = { Tokens(access = "access-g", refresh = "refresh-g") }
+    var tokenDeGoogleRecibido: String? = null
     var refreshRecibido: String? = null
 
     override suspend fun login(email: String, password: String): Tokens = respuestaLogin()
+
+    override suspend fun loginConGoogle(idToken: String): Tokens {
+        tokenDeGoogleRecibido = idToken
+        return respuestaGoogle()
+    }
 
     override suspend fun renovar(refresh: String): Tokens {
         refreshRecibido = refresh

@@ -70,6 +70,12 @@ class LoginSerializer(serializers.Serializer):
         return value.lower()
 
 
+class GoogleLoginSerializer(serializers.Serializer):
+    # El token de identidad que entrega Google al iniciar sesión (JWT firmado por Google).
+    id_token = serializers.CharField(max_length=4096)
+    cliente = serializers.ChoiceField(choices=["admin-web", "user-web", "mobile"])
+
+
 class RefreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 

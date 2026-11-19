@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { iniciarSesion, type CuerpoSesion } from '../api/cuentas.ts'
+import { iniciarSesion, iniciarSesionConGoogle, type CuerpoSesion } from '../api/cuentas.ts'
 import { guardarSesion } from '../api/sesion.ts'
+import BotonGoogle from '../components/BotonGoogle.tsx'
 import Formulario, { type Campo } from '../components/Formulario.tsx'
 import { Acceso } from '../components/Pantalla.tsx'
 
 // Los nombres coinciden con los campos que espera admin-api.
 const CAMPOS: Campo[] = [
-  { nombre: 'email', etiqueta: 'Correo institucional', tipo: 'email' },
-  { nombre: 'password', etiqueta: 'Contraseña', tipo: 'password' },
+  { nombre: 'email', etiqueta: 'Correo institucional', tipo: 'email', autoComplete: 'username' },
+  { nombre: 'password', etiqueta: 'Contraseña', tipo: 'password', autoComplete: 'current-password' },
 ]
 
 // admin-api responde { detail } (credenciales incorrectas, cuenta inactiva) o { campo: ['mensaje', ...] }.
@@ -52,15 +53,40 @@ function InicioSesion() {
     setEnviando(false)
   }
 
+  async function entrarConGoogle(credencial: string) {
+    setEnviando(true)
+    setErrores({})
+    try {
+      const { ok, cuerpo } = await iniciarSesionConGoogle(credencial)
+      if (ok && cuerpo.access && cuerpo.refresh) {
+        guardarSesion(cuerpo.access, cuerpo.refresh)
+        window.location.assign('/inicio')
+        return
+      }
+      setErrores({ general: cuerpo.detail ?? 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.' })
+    } catch {
+      setErrores({ general: 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.' })
+    }
+    setEnviando(false)
+  }
+
   return (
-    <Acceso lema="Practica programación a tu ritmo" descripcion="Resuelve los problemas de tus cursos, envía tu solución y mira cómo avanzas.">
-      <h1>Inicio de sesión</h1>
+    <Acceso
+      lema="Practica programación a tu ritmo"
+      descripcion="Resuelve los problemas de tus cursos, envía tu solución y mira cómo avanzas."
+      enlace={{ texto: '¿Eres nuevo?', accion: 'Crea tu cuenta', href: '/' }}
+    >
+      <h1>Inicia sesión en MASTER CODE</h1>
       <Formulario
         campos={CAMPOS}
         textoBoton="Iniciar sesión"
         enviando={enviando}
         errores={errores}
         onEnviar={entrar}
+      />
+      <BotonGoogle
+        alCredencial={entrarConGoogle}
+        alFallar={() => setErrores({ general: 'No se pudo cargar el inicio con Google. Revisa tu conexión.' })}
       />
       <p>
         <a href="/olvide-contrasena">Olvidé mi contraseña</a>

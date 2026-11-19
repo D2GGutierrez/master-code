@@ -5,6 +5,9 @@ export type Campo = {
   nombre: string
   etiqueta: string
   tipo: 'text' | 'email' | 'password'
+  // Una línea de ayuda bajo el campo (qué se espera escribir).
+  ayuda?: string
+  autoComplete?: string
 }
 
 type Props = {
@@ -41,8 +44,15 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar }: Props) 
             type={campo.tipo}
             value={valores[campo.nombre] ?? ''}
             onChange={manejarCambio}
+            autoComplete={campo.autoComplete}
+            aria-describedby={campo.ayuda ? `${campo.nombre}-ayuda` : undefined}
             required
           />
+          {campo.ayuda && (
+            <p id={`${campo.nombre}-ayuda`} className="ayuda">
+              {campo.ayuda}
+            </p>
+          )}
           {errores[campo.nombre] && <p className="error">{errores[campo.nombre]}</p>}
         </div>
       ))}

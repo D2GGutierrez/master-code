@@ -5,6 +5,7 @@ import { correoDeSesion } from '../api/sesion.ts'
 import { EsqueletoCursos } from '../components/Esqueleto.tsx'
 import { FiltroLenguaje } from '../components/FiltroLenguaje.tsx'
 import Icono from '../components/Icono.tsx'
+import { LogoLenguaje } from '../components/LogoLenguaje.tsx'
 import { EstadoVacio, Hero } from '../components/Pantalla.tsx'
 import { Portada } from '../components/Portada.tsx'
 import { BarraProgreso } from '../components/Progreso.tsx'
@@ -62,7 +63,7 @@ function PanelContinuar({ cursos, progreso }: { cursos: MiCurso[]; progreso: Dat
         <div>
           <h2>{curso.nombre}</h2>
           <p>
-            {etiquetaLenguaje(curso.lenguaje)} · {curso.institucion}
+            <LogoLenguaje lenguaje={curso.lenguaje} /> {etiquetaLenguaje(curso.lenguaje)} · {curso.institucion}
           </p>
         </div>
       </div>
@@ -177,6 +178,7 @@ function Inicio() {
   return (
     <main className="inicio">
       <Hero
+        ilustracion
         lateral={
           cursos === null && !error ? (
             <PanelEsqueleto />

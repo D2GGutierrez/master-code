@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,10 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mastercode.app.R
+import com.mastercode.app.ui.componentes.CampoDeTextoMC
+import com.mastercode.app.ui.theme.EstiloDeCodigo
 
 // HU47-T3 (CA-47.1, CA-47.2): el fragmento de código con el campo de texto en el lugar del hueco. El envío, el resultado
 // y los intentos los pone MarcoDeEjercicio (HU48-T2); se llega a ella desde el Dojo (HU53-T3).
@@ -36,10 +36,10 @@ fun CompletarEspacioScreen(viewModel: ControlDeEjercicio, alVencerSesion: () -> 
         val partes = separarHueco(enunciado)
         if (partes == null) {
             // Un enunciado sin hueco no debería existir (admin-api no lo aprueba, D17): se muestra y se deja el campo aparte.
-            Text(enunciado)
-            CampoDelHueco(uiState.respuesta, uiState.editable, viewModel::alCambiarRespuesta, Modifier.fillMaxWidth())
+            Text(enunciado, style = MaterialTheme.typography.bodyLarge)
+            CampoDelHueco(uiState.respuesta, uiState.editable, viewModel::alCambiarRespuesta, Modifier.fillMaxWidth(), sobreCodigo = false)
         } else {
-            CodigoConHueco(partes) { CampoDelHueco(uiState.respuesta, uiState.editable, viewModel::alCambiarRespuesta, Modifier.width(150.dp)) }
+            CodigoConHueco(partes) { CampoDelHueco(uiState.respuesta, uiState.editable, viewModel::alCambiarRespuesta, Modifier.width(150.dp), sobreCodigo = true) }
         }
     }
 }
@@ -64,16 +64,17 @@ private fun CodigoConHueco(partes: EnunciadoConHueco, campo: @Composable () -> U
 }
 
 @Composable
-private fun CampoDelHueco(valor: String, editable: Boolean, alCambiar: (String) -> Unit, modifier: Modifier) {
+private fun CampoDelHueco(valor: String, editable: Boolean, alCambiar: (String) -> Unit, modifier: Modifier, sobreCodigo: Boolean) {
     // El hueco solo tiene «___» de marca: el lector de pantalla necesita decir qué es el campo.
     val descripcion = stringResource(R.string.completar_campo)
-    OutlinedTextField(
-        value = valor,
-        onValueChange = alCambiar,
-        enabled = editable,
-        placeholder = { Text("___", fontFamily = FontFamily.Monospace) },
-        singleLine = true,
-        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+    CampoDeTextoMC(
+        valor = valor,
+        alCambiar = alCambiar,
+        habilitado = editable,
+        placeholder = "___",
+        unaLinea = true,
+        estiloDeTexto = EstiloDeCodigo,
+        sobreCodigo = sobreCodigo,
         modifier = modifier.semantics { contentDescription = descripcion },
     )
 }

@@ -43,17 +43,32 @@ class LoginViewModel(private val repository: AuthRepository) : ViewModel() {
         if (!estado.puedeEnviar) return
         _uiState.update { it.copy(cargando = true, error = null) }
 
-        viewModelScope.launch {
-            val resultado = repository.login(estado.email, estado.password)
-            _uiState.update {
-                when (resultado) {
-                    // La contraseña se borra del estado en cuanto ya no hace falta.
-                    ResultadoLogin.Exito -> it.copy(cargando = false, password = "", sesionIniciada = true)
-                    ResultadoLogin.CredencialesIncorrectas -> it.copy(cargando = false, error = R.string.login_error_credenciales)
-                    ResultadoLogin.PendienteActivacion -> it.copy(cargando = false, error = R.string.login_error_pendiente)
-                    ResultadoLogin.SinConexion -> it.copy(cargando = false, error = R.string.login_error_conexion)
-                    ResultadoLogin.ErrorInesperado -> it.copy(cargando = false, error = R.string.login_error_inesperado)
-                }
+        viewModelScope.launch { aplicar(repository.login(estado.email, estado.password)) }
+    }
+
+    // Google ya identificó a la persona en el teléfono; aquí se canjea su token por la sesión.
+    fun alRecibirTokenDeGoogle(idToken: String) {
+        if (_uiState.value.cargando) return
+        _uiState.update { it.copy(cargando = true, error = null) }
+        viewModelScope.launch { aplicar(repository.loginConGoogle(idToken)) }
+    }
+
+    // El selector de cuentas de Google no se pudo mostrar (no hay cuentas, no hay Google Play...).
+    fun alFallarGoogle(@StringRes error: Int) {
+        _uiState.update { it.copy(error = error) }
+    }
+
+    private fun aplicar(resultado: ResultadoLogin) {
+        _uiState.update {
+            when (resultado) {
+                // La contraseña se borra del estado en cuanto ya no hace falta.
+                ResultadoLogin.Exito -> it.copy(cargando = false, password = "", sesionIniciada = true)
+                ResultadoLogin.CredencialesIncorrectas -> it.copy(cargando = false, error = R.string.login_error_credenciales)
+                ResultadoLogin.PendienteActivacion -> it.copy(cargando = false, error = R.string.login_error_pendiente)
+                ResultadoLogin.GoogleRechazado -> it.copy(cargando = false, error = R.string.login_error_google_rechazado)
+                ResultadoLogin.CuentaNoPermitida -> it.copy(cargando = false, error = R.string.login_error_google_no_permitida)
+                ResultadoLogin.SinConexion -> it.copy(cargando = false, error = R.string.login_error_conexion)
+                ResultadoLogin.ErrorInesperado -> it.copy(cargando = false, error = R.string.login_error_inesperado)
             }
         }
     }

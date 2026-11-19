@@ -1,4 +1,5 @@
 import { claveLenguaje, etiquetaLenguaje, type ClaveLenguaje } from '../lenguajes.ts'
+import { LogoLenguaje } from './LogoLenguaje.tsx'
 
 const ORDEN: ClaveLenguaje[] = ['python', 'java', 'javascript', 'otro']
 
@@ -38,6 +39,7 @@ export function FiltroLenguaje({
           aria-pressed={valor === clave}
           onClick={() => onCambio(clave)}
         >
+          <LogoLenguaje lenguaje={clave} />
           {etiquetaClave(clave)} <small>{cantidad}</small>
         </button>
       ))}

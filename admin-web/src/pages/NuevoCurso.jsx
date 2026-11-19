@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { crearCurso } from '../api/cursos.js'
 import Formulario from '../components/Formulario.jsx'
-import { EstadoVacio, Hero } from '../components/Pantalla.jsx'
+import { Dibujo, EstadoVacio, Hero } from '../components/Pantalla.jsx'
 
 // Los valores son la lista fija que acepta admin-api; la etiqueta es solo para mostrar.
 export const CAMPOS = [
@@ -67,21 +67,25 @@ function NuevoCurso() {
         <p>Cada curso tiene un código de invitación para que tus estudiantes se inscriban.</p>
       </Hero>
       {creado ? (
-        <EstadoVacio ilustracion="exito">
+        <EstadoVacio ilustracion="exito" dibujo="celebracion">
           <p>Curso creado: {creado}.</p>
           <p>
             <a href="/cursos">Ver mis cursos</a> · <a href="/cursos/nuevo">Crear otro curso</a>
           </p>
         </EstadoVacio>
       ) : (
-        <div className="panel-formulario">
-          <Formulario
-            campos={CAMPOS}
-            textoBoton="Crear curso"
-            enviando={enviando}
-            errores={errores}
-            onEnviar={crear}
-          />
+        // El formulario a la izquierda y, en pantallas anchas, un dibujo grande a la derecha.
+        <div className="curso-pagina">
+          <div className="panel-formulario">
+            <Formulario
+              campos={CAMPOS}
+              textoBoton="Crear curso"
+              enviando={enviando}
+              errores={errores}
+              onEnviar={crear}
+            />
+          </div>
+          <Dibujo nombre="curso" className="curso-pagina-dibujo" />
         </div>
       )}
     </main>

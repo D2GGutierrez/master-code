@@ -8,6 +8,10 @@ sealed interface ResultadoLogin {
     data object Exito : ResultadoLogin
     data object CredencialesIncorrectas : ResultadoLogin
     data object PendienteActivacion : ResultadoLogin
+    // Solo con Google: el token no se pudo verificar o la cuenta no es del dominio institucional (401).
+    data object GoogleRechazado : ResultadoLogin
+    // Solo con Google: la cuenta no puede usar la app (por ejemplo, un correo de docente) o no está activa (403).
+    data object CuentaNoPermitida : ResultadoLogin
     data object SinConexion : ResultadoLogin
     data object ErrorInesperado : ResultadoLogin
 }
@@ -26,6 +30,20 @@ class AuthRepository(private val api: AuthApi, private val storage: TokenStorage
         private set
 
     fun haySesionGuardada(): Boolean = storage.leerRefresh() != null
+
+    // El token de identidad lo entrega Google en el teléfono; aquí solo se canjea por la sesión de MASTER CODE.
+    suspend fun loginConGoogle(idToken: String): ResultadoLogin = try {
+        guardar(api.loginConGoogle(idToken))
+        ResultadoLogin.Exito
+    } catch (e: ErrorHttp) {
+        when (e.codigo) {
+            401 -> ResultadoLogin.GoogleRechazado
+            403 -> ResultadoLogin.CuentaNoPermitida
+            else -> ResultadoLogin.ErrorInesperado
+        }
+    } catch (e: IOException) {
+        ResultadoLogin.SinConexion
+    }
 
     suspend fun login(email: String, password: String): ResultadoLogin = try {
         guardar(api.login(email, password))

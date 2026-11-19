@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import './Formulario.css'
 
-function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales, onCambio }) {
+// «acciones» (opcional) cambia el botón único por varios, cada uno { valor, texto, secundaria }: onEnviar recibe como
+// segundo argumento el valor del botón que se pulsó (p. ej. «Guardar cambios» y «Guardar y aprobar»).
+function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIniciales, onCambio, acciones }) {
   const [valores, setValores] = useState(valoresIniciales ?? {})
   // Campos que el docente cambió desde los últimos errores: su error ya no se muestra.
   const [editados, setEditados] = useState({})
@@ -31,7 +33,7 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
         enviados[campo.nombre] = valores[campo.nombre]
       }
     }
-    onEnviar(enviados)
+    onEnviar(enviados, evento.nativeEvent?.submitter?.value || undefined)
   }
 
   return (
@@ -84,10 +86,17 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
                 max={campo.max}
                 value={valores[campo.nombre] ?? ''}
                 onChange={manejarCambio}
+                autoComplete={campo.autoComplete}
                 required
                 aria-invalid={error ? 'true' : undefined}
-                aria-describedby={error ? idError : undefined}
+                aria-describedby={[campo.ayuda ? `${campo.nombre}-ayuda-campo` : '', error ? idError : ''].filter(Boolean).join(' ') || undefined}
               />
+            )}
+            {/* Una línea de ayuda bajo el campo (qué se espera escribir). */}
+            {campo.ayuda && !campo.componente && (
+              <p id={`${campo.nombre}-ayuda-campo`} className="campo-ayuda">
+                {campo.ayuda}
+              </p>
             )}
             {/* Una lista (errores por caso de prueba) la pinta el propio componente. */}
             {typeof error === 'string' && (
@@ -98,9 +107,26 @@ function Formulario({ campos, textoBoton, enviando, errores, onEnviar, valoresIn
           </div>
         )
       })}
-      <button type="submit" disabled={enviando}>
-        {textoBoton}
-      </button>
+      {acciones ? (
+        <div className="formulario-acciones">
+          {acciones.map((accion) => (
+            <button
+              key={accion.valor}
+              type="submit"
+              name="accion"
+              value={accion.valor}
+              className={accion.secundaria ? 'boton-secundario' : undefined}
+              disabled={enviando}
+            >
+              {accion.texto}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <button type="submit" disabled={enviando}>
+          {textoBoton}
+        </button>
+      )}
     </form>
   )
 }
